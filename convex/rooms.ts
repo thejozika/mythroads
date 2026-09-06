@@ -69,20 +69,35 @@ export async function joinRoom(
     code: string,
     data: { name: string; color: string },
 ) {
+    const normalizedName = data.name.trim().slice(0, 16)
+    if (!normalizedName) throw new ConvexError('Choose a hero name.')
     const room = await ctx.db
         .query('rooms')
         .withIndex('by_code', (q) => q.eq('code', code.toUpperCase()))
         .unique()
     if (!room) throw new ConvexError('That room does not exist.')
-    if (room.status !== 'lobby') throw new ConvexError('That adventure has already started.')
     const players = await ctx.db
         .query('players')
         .withIndex('by_room', (q) => q.eq('roomId', room._id))
         .take(4)
+    const namedPlayer = players.find(
+        (player) => player.name.toLocaleLowerCase() === normalizedName.toLocaleLowerCase(),
+    )
+    if (namedPlayer) {
+        if (namedPlayer.color.toLocaleLowerCase() !== data.color.toLocaleLowerCase()) {
+            throw new ConvexError('That hero exists. Select their original color to rejoin.')
+        }
+        return namedPlayer._id
+    }
+    if (room.status !== 'lobby') {
+        throw new ConvexError(
+            'That adventure has started. Rejoin with your existing name and color.',
+        )
+    }
     if (players.length >= 4) throw new ConvexError('That room is full.')
     const playerId = await ctx.db.insert('players', {
         roomId: room._id,
-        name: data.name.trim().slice(0, 16),
+        name: normalizedName,
         color: data.color,
         position: 0,
         gold: 10,

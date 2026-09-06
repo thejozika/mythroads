@@ -75,6 +75,11 @@ code {
     place-items: center;
     color: #b9c7c7;
 }
+.rejoin-hint {
+    margin: 0.25rem 0 1rem;
+    color: #71817b;
+    font-size: 0.82rem;
+}
 
 .display-shell {
     position: relative;

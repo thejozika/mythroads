@@ -172,6 +172,9 @@ function ConnectedJoin({ code }: { code: string }) {
             <form className="controller-card join-card" onSubmit={join}>
                 <span className="eyebrow">Joining room {code}</span>
                 <h1>Choose your hero</h1>
+                <p className="rejoin-hint">
+                    Returning? Enter the same name and choose the same color to reconnect.
+                </p>
                 <label>
                     Name
                     <input
