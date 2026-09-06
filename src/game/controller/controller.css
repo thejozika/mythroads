@@ -64,6 +64,12 @@
     opacity: 0.22;
 }
 
+.dpad-button:focus-visible,
+.action-button:focus-visible {
+    outline: 4px solid #f7cf67;
+    outline-offset: 3px;
+}
+
 .dpad-up {
     grid-column: 2;
     grid-row: 1;
@@ -146,6 +152,23 @@
     font-weight: 700;
 }
 
+.move-options {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.35rem;
+}
+.move-options span {
+    padding: 0.3rem 0.5rem;
+    border-radius: 999px;
+    color: #53645d;
+    background: #e9e4d3;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: capitalize;
+}
+
 .inventory-button {
     width: 100%;
     border: 1px solid #c8c1ad;
@@ -165,6 +188,133 @@
     color: var(--ink);
     background: var(--paper);
     box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+    overflow-y: auto;
+}
+
+.equipment-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.45rem;
+    margin: 0.65rem 0 1rem;
+}
+.equipment-slot {
+    min-height: 5.2rem;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    padding: 0.4rem;
+    border: 1px dashed #b8af98;
+    border-radius: 0.8rem;
+    background: #eee8d7;
+    text-align: center;
+}
+.equipment-slot > span {
+    color: #6b5a40;
+    font-size: 1.35rem;
+}
+.equipment-slot small {
+    color: #8a806b;
+    font-size: 0.58rem;
+    text-transform: uppercase;
+}
+.equipment-slot strong {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 0.68rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.slot-helmet {
+    grid-column: 2;
+}
+.slot-weapon {
+    grid-column: 1;
+    grid-row: 2;
+}
+.slot-body {
+    grid-column: 2;
+    grid-row: 2;
+}
+.slot-cape {
+    grid-column: 3;
+    grid-row: 2;
+}
+.owned-items {
+    display: grid;
+    gap: 0.35rem;
+    margin: 0.65rem 0 1rem;
+}
+.owned-items > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.45rem 0.6rem;
+    border-radius: 0.65rem;
+    background: #e9e4d3;
+    font-size: 0.78rem;
+}
+.owned-items button {
+    padding: 0.35rem 0.6rem;
+    color: var(--ink);
+    background: #f7cf67;
+}
+.shop-panel {
+    position: fixed;
+    z-index: 12;
+    inset: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+    max-width: 440px;
+    margin: auto;
+    padding: 1.25rem;
+    overflow-y: auto;
+    border-radius: 1.4rem;
+    color: var(--ink);
+    background: var(--paper);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+}
+.shop-panel h2 {
+    margin: 0.2rem 0 1rem;
+    font-family: "Fraunces", serif;
+    font-size: 2rem;
+}
+.shop-list {
+    display: grid;
+    gap: 0.55rem;
+}
+.shop-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 0.7rem;
+    align-items: center;
+    padding: 0.7rem;
+    border-radius: 0.85rem;
+    background: #e9e4d3;
+}
+.shop-item-icon {
+    width: 2.4rem;
+    height: 2.4rem;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: #f7cf67;
+    background: #263631;
+    font-size: 1.2rem;
+}
+.shop-item strong,
+.shop-item small {
+    display: block;
+}
+.shop-item small {
+    color: #71817b;
+    font-size: 0.7rem;
+}
+.shop-item button {
+    padding: 0.5rem 0.65rem;
+    color: var(--ink);
+    background: #f7cf67;
+}
+.encounter-prompt {
+    background: #e3dcff;
 }
 
 .inventory-panel header {

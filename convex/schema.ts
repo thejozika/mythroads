@@ -10,6 +10,24 @@ export default defineSchema({
         lastRoll: v.optional(v.array(v.number())),
         message: v.string(),
         round: v.number(),
+        phase: v.optional(
+            v.union(
+                v.literal('awaitingRoll'),
+                v.literal('moving'),
+                v.literal('revealingEncounter'),
+                v.literal('shopping'),
+            ),
+        ),
+        activeEncounterId: v.optional(v.id('encounters')),
+        shopKind: v.optional(
+            v.union(
+                v.literal('armoury'),
+                v.literal('jeweller'),
+                v.literal('weapons'),
+                v.literal('items'),
+                v.literal('magic'),
+            ),
+        ),
     }).index('by_code', ['code']),
     players: defineTable({
         roomId: v.id('rooms'),
@@ -24,4 +42,42 @@ export default defineSchema({
         dice: v.array(v.number()),
         joinedAt: v.number(),
     }).index('by_room', ['roomId']),
+    encounters: defineTable({
+        roomId: v.id('rooms'),
+        playerId: v.id('players'),
+        spaceId: v.number(),
+        kind: v.union(v.literal('combat'), v.literal('event')),
+        outcomeId: v.string(),
+        title: v.string(),
+        description: v.string(),
+        goldDelta: v.number(),
+        hpDelta: v.number(),
+        wheelIndex: v.number(),
+        status: v.union(v.literal('revealing'), v.literal('resolved')),
+        createdAt: v.number(),
+    }).index('by_roomId', ['roomId']),
+    playerItems: defineTable({
+        playerId: v.id('players'),
+        itemId: v.string(),
+        equippedSlot: v.optional(
+            v.union(
+                v.literal('weapon'),
+                v.literal('helmet'),
+                v.literal('body'),
+                v.literal('gloves'),
+                v.literal('boots'),
+                v.literal('cape'),
+                v.literal('amulet'),
+                v.literal('ringLeft'),
+                v.literal('ringRight'),
+            ),
+        ),
+        purchasedAt: v.number(),
+    }).index('by_playerId', ['playerId']),
+    gameEvents: defineTable({
+        type: v.string(),
+        subjects: v.any(),
+        data: v.any(),
+        createdAt: v.number(),
+    }).index('by_createdAt', ['createdAt']),
 })

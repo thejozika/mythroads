@@ -1,11 +1,13 @@
 import type { CardinalDirection } from '../../../shared/controller-input.system'
 
-type DirectionActions = Partial<Record<CardinalDirection, () => void>>
+type DirectionAction = { run: () => void; label: string; kind: string }
+type DirectionActions = Partial<Record<CardinalDirection, DirectionAction>>
 
 type GamepadProps = {
     directions: DirectionActions
-    canRoll: boolean
-    onRoll: () => void
+    canPrimaryAction: boolean
+    primaryActionLabel: string
+    onPrimaryAction: () => void
     onInventory: () => void
     onBack: () => void
     inventoryOpen: boolean
@@ -24,9 +26,13 @@ function DirectionButton({
         <button
             type="button"
             className={`dpad-button dpad-${direction}`}
-            aria-label={`Move ${direction}`}
+            aria-label={
+                actions[direction]
+                    ? `Move ${direction} to ${actions[direction]?.label}`
+                    : `No road ${direction}`
+            }
             disabled={!actions[direction]}
-            onClick={actions[direction]}
+            onClick={actions[direction]?.run}
         >
             {symbol}
         </button>
@@ -35,8 +41,9 @@ function DirectionButton({
 
 export function Gamepad({
     directions,
-    canRoll,
-    onRoll,
+    canPrimaryAction,
+    primaryActionLabel,
+    onPrimaryAction,
     onInventory,
     onBack,
     inventoryOpen,
@@ -81,16 +88,30 @@ export function Gamepad({
                 <button
                     type="button"
                     className="action-button action-a"
-                    disabled={!canRoll}
-                    onClick={onRoll}
-                    aria-label="Roll dice"
+                    disabled={!canPrimaryAction}
+                    onClick={onPrimaryAction}
+                    aria-label={primaryActionLabel}
                 >
                     A
                 </button>
             </fieldset>
             <div className="gamepad-labels">
                 <span>D-pad · move</span>
-                <span>A · roll &nbsp; X · inventory</span>
+                <span>A · {primaryActionLabel.toLowerCase()} &nbsp; X · inventory</span>
+            </div>
+            <div className="move-options" aria-live="polite">
+                {Object.entries(directions).map(([direction, choice]) => (
+                    <span key={direction}>
+                        {direction === 'up'
+                            ? '▲'
+                            : direction === 'down'
+                              ? '▼'
+                              : direction === 'left'
+                                ? '◀'
+                                : '▶'}{' '}
+                        {choice.label} · {choice.kind}
+                    </span>
+                ))}
             </div>
         </section>
     )

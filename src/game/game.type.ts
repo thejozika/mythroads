@@ -7,6 +7,9 @@ export type Room = {
     lastRoll?: number[]
     message: string
     round: number
+    phase?: 'awaitingRoll' | 'moving' | 'revealingEncounter' | 'shopping'
+    activeEncounterId?: string
+    shopKind?: 'armoury' | 'jeweller' | 'weapons' | 'items' | 'magic'
 }
 
 export type Player = {
@@ -23,4 +26,22 @@ export type Player = {
     joinedAt: number
 }
 
-export type RoomState = { room: Room; players: Player[] } | null
+export type Encounter = {
+    _id: string
+    playerId: string
+    kind: 'combat' | 'event'
+    title: string
+    description: string
+    goldDelta: number
+    hpDelta: number
+    wheelIndex: number
+    createdAt: number
+}
+
+export type OwnedItem = {
+    _id: string
+    itemId: string
+    equippedSlot?: string
+}
+
+export type RoomState = { room: Room; players: Player[]; encounter: Encounter | null } | null

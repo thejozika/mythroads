@@ -1,17 +1,18 @@
 import { Float, Line, Text } from '@react-three/drei'
-import { BOARD, getNode, SPACE_COLORS } from '../../../shared/board.system'
+import { availableSteps, BOARD, getNode } from '../../../shared/board.system'
 import type { Player } from '../game.type'
+import { SPACE_VISUALS } from './world.material'
 
 function Ground() {
     return (
         <>
             <mesh receiveShadow position={[0, -0.42, 0]}>
-                <cylinderGeometry args={[7.4, 8, 0.65, 12]} />
+                <cylinderGeometry args={[9.1, 9.7, 0.65, 16]} />
                 <meshStandardMaterial color="#243a32" roughness={0.92} />
             </mesh>
-            {Array.from({ length: 18 }).map((_, index) => {
-                const angle = (index / 18) * Math.PI * 2
-                const radius = 5.7 + (index % 3) * 0.45
+            {Array.from({ length: 24 }).map((_, index) => {
+                const angle = (index / 24) * Math.PI * 2
+                const radius = 7.7 + (index % 3) * 0.4
                 return (
                     <group
                         key={`tree-${angle}`}
@@ -55,12 +56,18 @@ function Roads() {
     )
 }
 
-function Space({ node }: { node: (typeof BOARD)[number] }) {
+function Space({ node, reachable }: { node: (typeof BOARD)[number]; reachable: boolean }) {
+    const visual = SPACE_VISUALS[node.visualId]
     return (
         <group position={[node.x, -0.01, node.z]}>
-            <mesh castShadow receiveShadow>
+            <mesh castShadow receiveShadow scale={reachable ? 1.16 : 1}>
                 <cylinderGeometry args={[0.58, 0.61, 0.16, 32]} />
-                <meshStandardMaterial color={SPACE_COLORS[node.kind]} roughness={0.55} />
+                <meshStandardMaterial
+                    color={visual.color}
+                    emissive={reachable ? '#f7cf67' : '#000000'}
+                    emissiveIntensity={reachable ? 0.85 : 0}
+                    roughness={0.55}
+                />
             </mesh>
             <mesh position={[0, 0.085, 0]} rotation={[Math.PI / 2, 0, 0]}>
                 <torusGeometry args={[0.49, 0.035, 8, 32]} />
@@ -72,7 +79,7 @@ function Space({ node }: { node: (typeof BOARD)[number] }) {
                 fontSize={0.27}
                 color="#171d25"
             >
-                {node.kind === 'combat' ? '⚔' : node.kind === 'event' ? '?' : '★'}
+                {visual.icon}
             </Text>
         </group>
     )
@@ -103,13 +110,20 @@ function Pawn({ player, offset }: { player: Player; offset: number }) {
     )
 }
 
-export function BoardWorld({ players }: { players: Player[] }) {
+type BoardWorldProps = { players: Player[]; activePlayer?: Player; remainingMoves: number }
+
+export function BoardWorld({ players, activePlayer, remainingMoves }: BoardWorldProps) {
+    const reachable = new Set(
+        activePlayer && remainingMoves > 0
+            ? availableSteps(activePlayer.position, activePlayer.previousPosition)
+            : [],
+    )
     return (
         <>
             <Ground />
             <Roads />
             {BOARD.map((node) => (
-                <Space key={node.id} node={node} />
+                <Space key={node.id} node={node} reachable={reachable.has(node.id)} />
             ))}
             {players.map((player, index) => (
                 <Pawn key={player._id} player={player} offset={index - (players.length - 1) / 2} />

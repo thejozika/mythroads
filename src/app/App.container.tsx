@@ -30,13 +30,13 @@ function OfflineNotice() {
 }
 
 function ConnectedHome() {
-    const createRoom = useMutation(api.rooms.create)
+    const dispatch = useMutation(api.game.dispatch)
     const [joining, setJoining] = useState(false)
     const [code, setCode] = useState('')
 
     const create = async () => {
-        const result = (await createRoom({})) as { code: string }
-        window.location.href = `/display/${result.code}`
+        const result = await dispatch({ event: { type: 'room.create', subjects: {}, data: {} } })
+        if (result.kind === 'room.created') window.location.href = `/display/${result.code}`
     }
 
     return (
@@ -88,10 +88,19 @@ function Home({ connected }: { connected: boolean }) {
 
 function LiveDisplay({ code }: { code: string }) {
     const state = useQuery(api.rooms.byCode, { code })
-    const start = useMutation(api.rooms.start)
+    const dispatch = useMutation(api.game.dispatch)
     if (state === undefined) return <div className="loading">Summoning the board…</div>
     if (!state) return <div className="loading">Room not found.</div>
-    return <BoardDisplay state={state} onStart={() => start({ roomId: state.room._id })} />
+    return (
+        <BoardDisplay
+            state={state}
+            onStart={() =>
+                dispatch({
+                    event: { type: 'game.start', subjects: { roomId: state.room._id }, data: {} },
+                })
+            }
+        />
+    )
 }
 
 const DEMO_STATE: NonNullable<RoomState> = {
@@ -132,10 +141,11 @@ const DEMO_STATE: NonNullable<RoomState> = {
             joinedAt: 2,
         },
     ],
+    encounter: null,
 }
 
 function ConnectedJoin({ code }: { code: string }) {
-    const joinRoom = useMutation(api.rooms.join)
+    const dispatch = useMutation(api.game.dispatch)
     const [name, setName] = useState('')
     const [error, setError] = useState('')
     const colors = ['#4bd3c2', '#ffbd59', '#f875aa', '#71a7ff']
@@ -144,9 +154,13 @@ function ConnectedJoin({ code }: { code: string }) {
     const join = async (event: React.FormEvent) => {
         event.preventDefault()
         try {
-            const result = (await joinRoom({ code, name, color })) as { playerId: string }
-            localStorage.setItem(`dicebound:${code}`, result.playerId)
-            window.location.href = `/controller/${code}`
+            const result = await dispatch({
+                event: { type: 'player.join', subjects: { code }, data: { name, color } },
+            })
+            if (result.kind === 'player.joined') {
+                localStorage.setItem(`dicebound:${code}`, result.playerId)
+                window.location.href = `/controller/${code}`
+            }
         } catch (caught) {
             setError(caught instanceof Error ? caught.message : 'Could not join room')
         }

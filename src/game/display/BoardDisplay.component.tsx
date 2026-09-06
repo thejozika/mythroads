@@ -1,6 +1,7 @@
 import { QRCodeSVG } from 'qrcode.react'
 import { BoardScene } from '../board/Board.scene'
 import type { RoomState } from '../game.type'
+import { EncounterWheel } from './EncounterWheel.component'
 
 type BoardDisplayProps = {
     state: NonNullable<RoomState>
@@ -15,7 +16,11 @@ export function BoardDisplay({ state, onStart }: BoardDisplayProps) {
     return (
         <main className="display-shell">
             <div className="canvas-wrap">
-                <BoardScene players={players} />
+                <BoardScene
+                    players={players}
+                    activePlayer={active}
+                    remainingMoves={room.remainingMoves}
+                />
             </div>
             <header className="display-header">
                 <div>
@@ -83,6 +88,7 @@ export function BoardDisplay({ state, onStart }: BoardDisplayProps) {
                     )}
                 </div>
             )}
+            {state.encounter && <EncounterWheel encounter={state.encounter} />}
         </main>
     )
 }

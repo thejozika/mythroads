@@ -9,7 +9,7 @@ export function directionForStep(originId: number, destinationId: number): Cardi
     const deltaZ = destination.z - origin.z
 
     if (Math.abs(deltaX) > Math.abs(deltaZ)) return deltaX > 0 ? 'right' : 'left'
-    return deltaZ > 0 ? 'up' : 'down'
+    return deltaZ > 0 ? 'down' : 'up'
 }
 
 export function directionalSteps(position: number, previousPosition?: number) {
