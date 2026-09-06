@@ -201,9 +201,10 @@ body[data-view="controller"] .controller-card {
     max-width: none;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     border-radius: 0;
     box-shadow: none;
+    overflow-y: auto;
 }
 body[data-view="controller"] .gamepad {
     grid-template-columns: 1fr;

@@ -10,6 +10,7 @@ import { Inventory } from './Inventory.component'
 import { Shop } from './Shop.component'
 import { identifiedDice } from './dice-view.util'
 import './controller.css'
+import './controller-landscape.css'
 
 export function Controller({ code }: { code: string }) {
     const [inventoryOpen, setInventoryOpen] = useState(false)
