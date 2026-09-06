@@ -1,7 +1,7 @@
 @media (orientation: landscape) {
     body[data-view="controller"] .controller-card {
         display: grid;
-        grid-template-columns: minmax(220px, 0.8fr) minmax(350px, 1.2fr);
+        grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
         grid-template-rows: auto auto 1fr auto;
         gap: 0.45rem 1rem;
         align-items: start;
@@ -46,14 +46,23 @@
         grid-template-columns: 1fr 1fr;
         align-self: stretch;
         margin: 0;
-        padding: 0.35rem 0 0.25rem 1rem;
-        border-top: 0;
-        border-left: 1px solid #dcd6c4;
+        gap: 0.6rem 1.2rem;
+        place-content: center;
+        padding: 1rem;
+        border: 0;
+        border-radius: 1.4rem;
+        background: #e9e4d3;
     }
 
     body[data-view="controller"] .gamepad-labels,
-    body[data-view="controller"] .move-options {
+    body[data-view="controller"] .move-options,
+    body[data-view="controller"] .camera-mode-label {
         grid-column: 1 / -1;
+    }
+
+    body[data-view="controller"] .gamepad-labels {
+        justify-content: center;
+        gap: 2rem;
     }
 
     body[data-view="controller"] .utility-controls {

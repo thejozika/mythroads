@@ -52,12 +52,23 @@
     color: #f7f1de;
     background: #263631;
     font-size: 1rem;
+    touch-action: none;
 }
 
 .dpad-button:active:not(:disabled),
-.action-button:active:not(:disabled) {
+.action-button:active:not(:disabled),
+.dpad-button.is-pressed,
+.action-button.is-pressed {
     transform: translateY(3px);
     filter: brightness(1.2);
+}
+
+.dpad-button.is-pressed {
+    box-shadow: inset 0 4px 0 rgba(0, 0, 0, 0.28);
+}
+
+.action-button.is-pressed {
+    box-shadow: inset 0 3px 0 rgba(23, 34, 30, 0.38);
 }
 
 .dpad-button:disabled {
@@ -113,6 +124,7 @@
     box-shadow: inset 0 -4px 0 rgba(23, 34, 30, 0.22);
     font-family: "Fraunces", serif;
     font-size: 1.15rem;
+    touch-action: none;
 }
 
 .action-button:disabled {
@@ -194,6 +206,7 @@ body[data-view="controller"] .phone-shell {
     min-height: 100dvh;
     padding: 0;
     place-items: stretch;
+    overflow: hidden;
 }
 body[data-view="controller"] .controller-card {
     width: 100%;
@@ -205,6 +218,10 @@ body[data-view="controller"] .controller-card {
     border-radius: 0;
     box-shadow: none;
     overflow-y: auto;
+    overflow-x: hidden;
+}
+body[data-view="controller"] .controller-card > * {
+    min-width: 0;
 }
 body[data-view="controller"] .gamepad {
     grid-template-columns: 1fr;
@@ -212,8 +229,20 @@ body[data-view="controller"] .gamepad {
     flex: 1;
 }
 body[data-view="controller"] .gamepad-labels,
-body[data-view="controller"] .move-options {
+body[data-view="controller"] .move-options,
+body[data-view="controller"] .camera-mode-label {
     grid-column: 1;
+}
+
+body[data-view="controller"] .camera-mode-label {
+    grid-column: 1 / -1;
+    padding: 0.45rem 0.7rem;
+    border-radius: 999px;
+    color: #f7f1de;
+    background: #53645d;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-align: center;
 }
 
 .inventory-panel {

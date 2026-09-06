@@ -1,4 +1,5 @@
 import type { CardinalDirection } from '../../../shared/controller-input.system'
+import { useHeldAction } from './useHeldAction.hook'
 
 type DirectionAction = { run: () => void; label: string; kind: string }
 type DirectionActions = Partial<Record<CardinalDirection, DirectionAction>>
@@ -18,24 +19,57 @@ function DirectionButton({
     direction,
     symbol,
     actions,
+    repeat,
 }: {
     direction: CardinalDirection
     symbol: string
     actions: DirectionActions
+    repeat: boolean
 }) {
+    const action = actions[direction]
+    const { pressed, pressProps } = useHeldAction(action?.run, repeat)
     return (
         <button
             type="button"
-            className={`dpad-button dpad-${direction}`}
+            className={`dpad-button dpad-${direction} ${pressed ? 'is-pressed' : ''}`}
             aria-label={
                 actions[direction]
                     ? `Move ${direction} to ${actions[direction]?.label}`
                     : `No road ${direction}`
             }
-            disabled={!actions[direction]}
-            onClick={actions[direction]?.run}
+            disabled={!action}
+            {...pressProps}
         >
             {symbol}
+        </button>
+    )
+}
+
+function ActionButton({
+    letter,
+    className,
+    action,
+    disabled,
+    label,
+    repeat = false,
+}: {
+    letter: string
+    className: string
+    action?: () => void
+    disabled?: boolean
+    label: string
+    repeat?: boolean
+}) {
+    const { pressed, pressProps } = useHeldAction(disabled ? undefined : action, repeat)
+    return (
+        <button
+            type="button"
+            className={`action-button ${className} ${pressed ? 'is-pressed' : ''}`}
+            disabled={disabled}
+            aria-label={label}
+            {...pressProps}
+        >
+            {letter}
         </button>
     )
 }
@@ -54,48 +88,57 @@ export function Gamepad({
         <section className="gamepad" aria-label="Game controls">
             <fieldset className="dpad">
                 <legend>Movement pad</legend>
-                <DirectionButton direction="up" symbol="▲" actions={directions} />
-                <DirectionButton direction="left" symbol="◀" actions={directions} />
+                <DirectionButton
+                    direction="up"
+                    symbol="▲"
+                    actions={directions}
+                    repeat={cameraMode}
+                />
+                <DirectionButton
+                    direction="left"
+                    symbol="◀"
+                    actions={directions}
+                    repeat={cameraMode}
+                />
                 <div className="dpad-center" />
-                <DirectionButton direction="right" symbol="▶" actions={directions} />
-                <DirectionButton direction="down" symbol="▼" actions={directions} />
+                <DirectionButton
+                    direction="right"
+                    symbol="▶"
+                    actions={directions}
+                    repeat={cameraMode}
+                />
+                <DirectionButton
+                    direction="down"
+                    symbol="▼"
+                    actions={directions}
+                    repeat={cameraMode}
+                />
             </fieldset>
             <fieldset className="action-pad">
                 <legend>Action buttons</legend>
-                <button
-                    type="button"
-                    className="action-button action-y"
-                    disabled
-                    aria-label="Y action"
-                >
-                    Y
-                </button>
-                <button
-                    type="button"
-                    className="action-button action-x"
-                    onClick={onInventory}
-                    aria-label="Open inventory"
-                >
-                    X
-                </button>
-                <button
-                    type="button"
-                    className="action-button action-b"
+                <ActionButton letter="Y" className="action-y" disabled label="Y action" />
+                <ActionButton
+                    letter="X"
+                    className="action-x"
+                    action={onInventory}
+                    label="Open inventory"
+                />
+                <ActionButton
+                    letter="B"
+                    className="action-b"
                     disabled={!inventoryOpen && !cameraMode}
-                    onClick={onBack}
-                    aria-label={cameraMode ? 'Zoom camera out' : 'Back'}
-                >
-                    B
-                </button>
-                <button
-                    type="button"
-                    className="action-button action-a"
+                    action={onBack}
+                    label={cameraMode ? 'Zoom camera out' : 'Back'}
+                    repeat={cameraMode}
+                />
+                <ActionButton
+                    letter="A"
+                    className="action-a"
                     disabled={!canPrimaryAction}
-                    onClick={onPrimaryAction}
-                    aria-label={primaryActionLabel}
-                >
-                    A
-                </button>
+                    action={onPrimaryAction}
+                    label={primaryActionLabel}
+                    repeat={cameraMode}
+                />
             </fieldset>
             <div className="gamepad-labels">
                 <span>D-pad · {cameraMode ? 'camera' : 'move'}</span>
@@ -104,20 +147,24 @@ export function Gamepad({
                     {cameraMode ? ' · B zoom out' : ' · X inventory'}
                 </span>
             </div>
-            <div className="move-options" aria-live="polite">
-                {Object.entries(directions).map(([direction, choice]) => (
-                    <span key={direction}>
-                        {direction === 'up'
-                            ? '▲'
-                            : direction === 'down'
-                              ? '▼'
-                              : direction === 'left'
-                                ? '◀'
-                                : '▶'}{' '}
-                        {choice.label} · {choice.kind}
-                    </span>
-                ))}
-            </div>
+            {cameraMode ? (
+                <div className="camera-mode-label">Free camera · D-pad pans · A/B zoom</div>
+            ) : (
+                <div className="move-options" aria-live="polite">
+                    {Object.entries(directions).map(([direction, choice]) => (
+                        <span key={direction}>
+                            {direction === 'up'
+                                ? '▲'
+                                : direction === 'down'
+                                  ? '▼'
+                                  : direction === 'left'
+                                    ? '◀'
+                                    : '▶'}{' '}
+                            {choice.label} · {choice.kind}
+                        </span>
+                    ))}
+                </div>
+            )}
         </section>
     )
 }
