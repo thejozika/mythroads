@@ -142,6 +142,7 @@ const DEMO_STATE: NonNullable<RoomState> = {
         },
     ],
     encounter: null,
+    camera: null,
 }
 
 function ConnectedJoin({ code }: { code: string }) {

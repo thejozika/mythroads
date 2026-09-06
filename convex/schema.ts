@@ -80,4 +80,12 @@ export default defineSchema({
         data: v.any(),
         createdAt: v.number(),
     }).index('by_createdAt', ['createdAt']),
+    roomCameras: defineTable({
+        roomId: v.id('rooms'),
+        mode: v.union(v.literal('follow'), v.literal('free')),
+        targetX: v.number(),
+        targetZ: v.number(),
+        distance: v.number(),
+        updatedAt: v.number(),
+    }).index('by_roomId', ['roomId']),
 })

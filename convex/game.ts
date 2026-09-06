@@ -1,5 +1,6 @@
 import { v } from 'convex/values'
 import { mutation } from './_generated/server'
+import { moveCamera, toggleCamera, zoomCamera } from './camera'
 import { resolveEncounter } from './encounters'
 import { createRoom, joinRoom, movePlayer, rollMovement, startRoom } from './rooms'
 import { buyItem, equipItem, leaveShop } from './shops'
@@ -62,6 +63,28 @@ const eventValidator = v.union(
         subjects: v.object({ roomId: v.id('rooms'), playerId: v.id('players') }),
         data: v.object({}),
     }),
+    v.object({
+        type: v.literal('camera.toggle'),
+        subjects: v.object({ roomId: v.id('rooms'), playerId: v.id('players') }),
+        data: v.object({}),
+    }),
+    v.object({
+        type: v.literal('camera.move'),
+        subjects: v.object({ roomId: v.id('rooms'), playerId: v.id('players') }),
+        data: v.object({
+            direction: v.union(
+                v.literal('up'),
+                v.literal('down'),
+                v.literal('left'),
+                v.literal('right'),
+            ),
+        }),
+    }),
+    v.object({
+        type: v.literal('camera.zoom'),
+        subjects: v.object({ roomId: v.id('rooms'), playerId: v.id('players') }),
+        data: v.object({ delta: v.union(v.literal(-1), v.literal(1)) }),
+    }),
 )
 
 const resultValidator = v.union(
@@ -110,6 +133,15 @@ export const dispatch = mutation({
                 break
             case 'shop.leave':
                 await leaveShop(ctx, event.subjects)
+                break
+            case 'camera.toggle':
+                await toggleCamera(ctx, event.subjects)
+                break
+            case 'camera.move':
+                await moveCamera(ctx, event.subjects, event.data.direction)
+                break
+            case 'camera.zoom':
+                await zoomCamera(ctx, event.subjects, event.data.delta)
                 break
         }
         await ctx.db.insert('gameEvents', {

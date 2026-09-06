@@ -11,6 +11,7 @@ type GamepadProps = {
     onInventory: () => void
     onBack: () => void
     inventoryOpen: boolean
+    cameraMode: boolean
 }
 
 function DirectionButton({
@@ -47,6 +48,7 @@ export function Gamepad({
     onInventory,
     onBack,
     inventoryOpen,
+    cameraMode,
 }: GamepadProps) {
     return (
         <section className="gamepad" aria-label="Game controls">
@@ -79,9 +81,9 @@ export function Gamepad({
                 <button
                     type="button"
                     className="action-button action-b"
-                    disabled={!inventoryOpen}
+                    disabled={!inventoryOpen && !cameraMode}
                     onClick={onBack}
-                    aria-label="Back"
+                    aria-label={cameraMode ? 'Zoom camera out' : 'Back'}
                 >
                     B
                 </button>
@@ -96,8 +98,11 @@ export function Gamepad({
                 </button>
             </fieldset>
             <div className="gamepad-labels">
-                <span>D-pad · move</span>
-                <span>A · {primaryActionLabel.toLowerCase()} &nbsp; X · inventory</span>
+                <span>D-pad · {cameraMode ? 'camera' : 'move'}</span>
+                <span>
+                    A · {primaryActionLabel.toLowerCase()}
+                    {cameraMode ? ' · B zoom out' : ' · X inventory'}
+                </span>
             </div>
             <div className="move-options" aria-live="polite">
                 {Object.entries(directions).map(([direction, choice]) => (

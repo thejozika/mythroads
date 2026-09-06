@@ -46,12 +46,13 @@ export function Controller({ code }: { code: string }) {
     const canRoll = isActive && state.room.status === 'playing' && phase === 'awaitingRoll'
     const canResolve =
         isActive && phase === 'revealingEncounter' && Boolean(state.encounter) && encounterReady
-    const choices =
+    const cameraMode = state.camera?.mode === 'free'
+    const movementChoices =
         isActive && phase === 'moving' && state.room.remainingMoves > 0
             ? directionalSteps(player.position, player.previousPosition)
             : {}
-    const directions = Object.fromEntries(
-        Object.entries(choices).map(([direction, destination]) => [
+    const moveDirections = Object.fromEntries(
+        Object.entries(movementChoices).map(([direction, destination]) => [
             direction,
             {
                 label: getNode(destination).label,
@@ -67,6 +68,24 @@ export function Controller({ code }: { code: string }) {
             },
         ]),
     )
+    const cameraDirections = Object.fromEntries(
+        (['up', 'down', 'left', 'right'] as const).map((direction) => [
+            direction,
+            {
+                label: 'Free camera',
+                kind: 'pan',
+                run: () =>
+                    dispatch({
+                        event: {
+                            type: 'camera.move',
+                            subjects: { roomId: state.room._id, playerId },
+                            data: { direction },
+                        },
+                    }),
+            },
+        ]),
+    )
+    const directions = cameraMode && isActive ? cameraDirections : moveDirections
 
     return (
         <main className="phone-shell" style={{ '--hero': player.color } as React.CSSProperties}>
@@ -117,15 +136,26 @@ export function Controller({ code }: { code: string }) {
                 )}
                 <Gamepad
                     directions={directions}
-                    canPrimaryAction={canRoll || canResolve}
+                    canPrimaryAction={(cameraMode && isActive) || canRoll || canResolve}
                     primaryActionLabel={
-                        phase === 'revealingEncounter'
-                            ? encounterReady
-                                ? 'Reveal result'
-                                : 'Spinning…'
-                            : 'Roll dice'
+                        cameraMode
+                            ? 'Zoom in'
+                            : phase === 'revealingEncounter'
+                              ? encounterReady
+                                  ? 'Reveal result'
+                                  : 'Spinning…'
+                              : 'Roll dice'
                     }
                     onPrimaryAction={() => {
+                        if (cameraMode) {
+                            return dispatch({
+                                event: {
+                                    type: 'camera.zoom',
+                                    subjects: { roomId: state.room._id, playerId },
+                                    data: { delta: -1 },
+                                },
+                            })
+                        }
                         if (canResolve && state.encounter) {
                             return dispatch({
                                 event: {
@@ -148,16 +178,42 @@ export function Controller({ code }: { code: string }) {
                         })
                     }}
                     onInventory={() => setInventoryOpen(true)}
-                    onBack={() => setInventoryOpen(false)}
+                    onBack={() => {
+                        if (cameraMode) {
+                            return dispatch({
+                                event: {
+                                    type: 'camera.zoom',
+                                    subjects: { roomId: state.room._id, playerId },
+                                    data: { delta: 1 },
+                                },
+                            })
+                        }
+                        setInventoryOpen(false)
+                    }}
                     inventoryOpen={inventoryOpen}
+                    cameraMode={cameraMode}
                 />
-                <button
-                    type="button"
-                    className="inventory-button"
-                    onClick={() => setInventoryOpen(true)}
-                >
-                    Inventory
-                </button>
+                <div className="utility-controls">
+                    <button type="button" onClick={() => setInventoryOpen(true)}>
+                        <span>▣</span> Inventory
+                    </button>
+                    <button
+                        type="button"
+                        className={cameraMode ? 'active' : ''}
+                        disabled={!isActive || state.room.status !== 'playing'}
+                        onClick={() =>
+                            dispatch({
+                                event: {
+                                    type: 'camera.toggle',
+                                    subjects: { roomId: state.room._id, playerId },
+                                    data: {},
+                                },
+                            })
+                        }
+                    >
+                        <span>◉</span> {cameraMode ? 'Follow hero' : 'Free camera'}
+                    </button>
+                </div>
                 {inventoryOpen && (
                     <Inventory
                         dice={player.dice}

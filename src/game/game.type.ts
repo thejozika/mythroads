@@ -44,4 +44,16 @@ export type OwnedItem = {
     equippedSlot?: string
 }
 
-export type RoomState = { room: Room; players: Player[]; encounter: Encounter | null } | null
+export type RoomCamera = {
+    mode: 'follow' | 'free'
+    targetX: number
+    targetZ: number
+    distance: number
+}
+
+export type RoomState = {
+    room: Room
+    players: Player[]
+    encounter: Encounter | null
+    camera: RoomCamera | null
+} | null

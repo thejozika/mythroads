@@ -20,6 +20,7 @@ export function BoardDisplay({ state, onStart }: BoardDisplayProps) {
                     players={players}
                     activePlayer={active}
                     remainingMoves={room.remainingMoves}
+                    cameraState={state.camera}
                 />
             </div>
             <header className="display-header">

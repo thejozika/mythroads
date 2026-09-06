@@ -17,3 +17,8 @@ The authoritative logical map is `WORLD` in `shared/board.system.ts`. Each node 
 
 Add new mechanics by extending the event union, implementing one focused handler, and adding tests
 for allowed and rejected phase transitions. Do not add a second public gameplay mutation.
+
+Camera commands use the same gateway but store their higher-churn projection in `roomCameras`
+rather than repeatedly patching the stable room document. Follow mode derives its target from the
+active player's logical world node. Free mode persists a display target and distance, allowing the
+active phone controller to pan and zoom the shared camera.

@@ -169,12 +169,50 @@
     text-transform: capitalize;
 }
 
-.inventory-button {
-    width: 100%;
-    border: 1px solid #c8c1ad;
-    border-radius: 0.8rem;
+.utility-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+    margin-top: 0.65rem;
+}
+.utility-controls button {
+    border: 0;
+    border-radius: 0.85rem;
     color: #53645d;
-    background: transparent;
+    background: #e9e4d3;
+}
+.utility-controls button.active {
+    color: #f7f1de;
+    background: #263631;
+}
+.utility-controls span {
+    margin-right: 0.25rem;
+    color: var(--hero, #4bd3c2);
+}
+
+body[data-view="controller"] .phone-shell {
+    min-height: 100dvh;
+    padding: 0;
+    place-items: stretch;
+}
+body[data-view="controller"] .controller-card {
+    width: 100%;
+    min-height: 100dvh;
+    max-width: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-radius: 0;
+    box-shadow: none;
+}
+body[data-view="controller"] .gamepad {
+    grid-template-columns: 1fr;
+    align-content: center;
+    flex: 1;
+}
+body[data-view="controller"] .gamepad-labels,
+body[data-view="controller"] .move-options {
+    grid-column: 1;
 }
 
 .inventory-panel {

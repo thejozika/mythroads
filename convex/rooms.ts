@@ -42,6 +42,7 @@ export const byCode = query({
             room: schema.doc('rooms'),
             players: v.array(schema.doc('players')),
             encounter: v.union(v.null(), schema.doc('encounters')),
+            camera: v.union(v.null(), schema.doc('roomCameras')),
         }),
     ),
     handler: async (ctx, { code }) => {
@@ -55,7 +56,11 @@ export const byCode = query({
             .withIndex('by_room', (q) => q.eq('roomId', room._id))
             .take(4)
         const encounter = room.activeEncounterId ? await ctx.db.get(room.activeEncounterId) : null
-        return { room, players: players.sort((a, b) => a.joinedAt - b.joinedAt), encounter }
+        const camera = await ctx.db
+            .query('roomCameras')
+            .withIndex('by_roomId', (query) => query.eq('roomId', room._id))
+            .unique()
+        return { room, players: players.sort((a, b) => a.joinedAt - b.joinedAt), encounter, camera }
     },
 })
 
