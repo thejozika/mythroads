@@ -1,0 +1,232 @@
+.steps-left {
+    margin: 0.35rem 0;
+    color: #53645d;
+    font-size: 0.8rem;
+    font-weight: 800;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.gamepad {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    align-items: center;
+    margin-top: 0.75rem;
+    padding: 1rem 0.5rem 0.65rem;
+    border-top: 1px solid #dcd6c4;
+    user-select: none;
+    touch-action: manipulation;
+}
+
+.gamepad fieldset {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.gamepad legend {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.dpad {
+    display: grid;
+    grid-template-columns: repeat(3, 3.15rem);
+    grid-template-rows: repeat(3, 3.15rem);
+    justify-content: center;
+    filter: drop-shadow(0 5px 0 rgba(23, 34, 30, 0.2));
+}
+
+.dpad-button {
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0.45rem;
+    color: #f7f1de;
+    background: #263631;
+    font-size: 1rem;
+}
+
+.dpad-button:active:not(:disabled),
+.action-button:active:not(:disabled) {
+    transform: translateY(3px);
+    filter: brightness(1.2);
+}
+
+.dpad-button:disabled {
+    opacity: 0.22;
+}
+
+.dpad-up {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.dpad-left {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+.dpad-center {
+    grid-column: 2;
+    grid-row: 2;
+    background: #263631;
+}
+
+.dpad-right {
+    grid-column: 3;
+    grid-row: 2;
+}
+
+.dpad-down {
+    grid-column: 2;
+    grid-row: 3;
+}
+
+.action-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 3.25rem);
+    grid-template-rows: repeat(3, 3.25rem);
+    justify-content: center;
+    transform: rotate(-8deg);
+}
+
+.action-button {
+    min-width: 0;
+    padding: 0;
+    border: 3px solid rgba(23, 34, 30, 0.18);
+    border-radius: 50%;
+    color: white;
+    box-shadow: inset 0 -4px 0 rgba(23, 34, 30, 0.22);
+    font-family: "Fraunces", serif;
+    font-size: 1.15rem;
+}
+
+.action-button:disabled {
+    opacity: 0.28;
+}
+
+.action-y {
+    grid-column: 2;
+    grid-row: 1;
+    background: #e0b941;
+}
+
+.action-x {
+    grid-column: 1;
+    grid-row: 2;
+    background: #497fc4;
+}
+
+.action-b {
+    grid-column: 3;
+    grid-row: 2;
+    background: #d9575e;
+}
+
+.action-a {
+    grid-column: 2;
+    grid-row: 3;
+    background: #4f9c70;
+}
+
+.gamepad-labels {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    color: #71817b;
+    font-size: 0.68rem;
+    font-weight: 700;
+}
+
+.inventory-button {
+    width: 100%;
+    border: 1px solid #c8c1ad;
+    border-radius: 0.8rem;
+    color: #53645d;
+    background: transparent;
+}
+
+.inventory-panel {
+    position: fixed;
+    z-index: 10;
+    inset: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+    max-width: 440px;
+    margin: auto;
+    padding: 1.25rem;
+    border-radius: 1.4rem;
+    color: var(--ink);
+    background: var(--paper);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+}
+
+.inventory-panel header {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+}
+
+.inventory-panel h2 {
+    margin: 0.2rem 0 0;
+    font-family: "Fraunces", serif;
+    font-size: 2rem;
+}
+
+.inventory-panel header button {
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    color: var(--ink);
+    border-color: #c8c1ad;
+}
+
+.inventory-panel p {
+    color: #71817b;
+    font-size: 0.85rem;
+}
+
+.inventory-gold {
+    margin: 1.2rem 0;
+    padding: 0.9rem;
+    border-radius: 0.8rem;
+    background: #e9e4d3;
+    font-weight: 800;
+}
+
+.inventory-back {
+    width: 100%;
+    margin-top: 1rem;
+    border-radius: 0.8rem;
+    color: var(--ink);
+    background: #e9e4d3;
+}
+
+.inventory-back span {
+    display: inline-grid;
+    width: 1.6rem;
+    height: 1.6rem;
+    margin-right: 0.4rem;
+    place-items: center;
+    border-radius: 50%;
+    color: white;
+    background: #d9575e;
+}
+
+@media (max-width: 390px) {
+    .dpad {
+        grid-template-columns: repeat(3, 2.75rem);
+        grid-template-rows: repeat(3, 2.75rem);
+    }
+
+    .action-pad {
+        grid-template-columns: repeat(3, 2.9rem);
+        grid-template-rows: repeat(3, 2.9rem);
+    }
+}
