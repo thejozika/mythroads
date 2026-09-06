@@ -1,6 +1,6 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import { useMemo } from 'react'
-import { Object3D, Vector3 } from 'three'
+import { PerspectiveCamera, Vector3 } from 'three'
 import { getNode } from '../../../shared/board.system'
 import type { Player, RoomCamera } from '../game.type'
 
@@ -10,7 +10,7 @@ export function CameraRig({ activePlayer, cameraState }: CameraRigProps) {
     const camera = useThree((state) => state.camera)
     const desired = useMemo(() => new Vector3(), [])
     const fixedRotation = useMemo(() => {
-        const anchor = new Object3D()
+        const anchor = new PerspectiveCamera()
         anchor.position.set(0, 0.82, 0.72)
         anchor.lookAt(0, 0, 0)
         return anchor.quaternion.clone()
