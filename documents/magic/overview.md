@@ -10,22 +10,29 @@ Spells, elements, resistances, and the split between battle magic and field magi
 - **Battle magic** — used in combat as the Magic action; cross-references `../combat/`.
 - **Field magic** — over-the-board sabotage cast on rival players from a distance.
 - **Magic books** — collected as gear and assigned to either the Battle Spell or Magic Ward slot.
-- **MP / casting cost** — playable battle spells cost 2 MP. Long-term MP economy and regen remain TBD.
+- **No mana resource** — equipped techniques are always available; their opportunity cost is the
+  combat turn and the grimoire occupying the Battle Spell slot.
 
 ## Playable battle magic
 
-- Ember (fire), Tide (water), Gale (wind), and Stonebind (earth) form a four-element cycle. Only the
-  currently equipped battle spell appears beside physical attacks on the controller.
+- Every offensive grimoire grants exactly two combat actions. The current four starter pairs are:
+  Ember Blast + Scorch Armor, Tide Needle + Undertow, Gale Blade + Wind Shear, and Stone Crash +
+  Calcify.
 - Fire beats earth, earth beats wind, wind beats water, and water beats fire.
-- Element-neutral targets take normal damage. Arcane Ward is the fourth defense: it sharply reduces
-  spell damage but loses badly to all physical options. An equipped defensive spell supplies its
-  ward strength and can later carry counter-effects.
-- This is deliberately one decision deep: choose a spell from the visible enemy element and spend
-  2 MP. Status spells, books, equipment resistances, and field targeting build on this foundation.
+- A technique can deal pure magic damage, apply a battle-only debuff, or use Magic to deliver one of
+  three physical impact types: **Wucht**, **Stich**, or **Hieb**. Wucht/Stich/Hieb are read by the
+  normal physical guards, while pure magic and debuffs are answered by Arcane Ward.
+- The two-action data model also supports future books containing two debuffs, two damage actions,
+  or any mixed pair without changing the combat protocol.
+- Arcane Ward sharply reduces pure spell damage and nullifies debuffs, but is exposed to physical
+  and physical-magic attacks. An equipped defensive spell supplies its ward strength.
 
 ## Dokapon reference
 
-Dokapon splits magic into three categories with elemental rules and Bracelet-type counters; books are *equipped* to gate access and casts cost gold/charges, not MP. We diverge: books live in inventory (not equipment), spells cost MP (the new sixth stat). Field magic remains a major griefing vector. See `../../sources/dokapon-items-economy/notes.md` (magic shop section) and `../../sources/dokapon-combat/notes.md` (battle-magic interaction).
+Dokapon splits magic into three categories with elemental rules and Bracelet-type counters. We keep
+equipped battle magic and no MP stat, while making each offensive grimoire a visible pair of actions.
+Field magic remains a separate board-system design problem. See
+`../../sources/dokapon-items-economy/notes.md` and `../../sources/dokapon-combat/notes.md`.
 
 ## Files in this folder
 
@@ -38,7 +45,5 @@ Dokapon splits magic into three categories with elemental rules and Bracelet-typ
 ## Open questions
 
 - Element count — 4 classical, or fewer / more?
-- MP regen mechanism (cross-cuts [`../characters/stats.md`](../characters/stats.md)).
-- MP cost curves per spell tier.
 - Field-magic targeting — any player anywhere, only adjacent, or limited per turn?
 - Dispel / counter — can defenders nullify field magic?

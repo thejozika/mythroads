@@ -10,12 +10,12 @@ Worn gear that modifies a character's stats in combat and on the board. **Equipm
 | **Gloves** | Hand armor | DF; sometimes AT bonus or crit chance |
 | **Body armor** | Chest armor | DF (highest of the armor pieces) |
 | **Shoes** | Foot armor | DF; sometimes SP bonus or movement-related effect |
-| **Necklace** | Accessory | Varied: HP/MP boost, status immunity, signature effects |
+| **Necklace** | Accessory | Varied: HP boost, status immunity, signature effects |
 | **Ring 1** | Accessory | Varied effects |
 | **Ring 2** | Accessory | Varied effects |
 | **Right hand** | Held | Main weapon (sword, axe, staff, etc.) |
 | **Left hand** | Held | Off-hand: shield, secondary weapon, or focus |
-| **Battle spell** | Magic | One equipped offensive spell available during attack phases |
+| **Battle spell** | Magic | One grimoire granting exactly two offensive actions |
 | **Magic ward** | Magic | One equipped defensive spell powering Arcane Ward |
 
 Two-handed weapons (great-axes, war-staves, polearms) occupy **BOTH** hand slots when equipped.

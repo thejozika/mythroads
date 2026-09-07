@@ -1,4 +1,4 @@
-import type { MagicSpell } from './combat.system'
+import { MAGIC_LOADOUTS, type Element } from './magic.system.ts'
 
 export type ShopKind = 'armoury' | 'jeweller' | 'weapons' | 'items' | 'magic'
 
@@ -23,7 +23,7 @@ export type ItemDefinition = {
     shop: ShopKind
     description: string
     slots: EquipmentSlot[]
-    spell?: MagicSpell
+    spell?: Element
     wardPower?: number
 }
 
@@ -174,7 +174,7 @@ export const ITEMS: ItemDefinition[] = [
         icon: '♨',
         price: 8,
         shop: 'magic',
-        description: 'Equips Ember as your battle spell.',
+        description: 'Grants Ember Blast and Scorch Armor.',
         slots: ['offensiveMagic'],
         spell: 'fire',
     },
@@ -184,7 +184,7 @@ export const ITEMS: ItemDefinition[] = [
         icon: '≋',
         price: 10,
         shop: 'magic',
-        description: 'Equips Tide as your battle spell.',
+        description: 'Grants Tide Needle and Undertow.',
         slots: ['offensiveMagic'],
         spell: 'water',
     },
@@ -194,7 +194,7 @@ export const ITEMS: ItemDefinition[] = [
         icon: '〰',
         price: 10,
         shop: 'magic',
-        description: 'Equips Gale as your battle spell.',
+        description: 'Grants Gale Blade and Wind Shear.',
         slots: ['offensiveMagic'],
         spell: 'wind',
     },
@@ -204,7 +204,7 @@ export const ITEMS: ItemDefinition[] = [
         icon: '◆',
         price: 11,
         shop: 'magic',
-        description: 'Equips Stonebind as your battle spell.',
+        description: 'Grants Stone Crash and Calcify.',
         slots: ['offensiveMagic'],
         spell: 'earth',
     },
@@ -228,6 +228,7 @@ export function equippedMagic(items: { itemId: string; equippedSlot?: EquipmentS
     const defensive = items.find((item) => item.equippedSlot === 'defensiveMagic')
     return {
         spell: getItem(offensive?.itemId ?? 'ember_grimoire')?.spell ?? 'fire',
+        actions: MAGIC_LOADOUTS[getItem(offensive?.itemId ?? 'ember_grimoire')?.spell ?? 'fire'],
         wardPower: getItem(defensive?.itemId ?? 'aegis_script')?.wardPower ?? 0.35,
     }
 }

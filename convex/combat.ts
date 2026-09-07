@@ -4,34 +4,60 @@ import {
     enemyForSpace,
     GUARD_LABELS,
     GUARD_STANCES,
-    isMagicSpell,
+    isMagicTechnique,
     PHYSICAL_ATTACKS,
     strikeDamage,
     type CombatAttack,
     type GuardStance,
 } from '../shared/combat.system'
 import { equippedMagic } from '../shared/item.system'
+import { MAGIC_LOADOUTS, MAGIC_TECHNIQUES, type DebuffStat } from '../shared/magic.system'
 import type { Doc, Id } from './_generated/dataModel'
 import type { MutationCtx } from './_generated/server'
 import { advanceTurn, roomPhase } from './gameHelpers'
 
 const choose = <T>(options: readonly T[]) => options[Math.floor(Math.random() * options.length)]
 
-const playerStats = (player: Doc<'players'>) => ({
+const playerStats = (player: Doc<'players'>, combat?: Doc<'combats'>) => ({
     attack: player.attack,
-    defense: player.defense ?? 2,
-    magic: player.magic ?? 2,
-    athletics: player.athletics ?? 2,
-    agility: player.agility ?? 2,
+    defense: Math.max(0, (player.defense ?? 2) - (combat?.playerDefensePenalty ?? 0)),
+    magic: Math.max(0, (player.magic ?? 2) - (combat?.playerMagicPenalty ?? 0)),
+    athletics: Math.max(0, (player.athletics ?? 2) - (combat?.playerAthleticsPenalty ?? 0)),
+    agility: Math.max(0, (player.agility ?? 2) - (combat?.playerAgilityPenalty ?? 0)),
 })
 
 const enemyStats = (combat: Doc<'combats'>) => ({
     attack: combat.enemyAttack,
-    defense: combat.enemyDefense ?? 2,
-    magic: combat.enemyMagic ?? 2,
-    athletics: combat.enemyAthletics ?? 2,
-    agility: combat.enemyAgility ?? 2,
+    defense: Math.max(0, (combat.enemyDefense ?? 2) - (combat.enemyDefensePenalty ?? 0)),
+    magic: Math.max(0, (combat.enemyMagic ?? 2) - (combat.enemyMagicPenalty ?? 0)),
+    athletics: Math.max(0, (combat.enemyAthletics ?? 2) - (combat.enemyAthleticsPenalty ?? 0)),
+    agility: Math.max(0, (combat.enemyAgility ?? 2) - (combat.enemyAgilityPenalty ?? 0)),
 })
+
+function debuffPatch(
+    combat: Doc<'combats'>,
+    target: 'enemy' | 'player',
+    stat: DebuffStat,
+    amount: number,
+) {
+    const current = (key: keyof Doc<'combats'>) => Number(combat[key] ?? 0)
+    if (target === 'enemy') {
+        if (stat === 'defense')
+            return { enemyDefensePenalty: Math.max(current('enemyDefensePenalty'), amount) }
+        if (stat === 'magic')
+            return { enemyMagicPenalty: Math.max(current('enemyMagicPenalty'), amount) }
+        if (stat === 'athletics')
+            return { enemyAthleticsPenalty: Math.max(current('enemyAthleticsPenalty'), amount) }
+        return { enemyAgilityPenalty: Math.max(current('enemyAgilityPenalty'), amount) }
+    }
+    if (stat === 'defense')
+        return { playerDefensePenalty: Math.max(current('playerDefensePenalty'), amount) }
+    if (stat === 'magic')
+        return { playerMagicPenalty: Math.max(current('playerMagicPenalty'), amount) }
+    if (stat === 'athletics')
+        return { playerAthleticsPenalty: Math.max(current('playerAthleticsPenalty'), amount) }
+    return { playerAgilityPenalty: Math.max(current('playerAgilityPenalty'), amount) }
+}
 
 export async function startCombat(
     ctx: MutationCtx,
@@ -99,26 +125,47 @@ export async function chooseAttack(
         'combatAttack',
     )
     const guard = choose(GUARD_STANCES)
-    const magic = isMagicSpell(attack)
-    const mp = player.mp ?? player.maxMp ?? 5
-    if (magic && mp < 2) throw new ConvexError('You need 2 MP to cast that spell.')
+    const magic = isMagicTechnique(attack)
     const inventory = await ctx.db
         .query('playerItems')
         .withIndex('by_playerId', (query) => query.eq('playerId', player._id))
         .take(40)
     const loadout = equippedMagic(inventory)
-    if (magic && attack !== loadout.spell)
-        throw new ConvexError('Equip that battle spell before casting it.')
+    if (magic && !loadout.actions.includes(attack))
+        throw new ConvexError('Equip the grimoire containing that technique first.')
+    const technique = magic ? MAGIC_TECHNIQUES[attack] : undefined
+    if (technique?.delivery === 'debuff') {
+        const blocked = guard === 'ward'
+        if (!blocked && technique.debuff) {
+            await ctx.db.patch(
+                combat._id,
+                debuffPatch(combat, 'enemy', technique.debuff.stat, technique.debuff.amount),
+            )
+        }
+        await ctx.db.patch(combat._id, {
+            phase: 'defend',
+            lastAttack: attack,
+            lastGuard: guard,
+            lastDamage: 0,
+            message: blocked
+                ? `${GUARD_LABELS[guard]} nullified ${ATTACK_LABELS[attack]}.`
+                : `${ATTACK_LABELS[attack]} lowered the enemy's ${technique.debuff?.stat}.`,
+        })
+        await ctx.db.patch(room._id, {
+            phase: 'combatDefend',
+            message: `${combat.enemyName} prepares a counterattack. Choose a guard.`,
+        })
+        return
+    }
     const result = strikeDamage(
         attack,
         guard,
-        playerStats(player),
+        playerStats(player, combat),
         enemyStats(combat),
         combat.enemyElement,
     )
     const damage = Math.random() <= result.accuracy ? result.damage : 0
     const enemyHp = Math.max(0, combat.enemyHp - damage)
-    if (magic) await ctx.db.patch(player._id, { mp: mp - 2 })
     await ctx.db.patch(combat._id, {
         enemyHp,
         lastAttack: attack,
@@ -157,16 +204,43 @@ export async function chooseGuard(
         subjects.playerId,
         'combatDefend',
     )
-    const attack = choose([...PHYSICAL_ATTACKS, combat.enemyElement] as const)
+    const attack = choose([...PHYSICAL_ATTACKS, ...MAGIC_LOADOUTS[combat.enemyElement]] as const)
     const inventory = await ctx.db
         .query('playerItems')
         .withIndex('by_playerId', (query) => query.eq('playerId', player._id))
         .take(40)
+    const technique = isMagicTechnique(attack) ? MAGIC_TECHNIQUES[attack] : undefined
+    if (technique?.delivery === 'debuff') {
+        const blocked = guard === 'ward'
+        if (!blocked && technique.debuff) {
+            await ctx.db.patch(
+                combat._id,
+                debuffPatch(combat, 'player', technique.debuff.stat, technique.debuff.amount),
+            )
+        }
+        await ctx.db.patch(combat._id, {
+            round: combat.round + 1,
+            phase: 'attack',
+            lastAttack: attack,
+            lastGuard: guard,
+            lastDamage: 0,
+            message: blocked
+                ? `${player.name}'s ${GUARD_LABELS[guard]} nullified ${ATTACK_LABELS[attack]}.`
+                : `${combat.enemyName}'s ${ATTACK_LABELS[attack]} lowered ${player.name}'s ${technique.debuff?.stat}.`,
+        })
+        await ctx.db.patch(room._id, {
+            phase: 'combatAttack',
+            message: blocked
+                ? `${player.name} resisted the hex. Choose another attack.`
+                : `${player.name} was weakened. Choose another attack.`,
+        })
+        return
+    }
     const result = strikeDamage(
         attack,
         guard,
         enemyStats(combat),
-        playerStats(player),
+        playerStats(player, combat),
         undefined,
         equippedMagic(inventory).wardPower,
     )

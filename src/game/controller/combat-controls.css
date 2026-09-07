@@ -59,7 +59,7 @@
 }
 
 .magic-choices button {
-    grid-column: 1 / -1;
+    grid-column: span 2;
     color: #fff8dd;
     background: #436b8b;
 }

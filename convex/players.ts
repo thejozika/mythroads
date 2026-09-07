@@ -19,8 +19,6 @@ export async function createPlayer(
         magic: 2,
         athletics: 2,
         agility: 2,
-        mp: 5,
-        maxMp: 5,
         dice: [4, 6],
         joinedAt: Date.now(),
     })

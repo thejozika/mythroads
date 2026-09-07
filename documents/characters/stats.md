@@ -1,17 +1,16 @@
 # Stats
 
-Seven stats define a character's capability in combat and on the board.
+Six stats define a character's capability in combat and on the board.
 
-> Dokapon reference: Dokapon uses HP / AT / DF / MG / SP with no MP. We add MP and split SP
-> into Athletics and Agility so physical power and evasiveness can be tuned independently. Source:
+> Dokapon reference: Dokapon uses HP / AT / DF / MG / SP with no MP. We likewise avoid a mana
+> resource, but split SP into Athletics and Agility so physical power and evasiveness can be tuned independently. Source:
 > `../../sources/dokapon-combat/notes.md`.
 
-## The seven stats
+## The six stats
 
 | Stat | Name | Role |
 |---|---|---|
 | **HP** | Hit Points | Damage capacity. Reach 0 → KO. |
-| **MP** | Mana Points | Spell-cast resource. Spent per cast. |
 | **AT** | Attack | Physical damage output. |
 | **DF** | Defense | Physical damage mitigation. |
 | **MG** | Magic | Spell damage AND magic-damage mitigation (single combined stat, like Dokapon). |
@@ -37,7 +36,6 @@ A character's current stat = sum of:
 ## Stat ↔ system cross-references
 
 - **HP** — combat damage tracking; KO triggers death penalty (see [`../meta/death-and-revival.md`](../meta/death-and-revival.md), planned).
-- **MP** — gates spell casting in combat and field magic. Regeneration TBD (see open questions).
 - **AT, DF, MG, ATH, AGI** — primary inputs to combat damage and accuracy formulas.
 - **ATH** adds power to High Charge, Side Rush, and Leaping Strike, and improves Brace.
 - **AGI** changes physical hit chance around a 75% equal-stat baseline, clamped to 50–98%.
@@ -46,8 +44,7 @@ A character's current stat = sum of:
 
 ## Open questions
 
-- **MP regeneration.** Candidates: refill on visiting a town, refill end-of-week, +N per turn (slow regen), item-only, never-refill (one-shot use). Affects how often spells can be cast and balance vs items/potions.
 - **Stat-allocation choice on level-up.** Is growth fully automatic per class, or does the player choose to allocate points? Currently spec'd as automatic — keeps pace fast and class identity strong.
 - **MG split.** Currently combined offense + defense like Dokapon. Splitting it would expand an
-  already readable seven-stat block without adding enough value yet.
+  already readable six-stat block without adding enough value yet.
 - **Diminishing returns curves.** Where do soft caps kick in for AT, DF, MG, ATH, and AGI?

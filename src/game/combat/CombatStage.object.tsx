@@ -1,11 +1,6 @@
 import { Float, Text } from '@react-three/drei'
-import {
-    ATTACK_LABELS,
-    MAGIC_SPELLS,
-    type CombatAttack,
-    type Element,
-    type MagicSpell,
-} from '../../../shared/combat.system'
+import { ATTACK_LABELS, isMagicTechnique, type CombatAttack } from '../../../shared/combat.system'
+import { MAGIC_TECHNIQUES, type Element } from '../../../shared/magic.system'
 import type { Combat, Player } from '../game.type'
 
 const ELEMENT_COLOR: Record<Element, string> = {
@@ -82,8 +77,8 @@ function Enemy({ combat }: { combat: Combat }) {
 function LastAction({ combat }: { combat: Combat }) {
     if (!combat.lastAttack) return null
     const attack = combat.lastAttack as CombatAttack
-    const magical = MAGIC_SPELLS.includes(attack as MagicSpell)
-    const color = magical ? ELEMENT_COLOR[attack as Element] : '#f5cf68'
+    const magical = isMagicTechnique(attack)
+    const color = magical ? ELEMENT_COLOR[MAGIC_TECHNIQUES[attack].element] : '#f5cf68'
     return (
         <Float speed={3} floatIntensity={0.3}>
             <group position={[0, 1.05, 0]}>

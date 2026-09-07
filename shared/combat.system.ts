@@ -1,13 +1,17 @@
+import {
+    elementMatchup,
+    MAGIC_TECHNIQUES,
+    type Element,
+    type ImpactType,
+    type MagicTechniqueId,
+} from './magic.system.ts'
+
 export const PHYSICAL_ATTACKS = ['stab', 'chargeHigh', 'chargeSide', 'leap'] as const
 export const GUARD_STANCES = ['high', 'side', 'brace', 'ward'] as const
-export const MAGIC_SPELLS = ['fire', 'water', 'wind', 'earth'] as const
-export const ELEMENTS = ['fire', 'water', 'wind', 'earth'] as const
 
 export type PhysicalAttack = (typeof PHYSICAL_ATTACKS)[number]
 export type GuardStance = (typeof GUARD_STANCES)[number]
-export type MagicSpell = (typeof MAGIC_SPELLS)[number]
-export type Element = (typeof ELEMENTS)[number]
-export type CombatAttack = PhysicalAttack | MagicSpell
+export type CombatAttack = PhysicalAttack | MagicTechniqueId
 export type Matchup = 'weak' | 'neutral' | 'strong'
 export type BattleStats = {
     attack: number
@@ -22,10 +26,14 @@ export const ATTACK_LABELS: Record<CombatAttack, string> = {
     chargeHigh: 'High charge',
     chargeSide: 'Side rush',
     leap: 'Leaping strike',
-    fire: 'Ember',
-    water: 'Tide',
-    wind: 'Gale',
-    earth: 'Stonebind',
+    emberBlast: 'Ember Blast',
+    scorchArmor: 'Scorch Armor',
+    tideNeedle: 'Tide Needle',
+    undertow: 'Undertow',
+    galeBlade: 'Gale Blade',
+    windShear: 'Wind Shear',
+    stoneCrash: 'Stone Crash',
+    calcify: 'Calcify',
 }
 
 export const GUARD_LABELS: Record<GuardStance, string> = {
@@ -42,37 +50,25 @@ const PHYSICAL_MATCHUPS: Record<PhysicalAttack, Record<GuardStance, Matchup>> = 
     leap: { high: 'strong', side: 'neutral', brace: 'weak', ward: 'strong' },
 }
 
-const SPELL_STRENGTH: Record<MagicSpell, { strong: Element; weak: Element }> = {
-    fire: { strong: 'earth', weak: 'water' },
-    water: { strong: 'fire', weak: 'wind' },
-    wind: { strong: 'water', weak: 'earth' },
-    earth: { strong: 'wind', weak: 'fire' },
-}
-
 const MULTIPLIER: Record<Matchup, number> = { weak: 0.55, neutral: 1, strong: 1.65 }
-const POWER: Record<CombatAttack, number> = {
+const POWER: Record<PhysicalAttack, number> = {
     stab: 1.15,
     chargeHigh: 1.45,
     chargeSide: 1.45,
     leap: 1.45,
-    fire: 1.35,
-    water: 1.25,
-    wind: 1.2,
-    earth: 1.3,
 }
 
-export const isMagicSpell = (attack: CombatAttack): attack is MagicSpell =>
-    MAGIC_SPELLS.includes(attack as MagicSpell)
+export const isMagicTechnique = (attack: CombatAttack): attack is MagicTechniqueId =>
+    attack in MAGIC_TECHNIQUES
 
 export function physicalMatchup(attack: PhysicalAttack, guard: GuardStance) {
     return PHYSICAL_MATCHUPS[attack][guard]
 }
 
-export function spellMatchup(spell: MagicSpell, element?: Element): Matchup {
-    if (!element) return 'neutral'
-    if (SPELL_STRENGTH[spell].strong === element) return 'strong'
-    if (SPELL_STRENGTH[spell].weak === element) return 'weak'
-    return 'neutral'
+const IMPACT_MATCHUPS: Record<ImpactType, Record<GuardStance, Matchup>> = {
+    wucht: { high: 'neutral', side: 'strong', brace: 'weak', ward: 'strong' },
+    stich: { high: 'strong', side: 'weak', brace: 'neutral', ward: 'strong' },
+    hieb: { high: 'weak', side: 'neutral', brace: 'strong', ward: 'strong' },
 }
 
 export function strikeDamage(
@@ -83,23 +79,34 @@ export function strikeDamage(
     targetElement?: Element,
     wardPower = 0.35,
 ) {
-    const magical = isMagicSpell(attack)
-    const matchup = magical ? spellMatchup(attack, targetElement) : physicalMatchup(attack, guard)
-    const techniquePower = attack === 'stab' || magical ? 0 : attacker.athletics * 0.35
-    const attackValue = magical ? attacker.magic : attacker.attack
-    const resistance = magical ? defender.magic * 0.55 : defender.defense * 0.55
-    const brace = !magical && guard === 'brace' ? defender.athletics * 0.25 : 0
-    const ward = magical && guard === 'ward' ? wardPower : 1
-    const accuracy = magical
+    const technique = isMagicTechnique(attack) ? MAGIC_TECHNIQUES[attack] : undefined
+    const arcane = technique?.delivery === 'arcane'
+    const impact =
+        technique && ['wucht', 'stich', 'hieb'].includes(technique.delivery)
+            ? (technique.delivery as ImpactType)
+            : undefined
+    const matchup = arcane
+        ? elementMatchup(technique.element, targetElement)
+        : impact
+          ? IMPACT_MATCHUPS[impact][guard]
+          : physicalMatchup(attack as PhysicalAttack, guard)
+    const physical = !arcane
+    const techniquePower = technique ? 0 : attack === 'stab' ? 0 : attacker.athletics * 0.35
+    const attackValue = technique ? attacker.magic : attacker.attack
+    const resistance = arcane ? defender.magic * 0.55 : defender.defense * 0.55
+    const brace = physical && guard === 'brace' ? defender.athletics * 0.25 : 0
+    const ward = arcane && guard === 'ward' ? wardPower : 1
+    const accuracy = arcane
         ? 1
         : Math.max(0.5, Math.min(0.98, 0.75 + (attacker.agility - defender.agility) * 0.04))
+    const power = technique?.power ?? POWER[attack as PhysicalAttack]
     return {
         matchup,
         accuracy,
         damage: Math.max(
             1,
             Math.round(
-                (attackValue * POWER[attack] + techniquePower - resistance - brace) *
+                (attackValue * power + techniquePower - resistance - brace) *
                     MULTIPLIER[matchup] *
                     ward,
             ),

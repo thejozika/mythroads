@@ -6,7 +6,7 @@ The battle system: how two combatants resolve a fight, the choices each makes, t
 
 - **Stance decision layer** — the hero alternates between choosing an attack and reading an enemy
   attack with a defensive stance. Choices are private on the controller; results are public.
-- **Stats** — HP, attack, defense, magic, speed (or our equivalents), how they're computed from level + class + equipment.
+- **Stats** — HP, Attack, Defense, Magic, Athletics, and Agility.
 - **Damage formulas** — basic attack, strike, counter, magic, skill.
 - **Status effects** — poison, sleep, curse, seal, fear, etc.
 - **Critical hits, accuracy, evasion, RNG** — how much variance and where.
@@ -28,15 +28,17 @@ Dokapon's combat is a simultaneous-reveal RPS over multiple rounds, with role-sw
 
 ## Playable PvE rules
 
-- Attack phase: choose Quick Stab, High Charge, Side Rush, Leaping Strike, or an elemental spell.
+- Attack phase: choose Quick Stab, High Charge, Side Rush, Leaping Strike, or one of the two actions
+  granted by the equipped offensive grimoire.
 - Quick Stab is reliable and neutral into every guard. Each committed technique is strong against
   one guard, neutral against one, and weak against one.
 - Defense phase: choose High Guard, Side Guard, Brace, or Arcane Ward against the enemy's hidden
   attack.
 - High Charge is stopped by High Guard and punishes Side Guard. Side Rush is stopped by Side Guard
   and punishes Brace. Leaping Strike is stopped by Brace and punishes High Guard.
-- Arcane Ward sharply reduces offensive magic but is exposed to every physical attack. Its power
-  comes from the equipped defensive spell.
+- Magic actions can be pure damage, battle-only debuffs, or Magic-powered Wucht, Stich, and Hieb
+  impacts. Impact magic uses the physical guard matrix. Arcane Ward sharply reduces pure magic and
+  nullifies debuffs, but is exposed to physical and impact-magic attacks.
 - AT drives physical damage, DF resists it, MG drives and resists magic, ATH strengthens committed
   techniques and Brace, and AGI controls physical accuracy/evasion.
 - Roles alternate until the monster or hero reaches zero HP. Victory pays the listed gold reward;
@@ -44,7 +46,6 @@ Dokapon's combat is a simultaneous-reveal RPS over multiple rounds, with role-sw
 
 ## Open questions
 
-- Keep the 5-stat shape (HP/AT/DF/MG/SP) or simplify?
 - PvP simultaneous reveal and role initiative remain to be designed; the current loop is PvE.
 - Variance level: keep ×0.95–1.05 multiplier or wider?
 - Battle skills per class: how many, when unlocked?

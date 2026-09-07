@@ -31,10 +31,6 @@ export function HeroStatus({
                     </strong>
                 </div>
                 <div>
-                    <small>Mana</small>
-                    <strong>✦ {player.mp ?? 5}</strong>
-                </div>
-                <div>
                     <small>Attack</small>
                     <strong>AT {player.attack}</strong>
                 </div>

@@ -7,6 +7,7 @@ import {
     type GuardStance,
 } from '../../../shared/combat.system'
 import { equippedMagic } from '../../../shared/item.system'
+import { MAGIC_TECHNIQUES } from '../../../shared/magic.system'
 import type { Combat, OwnedItem, Player } from '../game.type'
 import './combat-controls.css'
 
@@ -50,14 +51,25 @@ export function CombatControls({
                         ))}
                     </div>
                     <div className="combat-choice-grid magic-choices">
-                        <button
-                            type="button"
-                            disabled={(player.mp ?? 5) < 2}
-                            onClick={() => onAttack(magic.spell)}
-                        >
-                            <strong>✦ {ATTACK_LABELS[magic.spell]}</strong>
-                            <small>Equipped · 2 MP · {magic.spell}</small>
-                        </button>
+                        {magic.actions.map((actionId) => {
+                            const action = MAGIC_TECHNIQUES[actionId]
+                            return (
+                                <button
+                                    type="button"
+                                    onClick={() => onAttack(actionId)}
+                                    key={actionId}
+                                >
+                                    <strong>✦ {action.label}</strong>
+                                    <small>
+                                        {action.delivery === 'arcane'
+                                            ? 'Pure magic'
+                                            : action.delivery === 'debuff'
+                                              ? `Debuff · ${action.debuff?.stat}`
+                                              : `Magic · ${action.delivery.toUpperCase()}`}
+                                    </small>
+                                </button>
+                            )
+                        })}
                     </div>
                 </>
             ) : (

@@ -33,8 +33,6 @@ export type Player = {
     magic?: number
     athletics?: number
     agility?: number
-    mp?: number
-    maxMp?: number
     dice: number[]
     joinedAt: number
 }
@@ -75,6 +73,14 @@ export type Combat = {
     enemyMagic?: number
     enemyAthletics?: number
     enemyAgility?: number
+    enemyDefensePenalty?: number
+    enemyMagicPenalty?: number
+    enemyAthleticsPenalty?: number
+    enemyAgilityPenalty?: number
+    playerDefensePenalty?: number
+    playerMagicPenalty?: number
+    playerAthleticsPenalty?: number
+    playerAgilityPenalty?: number
     round: number
     phase: 'attack' | 'defend' | 'resolved'
     lastAttack?: string
