@@ -63,6 +63,8 @@ export async function equipItem(
             | 'amulet'
             | 'ringLeft'
             | 'ringRight'
+            | 'offensiveMagic'
+            | 'defensiveMagic'
     },
 ) {
     const owned = await ctx.db.get(playerItemId)

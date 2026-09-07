@@ -4,6 +4,7 @@ import { outcomesFor, pickEncounter } from '../shared/encounter.system'
 import type { Id } from './_generated/dataModel'
 import { type MutationCtx, query } from './_generated/server'
 import { advanceTurn, roomPhase } from './gameHelpers'
+import { createPlayer } from './players'
 import schema from './schema'
 import { startCombat } from './combat'
 
@@ -110,22 +111,7 @@ export async function joinRoom(
         )
     }
     if (players.length >= 4) throw new ConvexError('That room is full.')
-    const playerId = await ctx.db.insert('players', {
-        roomId: room._id,
-        name: normalizedName,
-        color: data.color,
-        position: 0,
-        gold: 10,
-        hp: 10,
-        maxHp: 10,
-        attack: 2,
-        magic: 2,
-        mp: 5,
-        maxMp: 5,
-        dice: [4, 6],
-        joinedAt: Date.now(),
-    })
-    return playerId
+    return await createPlayer(ctx, room._id, { name: normalizedName, color: data.color })
 }
 
 export async function startRoom(ctx: MutationCtx, roomId: Id<'rooms'>) {

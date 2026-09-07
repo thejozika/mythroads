@@ -26,10 +26,18 @@
     }
     body[data-view="controller"] .stat-grid {
         grid-row: 2;
+        grid-template-columns: repeat(4, 1fr);
         margin: 0.25rem 0;
     }
     body[data-view="controller"] .stat-grid div {
-        padding: 0.55rem;
+        padding: 0.35rem;
+    }
+    body[data-view="controller"] .stat-grid small {
+        font-size: 0.5rem;
+    }
+    body[data-view="controller"] .stat-grid strong {
+        margin-top: 0.1rem;
+        font-size: 0.75rem;
     }
     body[data-view="controller"] .dice-section {
         grid-row: 3;

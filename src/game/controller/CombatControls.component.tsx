@@ -2,12 +2,12 @@ import {
     ATTACK_LABELS,
     GUARD_LABELS,
     GUARD_STANCES,
-    MAGIC_SPELLS,
     PHYSICAL_ATTACKS,
     type CombatAttack,
     type GuardStance,
 } from '../../../shared/combat.system'
-import type { Combat, Player } from '../game.type'
+import { equippedMagic } from '../../../shared/item.system'
+import type { Combat, OwnedItem, Player } from '../game.type'
 import './combat-controls.css'
 
 export function CombatControls({
@@ -15,13 +15,16 @@ export function CombatControls({
     player,
     onAttack,
     onGuard,
+    items,
 }: {
     combat: Combat
     player: Player
     onAttack: (attack: CombatAttack) => void
     onGuard: (guard: GuardStance) => void
+    items: OwnedItem[]
 }) {
     const attacking = combat.phase === 'attack'
+    const magic = equippedMagic(items)
     return (
         <section className="combat-controls">
             <header>
@@ -47,17 +50,14 @@ export function CombatControls({
                         ))}
                     </div>
                     <div className="combat-choice-grid magic-choices">
-                        {MAGIC_SPELLS.map((spell) => (
-                            <button
-                                type="button"
-                                disabled={(player.mp ?? 5) < 2}
-                                onClick={() => onAttack(spell)}
-                                key={spell}
-                            >
-                                <strong>{ATTACK_LABELS[spell]}</strong>
-                                <small>2 MP · {spell}</small>
-                            </button>
-                        ))}
+                        <button
+                            type="button"
+                            disabled={(player.mp ?? 5) < 2}
+                            onClick={() => onAttack(magic.spell)}
+                        >
+                            <strong>✦ {ATTACK_LABELS[magic.spell]}</strong>
+                            <small>Equipped · 2 MP · {magic.spell}</small>
+                        </button>
                     </div>
                 </>
             ) : (
@@ -65,7 +65,11 @@ export function CombatControls({
                     {GUARD_STANCES.map((guard) => (
                         <button type="button" onClick={() => onGuard(guard)} key={guard}>
                             <strong>{GUARD_LABELS[guard]}</strong>
-                            <small>Strong, neutral, or weak by strike</small>
+                            <small>
+                                {guard === 'ward'
+                                    ? 'Strong vs magic · exposed to steel'
+                                    : 'Strong, neutral, or weak by strike'}
+                            </small>
                         </button>
                     ))}
                 </div>

@@ -20,7 +20,7 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173/display/demo`.
+Open `http://localhost:5175/display/demo`.
 
 ## Connect Convex for multiple screens
 

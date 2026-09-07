@@ -2,7 +2,7 @@
 
 Worn gear that modifies a character's stats in combat and on the board. **Equipment is NOT stored in inventory** — when a player picks up a new piece, they must immediately equip it or drop it. This is a deliberate simplicity rule borrowed from Dokapon Kingdom.
 
-## Slots — 9 total, identical for all classes
+## Slots — 11 total, identical for all classes
 
 | Slot | Category | Primary effects |
 |---|---|---|
@@ -15,6 +15,8 @@ Worn gear that modifies a character's stats in combat and on the board. **Equipm
 | **Ring 2** | Accessory | Varied effects |
 | **Right hand** | Held | Main weapon (sword, axe, staff, etc.) |
 | **Left hand** | Held | Off-hand: shield, secondary weapon, or focus |
+| **Battle spell** | Magic | One equipped offensive spell available during attack phases |
+| **Magic ward** | Magic | One equipped defensive spell powering Arcane Ward |
 
 Two-handed weapons (great-axes, war-staves, polearms) occupy **BOTH** hand slots when equipped.
 
@@ -36,8 +38,8 @@ Same sources as dice: shops (each town has its own stock), treasure spaces, boss
 
 | Decision | Dokapon | Dice RPG |
 |---|---|---|
-| Slot count | 4 (weapon / shield / accessory / book) | 9 (helmet / gloves / body / shoes / necklace / 2 rings / R-hand / L-hand) |
-| Magic books | Equipment slot | Inventory only — see [`../magic/overview.md`](../magic/overview.md) |
+| Slot count | 4 (weapon / shield / accessory / book) | 11 including separate offensive and defensive magic |
+| Magic books | One shared equipment slot | Dedicated Battle Spell and Magic Ward slots |
 | Storage | None — equip or drop | Same — equip or drop |
 | Two-handed weapons | One slot, no off-hand | Take both hand slots |
 

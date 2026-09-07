@@ -29,7 +29,10 @@ export type Player = {
     hp: number
     maxHp: number
     attack: number
+    defense?: number
     magic?: number
+    athletics?: number
+    agility?: number
     mp?: number
     maxMp?: number
     dice: number[]
@@ -51,7 +54,7 @@ export type Encounter = {
 export type OwnedItem = {
     _id: string
     itemId: string
-    equippedSlot?: string
+    equippedSlot?: EquipmentSlot
 }
 
 export type RoomCamera = {
@@ -68,6 +71,10 @@ export type Combat = {
     enemyElement: 'fire' | 'water' | 'wind' | 'earth'
     enemyHp: number
     enemyMaxHp: number
+    enemyDefense?: number
+    enemyMagic?: number
+    enemyAthletics?: number
+    enemyAgility?: number
     round: number
     phase: 'attack' | 'defend' | 'resolved'
     lastAttack?: string
@@ -89,3 +96,4 @@ export type RoomState = {
     selection: MovementSelection | null
     camera: RoomCamera | null
 } | null
+import type { EquipmentSlot } from '../../shared/item.system'

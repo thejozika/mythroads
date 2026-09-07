@@ -58,6 +58,7 @@ const eventValidator = v.union(
                 v.literal('fire'),
                 v.literal('water'),
                 v.literal('wind'),
+                v.literal('earth'),
             ),
         }),
     }),
@@ -65,7 +66,12 @@ const eventValidator = v.union(
         type: v.literal('combat.guard'),
         subjects: v.object({ roomId: v.id('rooms'), playerId: v.id('players') }),
         data: v.object({
-            guard: v.union(v.literal('high'), v.literal('side'), v.literal('brace')),
+            guard: v.union(
+                v.literal('high'),
+                v.literal('side'),
+                v.literal('brace'),
+                v.literal('ward'),
+            ),
         }),
     }),
     v.object({
@@ -96,6 +102,8 @@ const eventValidator = v.union(
                 v.literal('amulet'),
                 v.literal('ringLeft'),
                 v.literal('ringRight'),
+                v.literal('offensiveMagic'),
+                v.literal('defensiveMagic'),
             ),
         }),
     }),

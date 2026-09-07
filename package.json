@@ -4,8 +4,8 @@
     "version": "0.1.0",
     "type": "module",
     "scripts": {
-        "dev": "vite",
-        "dev:full": "convex dev --start 'vite --host 0.0.0.0'",
+        "dev": "vite --port 5175",
+        "dev:full": "convex dev --start 'vite --host 0.0.0.0 --port 5175'",
         "build": "tsc -b && vite build",
         "preview": "vite preview",
         "convex": "convex dev",

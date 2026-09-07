@@ -31,9 +31,14 @@ Dokapon's combat is a simultaneous-reveal RPS over multiple rounds, with role-sw
 - Attack phase: choose Quick Stab, High Charge, Side Rush, Leaping Strike, or an elemental spell.
 - Quick Stab is reliable and neutral into every guard. Each committed technique is strong against
   one guard, neutral against one, and weak against one.
-- Defense phase: choose High Guard, Side Guard, or Brace against the enemy's hidden attack.
+- Defense phase: choose High Guard, Side Guard, Brace, or Arcane Ward against the enemy's hidden
+  attack.
 - High Charge is stopped by High Guard and punishes Side Guard. Side Rush is stopped by Side Guard
   and punishes Brace. Leaping Strike is stopped by Brace and punishes High Guard.
+- Arcane Ward sharply reduces offensive magic but is exposed to every physical attack. Its power
+  comes from the equipped defensive spell.
+- AT drives physical damage, DF resists it, MG drives and resists magic, ATH strengthens committed
+  techniques and Brace, and AGI controls physical accuracy/evasion.
 - Roles alternate until the monster or hero reaches zero HP. Victory pays the listed gold reward;
   defeat restores the hero to 1 HP and loses up to 3 gold.
 

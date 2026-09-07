@@ -72,7 +72,13 @@ export function ControllerOverlays({
                 />
             )}
             {active && combat && (
-                <CombatControls combat={combat} player={player} onAttack={attack} onGuard={guard} />
+                <CombatControls
+                    combat={combat}
+                    player={player}
+                    onAttack={attack}
+                    onGuard={guard}
+                    items={items ?? []}
+                />
             )}
         </>
     )

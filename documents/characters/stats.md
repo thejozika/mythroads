@@ -1,10 +1,12 @@
 # Stats
 
-Six stats define a character's capability in combat and on the board.
+Seven stats define a character's capability in combat and on the board.
 
-> Dokapon reference: Dokapon uses 5 stats (HP / AT / DF / MG / SP) with no MP — spells cost gold or charges. We add MP as a sixth stat to make magic a managed resource rather than an economic one. Source: `../../sources/dokapon-combat/notes.md`.
+> Dokapon reference: Dokapon uses HP / AT / DF / MG / SP with no MP. We add MP and split SP
+> into Athletics and Agility so physical power and evasiveness can be tuned independently. Source:
+> `../../sources/dokapon-combat/notes.md`.
 
-## The six stats
+## The seven stats
 
 | Stat | Name | Role |
 |---|---|---|
@@ -13,7 +15,8 @@ Six stats define a character's capability in combat and on the board.
 | **AT** | Attack | Physical damage output. |
 | **DF** | Defense | Physical damage mitigation. |
 | **MG** | Magic | Spell damage AND magic-damage mitigation (single combined stat, like Dokapon). |
-| **SP** | Speed | Turn order in combat, accuracy/evasion modifiers, eligible for skill-based dice bonuses. |
+| **ATH** | Athletics | Committed-technique power, bracing, feats of strength, and physical board checks. |
+| **AGI** | Agility | Physical accuracy/evasion, future combat initiative, and finesse board checks. |
 
 ## Sources of stat values
 
@@ -35,12 +38,16 @@ A character's current stat = sum of:
 
 - **HP** — combat damage tracking; KO triggers death penalty (see [`../meta/death-and-revival.md`](../meta/death-and-revival.md), planned).
 - **MP** — gates spell casting in combat and field magic. Regeneration TBD (see open questions).
-- **AT, DF, MG, SP** — primary inputs to combat damage formulas.
-- **SP** — also modifies dice accuracy/evasion in combat. By default does NOT directly modify the movement roll; specific skills or items may grant SP-based dice bonuses (see [`../board/dice.md`](../board/dice.md) open questions).
+- **AT, DF, MG, ATH, AGI** — primary inputs to combat damage and accuracy formulas.
+- **ATH** adds power to High Charge, Side Rush, and Leaping Strike, and improves Brace.
+- **AGI** changes physical hit chance around a 75% equal-stat baseline, clamped to 50–98%.
+- Neither ATH nor AGI directly changes a movement roll. Specific skills or items may grant
+  stat-based dice bonuses later.
 
 ## Open questions
 
 - **MP regeneration.** Candidates: refill on visiting a town, refill end-of-week, +N per turn (slow regen), item-only, never-refill (one-shot use). Affects how often spells can be cast and balance vs items/potions.
 - **Stat-allocation choice on level-up.** Is growth fully automatic per class, or does the player choose to allocate points? Currently spec'd as automatic — keeps pace fast and class identity strong.
-- **MG split.** Currently combined offense + defense like Dokapon. Could split into MG-Off / MG-Def for more granular builds, at the cost of a 7-stat block.
-- **Diminishing returns curves.** Where do soft caps kick in for AT, DF, MG, SP? Tunable per stat.
+- **MG split.** Currently combined offense + defense like Dokapon. Splitting it would expand an
+  already readable seven-stat block without adding enough value yet.
+- **Diminishing returns curves.** Where do soft caps kick in for AT, DF, MG, ATH, and AGI?

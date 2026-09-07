@@ -1,3 +1,5 @@
+import type { MagicSpell } from './combat.system'
+
 export type ShopKind = 'armoury' | 'jeweller' | 'weapons' | 'items' | 'magic'
 
 export type EquipmentSlot =
@@ -10,6 +12,8 @@ export type EquipmentSlot =
     | 'amulet'
     | 'ringLeft'
     | 'ringRight'
+    | 'offensiveMagic'
+    | 'defensiveMagic'
 
 export type ItemDefinition = {
     id: string
@@ -19,6 +23,8 @@ export type ItemDefinition = {
     shop: ShopKind
     description: string
     slots: EquipmentSlot[]
+    spell?: MagicSpell
+    wardPower?: number
 }
 
 export const EQUIPMENT_SLOTS: { id: EquipmentSlot; label: string; icon: string }[] = [
@@ -31,6 +37,8 @@ export const EQUIPMENT_SLOTS: { id: EquipmentSlot; label: string; icon: string }
     { id: 'boots', label: 'Boots', icon: '◡' },
     { id: 'ringLeft', label: 'Ring I', icon: '○' },
     { id: 'ringRight', label: 'Ring II', icon: '○' },
+    { id: 'offensiveMagic', label: 'Battle Spell', icon: '✦' },
+    { id: 'defensiveMagic', label: 'Magic Ward', icon: '⌾' },
 ]
 
 export const ITEMS: ItemDefinition[] = [
@@ -160,7 +168,66 @@ export const ITEMS: ItemDefinition[] = [
         description: 'A charm against wild curses.',
         slots: ['amulet'],
     },
+    {
+        id: 'ember_grimoire',
+        name: 'Ember Grimoire',
+        icon: '♨',
+        price: 8,
+        shop: 'magic',
+        description: 'Equips Ember as your battle spell.',
+        slots: ['offensiveMagic'],
+        spell: 'fire',
+    },
+    {
+        id: 'tide_grimoire',
+        name: 'Tide Grimoire',
+        icon: '≋',
+        price: 10,
+        shop: 'magic',
+        description: 'Equips Tide as your battle spell.',
+        slots: ['offensiveMagic'],
+        spell: 'water',
+    },
+    {
+        id: 'gale_grimoire',
+        name: 'Gale Grimoire',
+        icon: '〰',
+        price: 10,
+        shop: 'magic',
+        description: 'Equips Gale as your battle spell.',
+        slots: ['offensiveMagic'],
+        spell: 'wind',
+    },
+    {
+        id: 'stone_grimoire',
+        name: 'Stone Grimoire',
+        icon: '◆',
+        price: 11,
+        shop: 'magic',
+        description: 'Equips Stonebind as your battle spell.',
+        slots: ['offensiveMagic'],
+        spell: 'earth',
+    },
+    {
+        id: 'aegis_script',
+        name: 'Aegis Script',
+        icon: '⌾',
+        price: 9,
+        shop: 'magic',
+        description: 'Strengthens Arcane Ward against battle magic.',
+        slots: ['defensiveMagic'],
+        wardPower: 0.35,
+    },
 ]
 
 export const getItem = (id: string) => ITEMS.find((item) => item.id === id)
 export const itemsForShop = (shop: ShopKind) => ITEMS.filter((item) => item.shop === shop)
+
+export function equippedMagic(items: { itemId: string; equippedSlot?: EquipmentSlot }[]) {
+    const offensive = items.find((item) => item.equippedSlot === 'offensiveMagic')
+    const defensive = items.find((item) => item.equippedSlot === 'defensiveMagic')
+    return {
+        spell: getItem(offensive?.itemId ?? 'ember_grimoire')?.spell ?? 'fire',
+        wardPower: getItem(defensive?.itemId ?? 'aegis_script')?.wardPower ?? 0.35,
+    }
+}

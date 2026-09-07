@@ -23,55 +23,64 @@ export function BoardDisplay({ state, onStart }: BoardDisplayProps) {
                     remainingMoves={room.remainingMoves}
                     cameraState={state.camera}
                     selectedDestination={state.selection?.destination}
+                    combat={state.combat}
                 />
             </div>
-            <header className="display-header">
-                <div>
-                    <span className="eyebrow">Round {room.round || 1}</span>
-                    <h1>Wildroot Crossing</h1>
-                </div>
-                <div className="legend">
-                    <span>
-                        <i className="combat-dot" /> Combat
-                    </span>
-                    <span>
-                        <i className="event-dot" /> Event
-                    </span>
-                </div>
-            </header>
-            <aside className="roster">
-                {players.map((player) => (
-                    <div
-                        className={`player-card ${active?._id === player._id ? 'active' : ''}`}
-                        key={player._id}
-                    >
-                        <span className="player-gem" style={{ background: player.color }} />
-                        <div>
-                            <strong>{player.name}</strong>
-                            <small>
-                                ♥ {player.hp}/{player.maxHp} · ◈ {player.gold}
-                            </small>
-                        </div>
+            {!state.combat && (
+                <header className="display-header">
+                    <div>
+                        <span className="eyebrow">Round {room.round || 1}</span>
+                        <h1>Wildroot Crossing</h1>
                     </div>
-                ))}
-            </aside>
-            <section className="status-ribbon">
-                {room.status === 'lobby' ? (
-                    <>
-                        <strong>Waiting for heroes</strong>
-                        <span>{players.length} joined</span>
-                    </>
-                ) : (
-                    <>
-                        <strong>{active ? `${active.name}'s turn` : 'Adventure complete'}</strong>
+                    <div className="legend">
                         <span>
-                            {room.remainingMoves > 0
-                                ? `${room.remainingMoves} steps remaining`
-                                : room.message}
+                            <i className="combat-dot" /> Combat
                         </span>
-                    </>
-                )}
-            </section>
+                        <span>
+                            <i className="event-dot" /> Event
+                        </span>
+                    </div>
+                </header>
+            )}
+            {!state.combat && (
+                <aside className="roster">
+                    {players.map((player) => (
+                        <div
+                            className={`player-card ${active?._id === player._id ? 'active' : ''}`}
+                            key={player._id}
+                        >
+                            <span className="player-gem" style={{ background: player.color }} />
+                            <div>
+                                <strong>{player.name}</strong>
+                                <small>
+                                    ♥ {player.hp}/{player.maxHp} · ◈ {player.gold}
+                                </small>
+                            </div>
+                        </div>
+                    ))}
+                </aside>
+            )}
+            {!state.combat && (
+                <section className="status-ribbon">
+                    {room.status === 'lobby' ? (
+                        <>
+                            <strong>Waiting for heroes</strong>
+                            <span>{players.length} joined</span>
+                        </>
+                    ) : (
+                        <>
+                            <strong>
+                                {active ? `${active.name}'s turn` : 'Adventure complete'}
+                            </strong>
+                            <span>
+                                {room.remainingMoves > 0
+                                    ? `${room.remainingMoves} steps remaining`
+                                    : room.message}
+                            </span>
+                        </>
+                    )}
+                </section>
+            )}
             {room.status === 'lobby' && (
                 <div className="join-panel">
                     <QRCodeSVG value={joinUrl} size={112} bgColor="#f7f1de" fgColor="#17221e" />

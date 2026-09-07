@@ -31,12 +31,32 @@ export function HeroStatus({
                     </strong>
                 </div>
                 <div>
-                    <small>Gold</small>
-                    <strong>◈ {player.gold}</strong>
+                    <small>Mana</small>
+                    <strong>✦ {player.mp ?? 5}</strong>
+                </div>
+                <div>
+                    <small>Attack</small>
+                    <strong>AT {player.attack}</strong>
+                </div>
+                <div>
+                    <small>Defense</small>
+                    <strong>DF {player.defense ?? 2}</strong>
                 </div>
                 <div>
                     <small>Magic</small>
-                    <strong>✦ {player.mp ?? 5} MP</strong>
+                    <strong>MG {player.magic ?? 2}</strong>
+                </div>
+                <div>
+                    <small>Athletics</small>
+                    <strong>ATH {player.athletics ?? 2}</strong>
+                </div>
+                <div>
+                    <small>Agility</small>
+                    <strong>AGI {player.agility ?? 2}</strong>
+                </div>
+                <div>
+                    <small>Gold</small>
+                    <strong>◈ {player.gold}</strong>
                 </div>
             </div>
             <section className="dice-section">
