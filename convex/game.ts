@@ -1,8 +1,17 @@
 import { v } from 'convex/values'
 import { mutation } from './_generated/server'
 import { moveCamera, toggleCamera, zoomCamera } from './camera'
+import { chooseAttack, chooseGuard } from './combat'
 import { resolveEncounter } from './encounters'
-import { createRoom, joinRoom, movePlayer, rollMovement, startRoom } from './rooms'
+import {
+    cancelDestination,
+    createRoom,
+    joinRoom,
+    movePlayer,
+    rollMovement,
+    selectDestination,
+    startRoom,
+} from './rooms'
 import { buyItem, equipItem, leaveShop } from './shops'
 
 const eventValidator = v.union(
@@ -23,9 +32,41 @@ const eventValidator = v.union(
         data: v.object({}),
     }),
     v.object({
+        type: v.literal('movement.select'),
+        subjects: v.object({ roomId: v.id('rooms'), playerId: v.id('players') }),
+        data: v.object({ destination: v.number() }),
+    }),
+    v.object({
+        type: v.literal('movement.cancel'),
+        subjects: v.object({ roomId: v.id('rooms'), playerId: v.id('players') }),
+        data: v.object({}),
+    }),
+    v.object({
         type: v.literal('movement.step'),
         subjects: v.object({ roomId: v.id('rooms'), playerId: v.id('players') }),
         data: v.object({ destination: v.number() }),
+    }),
+    v.object({
+        type: v.literal('combat.attack'),
+        subjects: v.object({ roomId: v.id('rooms'), playerId: v.id('players') }),
+        data: v.object({
+            attack: v.union(
+                v.literal('stab'),
+                v.literal('chargeHigh'),
+                v.literal('chargeSide'),
+                v.literal('leap'),
+                v.literal('fire'),
+                v.literal('water'),
+                v.literal('wind'),
+            ),
+        }),
+    }),
+    v.object({
+        type: v.literal('combat.guard'),
+        subjects: v.object({ roomId: v.id('rooms'), playerId: v.id('players') }),
+        data: v.object({
+            guard: v.union(v.literal('high'), v.literal('side'), v.literal('brace')),
+        }),
     }),
     v.object({
         type: v.literal('encounter.resolve'),
@@ -119,8 +160,20 @@ export const dispatch = mutation({
             case 'movement.roll':
                 await rollMovement(ctx, event.subjects)
                 break
+            case 'movement.select':
+                await selectDestination(ctx, { ...event.subjects, ...event.data })
+                break
+            case 'movement.cancel':
+                await cancelDestination(ctx, event.subjects)
+                break
             case 'movement.step':
                 await movePlayer(ctx, { ...event.subjects, ...event.data })
+                break
+            case 'combat.attack':
+                await chooseAttack(ctx, event.subjects, event.data.attack)
+                break
+            case 'combat.guard':
+                await chooseGuard(ctx, event.subjects, event.data.guard)
                 break
             case 'encounter.resolve':
                 await resolveEncounter(ctx, event.subjects)

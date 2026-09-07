@@ -23,7 +23,18 @@ How a turn unfolds: rolling, choosing direction, traveling, and what happens whe
 
 - **Choose direction at every junction.** Maximum mid-roll agency — players can react to their roll and reroute.
 - Branches are presented as on-board prompts; movement pauses until the player commits.
+- The D-pad selects a field, **A confirms**, **B cancels**, and **Y cycles every legal destination**.
+  Cycling is the fallback when multiple roads occupy the same approximate screen direction.
 - **No backtracking within a single turn.** Once a direction is chosen at a junction, the player continues forward until the next junction or end-of-roll.
+
+## Directed roads
+
+- Roads are stored separately from spaces as `from`, `to`, and `bidirectional`; rendering and
+  server traversal consume the same logical definition.
+- A one-way road is drawn in gold with an arrow pointing toward its legal destination.
+- Controllers mark its destination as `one-way →`. The unavailable reverse road never appears as
+  a choice and is rejected by the authoritative mutation if submitted directly.
+- B backs out of a highlighted choice. It does not undo an already committed movement step.
 
 ## Player collisions
 

@@ -8,6 +8,7 @@ type BoardSceneProps = {
     activePlayer?: Player
     remainingMoves: number
     cameraState: RoomCamera | null
+    selectedDestination?: number
 }
 
 export function BoardScene({
@@ -15,6 +16,7 @@ export function BoardScene({
     activePlayer,
     remainingMoves,
     cameraState,
+    selectedDestination,
 }: BoardSceneProps) {
     return (
         <Canvas shadows camera={{ position: [0, 12, 11.5], fov: 44 }}>
@@ -27,6 +29,7 @@ export function BoardScene({
                 players={players}
                 activePlayer={activePlayer}
                 remainingMoves={remainingMoves}
+                selectedDestination={selectedDestination}
             />
         </Canvas>
     )

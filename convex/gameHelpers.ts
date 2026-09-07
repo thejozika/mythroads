@@ -26,6 +26,7 @@ export async function advanceTurn(
         round: currentIndex === players.length - 1 ? room.round + 1 : room.round,
         phase: 'awaitingRoll',
         activeEncounterId: undefined,
+        activeCombatId: undefined,
         shopKind: undefined,
         message,
     })

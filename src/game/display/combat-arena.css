@@ -1,0 +1,46 @@
+.combat-arena {
+    position: absolute;
+    inset: auto 50% 5.8rem auto;
+    z-index: 8;
+    width: min(42rem, calc(100vw - 3rem));
+    padding: 1rem 1.25rem;
+    transform: translateX(50%);
+    color: #fff8dd;
+    border: 2px solid #f1c85a;
+    border-radius: 1.25rem;
+    background: rgb(18 27 27 / 92%);
+    box-shadow: 0 1rem 3rem rgb(0 0 0 / 35%);
+}
+
+.combat-arena header,
+.combatants {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.combat-arena header span,
+.combat-arena small {
+    color: #b9c9be;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.combatants {
+    margin: 0.75rem 0;
+}
+
+.combatants div {
+    display: grid;
+    min-width: 10rem;
+}
+
+.combatants div:last-child {
+    text-align: right;
+}
+
+.combat-arena p {
+    margin: 0;
+    text-align: center;
+}

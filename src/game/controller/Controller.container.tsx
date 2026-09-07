@@ -2,13 +2,12 @@ import { useMutation, useQuery } from 'convex/react'
 import { useEffect, useState } from 'react'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
-import { getNode } from '../../../shared/board.system'
+import { availableRoads, availableSteps, getNode } from '../../../shared/board.system'
 import { directionalSteps } from '../../../shared/controller-input.system'
-import type { EquipmentSlot, ShopKind } from '../../../shared/item.system'
+import type { ShopKind } from '../../../shared/item.system'
+import { ControllerOverlays } from './ControllerOverlays.container'
 import { Gamepad } from './Gamepad.component'
-import { Inventory } from './Inventory.component'
-import { Shop } from './Shop.component'
-import { identifiedDice } from './dice-view.util'
+import { HeroStatus } from './HeroStatus.component'
 import './controller.css'
 import './controller-landscape.css'
 
@@ -19,7 +18,6 @@ export function Controller({ code }: { code: string }) {
     const dispatch = useMutation(api.game.dispatch)
     const storedPlayerId = localStorage.getItem(`dicebound:${code}`)
     const playerId = storedPlayerId as Id<'players'> | null
-    const items = useQuery(api.shops.inventory, playerId ? { playerId } : 'skip')
     const encounterId = state?.encounter?._id
     useEffect(() => {
         setEncounterReady(false)
@@ -48,6 +46,8 @@ export function Controller({ code }: { code: string }) {
     const canResolve =
         isActive && phase === 'revealingEncounter' && Boolean(state.encounter) && encounterReady
     const cameraMode = state.camera?.mode === 'free'
+    const selectedDestination =
+        state.selection?.playerId === playerId ? state.selection.destination : undefined
     const movementChoices =
         isActive && phase === 'moving' && state.room.remainingMoves > 0
             ? directionalSteps(player.position, player.previousPosition)
@@ -57,11 +57,15 @@ export function Controller({ code }: { code: string }) {
             direction,
             {
                 label: getNode(destination).label,
-                kind: getNode(destination).kind,
+                kind: availableRoads(player.position).find(
+                    (road) => road.destination === destination,
+                )?.oneWay
+                    ? 'one-way →'
+                    : getNode(destination).kind,
                 run: () =>
                     dispatch({
                         event: {
-                            type: 'movement.step',
+                            type: 'movement.select',
                             subjects: { roomId: state.room._id, playerId },
                             data: { destination },
                         },
@@ -87,65 +91,52 @@ export function Controller({ code }: { code: string }) {
         ]),
     )
     const directions = cameraMode && isActive ? cameraDirections : moveDirections
+    const destinations =
+        isActive && phase === 'moving'
+            ? availableSteps(player.position, player.previousPosition)
+            : []
+    const cycleDestination = destinations.length
+        ? () => {
+              const index = selectedDestination ? destinations.indexOf(selectedDestination) : -1
+              const destination = destinations[(index + 1) % destinations.length]
+              return dispatch({
+                  event: {
+                      type: 'movement.select',
+                      subjects: { roomId: state.room._id, playerId },
+                      data: { destination },
+                  },
+              })
+          }
+        : undefined
 
     return (
         <main className="phone-shell" style={{ '--hero': player.color } as React.CSSProperties}>
             <div className="controller-card">
-                <header className="phone-header">
-                    <div>
-                        <span className="eyebrow">Room {code}</span>
-                        <h1>{player.name}</h1>
-                    </div>
-                    <span className="turn-pill">{isActive ? 'Your turn' : 'Waiting'}</span>
-                </header>
-                <div className="stat-grid">
-                    <div>
-                        <small>Health</small>
-                        <strong>
-                            ♥ {player.hp}/{player.maxHp}
-                        </strong>
-                    </div>
-                    <div>
-                        <small>Gold</small>
-                        <strong>◈ {player.gold}</strong>
-                    </div>
-                    <div>
-                        <small>Attack</small>
-                        <strong>⚔ {player.attack}</strong>
-                    </div>
-                </div>
-                <section className="dice-section">
-                    <span className="eyebrow">Equipped movement dice</span>
-                    <div className="dice-row">
-                        {identifiedDice(player.dice).map((die) => (
-                            <div className="die" key={die.id}>
-                                D{die.sides}
-                            </div>
-                        ))}
-                    </div>
-                    {state.room.lastRoll && isActive && (
-                        <p className="roll-result">
-                            Rolled {state.room.lastRoll.join(' + ')} ={' '}
-                            <strong>
-                                {state.room.lastRoll.reduce((sum, value) => sum + value, 0)}
-                            </strong>
-                        </p>
-                    )}
-                </section>
-                {isActive && state.room.remainingMoves > 0 && (
-                    <p className="steps-left">{state.room.remainingMoves} steps remaining</p>
-                )}
+                <HeroStatus
+                    code={code}
+                    player={player}
+                    active={isActive}
+                    lastRoll={state.room.lastRoll}
+                    remainingMoves={state.room.remainingMoves}
+                />
                 <Gamepad
                     directions={directions}
-                    canPrimaryAction={(cameraMode && isActive) || canRoll || canResolve}
+                    canPrimaryAction={
+                        (cameraMode && isActive) ||
+                        canRoll ||
+                        canResolve ||
+                        selectedDestination !== undefined
+                    }
                     primaryActionLabel={
                         cameraMode
                             ? 'Zoom in'
-                            : phase === 'revealingEncounter'
-                              ? encounterReady
-                                  ? 'Reveal result'
-                                  : 'Spinning…'
-                              : 'Roll dice'
+                            : selectedDestination !== undefined
+                              ? `Move to ${getNode(selectedDestination).label}`
+                              : phase === 'revealingEncounter'
+                                ? encounterReady
+                                    ? 'Reveal result'
+                                    : 'Spinning…'
+                                : 'Roll dice'
                     }
                     onPrimaryAction={() => {
                         if (cameraMode) {
@@ -154,6 +145,15 @@ export function Controller({ code }: { code: string }) {
                                     type: 'camera.zoom',
                                     subjects: { roomId: state.room._id, playerId },
                                     data: { delta: -1 },
+                                },
+                            })
+                        }
+                        if (selectedDestination !== undefined) {
+                            return dispatch({
+                                event: {
+                                    type: 'movement.step',
+                                    subjects: { roomId: state.room._id, playerId },
+                                    data: { destination: selectedDestination },
                                 },
                             })
                         }
@@ -189,9 +189,20 @@ export function Controller({ code }: { code: string }) {
                                 },
                             })
                         }
+                        if (selectedDestination !== undefined) {
+                            return dispatch({
+                                event: {
+                                    type: 'movement.cancel',
+                                    subjects: { roomId: state.room._id, playerId },
+                                    data: {},
+                                },
+                            })
+                        }
                         setInventoryOpen(false)
                     }}
-                    inventoryOpen={inventoryOpen}
+                    canBack={inventoryOpen || cameraMode || selectedDestination !== undefined}
+                    onSecondaryAction={!cameraMode ? cycleDestination : undefined}
+                    secondaryActionLabel="Cycle reachable fields"
                     cameraMode={cameraMode}
                 />
                 <div className="utility-controls">
@@ -215,50 +226,17 @@ export function Controller({ code }: { code: string }) {
                         <span>◉</span> {cameraMode ? 'Follow hero' : 'Free camera'}
                     </button>
                 </div>
-                {inventoryOpen && (
-                    <Inventory
-                        dice={player.dice}
-                        gold={player.gold}
-                        items={items ?? []}
-                        onEquip={(ownedItemId, slot: EquipmentSlot) =>
-                            dispatch({
-                                event: {
-                                    type: 'inventory.equip',
-                                    subjects: {
-                                        playerId,
-                                        playerItemId: ownedItemId as Id<'playerItems'>,
-                                    },
-                                    data: { slot },
-                                },
-                            })
-                        }
-                        onClose={() => setInventoryOpen(false)}
-                    />
-                )}
-                {isActive && phase === 'shopping' && state.room.shopKind && (
-                    <Shop
-                        kind={state.room.shopKind as ShopKind}
-                        gold={player.gold}
-                        onBuy={(itemId) =>
-                            dispatch({
-                                event: {
-                                    type: 'shop.buy',
-                                    subjects: { roomId: state.room._id, playerId },
-                                    data: { itemId },
-                                },
-                            })
-                        }
-                        onLeave={() =>
-                            dispatch({
-                                event: {
-                                    type: 'shop.leave',
-                                    subjects: { roomId: state.room._id, playerId },
-                                    data: {},
-                                },
-                            })
-                        }
-                    />
-                )}
+                <ControllerOverlays
+                    roomId={state.room._id}
+                    playerId={playerId}
+                    player={player}
+                    active={isActive}
+                    phase={phase}
+                    shopKind={state.room.shopKind as ShopKind | undefined}
+                    combat={state.combat}
+                    inventoryOpen={inventoryOpen}
+                    onCloseInventory={() => setInventoryOpen(false)}
+                />
                 {canResolve && (
                     <div className="waiting-card encounter-prompt">
                         <span className="pulse" /> Watch the wheel, then press A

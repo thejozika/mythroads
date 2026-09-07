@@ -142,6 +142,8 @@ const DEMO_STATE: NonNullable<RoomState> = {
         },
     ],
     encounter: null,
+    combat: null,
+    selection: null,
     camera: null,
 }
 

@@ -11,7 +11,9 @@ type GamepadProps = {
     onPrimaryAction: () => void
     onInventory: () => void
     onBack: () => void
-    inventoryOpen: boolean
+    onSecondaryAction?: () => void
+    secondaryActionLabel?: string
+    canBack: boolean
     cameraMode: boolean
 }
 
@@ -81,7 +83,9 @@ export function Gamepad({
     onPrimaryAction,
     onInventory,
     onBack,
-    inventoryOpen,
+    onSecondaryAction,
+    secondaryActionLabel = 'Cycle destination',
+    canBack,
     cameraMode,
 }: GamepadProps) {
     return (
@@ -116,7 +120,13 @@ export function Gamepad({
             </fieldset>
             <fieldset className="action-pad">
                 <legend>Action buttons</legend>
-                <ActionButton letter="Y" className="action-y" disabled label="Y action" />
+                <ActionButton
+                    letter="Y"
+                    className="action-y"
+                    disabled={!onSecondaryAction}
+                    action={onSecondaryAction}
+                    label={secondaryActionLabel}
+                />
                 <ActionButton
                     letter="X"
                     className="action-x"
@@ -126,7 +136,7 @@ export function Gamepad({
                 <ActionButton
                     letter="B"
                     className="action-b"
-                    disabled={!inventoryOpen && !cameraMode}
+                    disabled={!canBack}
                     action={onBack}
                     label={cameraMode ? 'Zoom camera out' : 'Back'}
                     repeat={cameraMode}
@@ -144,7 +154,7 @@ export function Gamepad({
                 <span>D-pad · {cameraMode ? 'camera' : 'move'}</span>
                 <span>
                     A · {primaryActionLabel.toLowerCase()}
-                    {cameraMode ? ' · B zoom out' : ' · X inventory'}
+                    {cameraMode ? ' · B zoom out' : ' · B back · Y cycle'}
                 </span>
             </div>
             {cameraMode ? (

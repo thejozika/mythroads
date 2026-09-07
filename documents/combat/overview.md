@@ -4,7 +4,8 @@ The battle system: how two combatants resolve a fight, the choices each makes, t
 
 ## Scope
 
-- **RPS (rock-paper-scissors) decision layer** — attacker and defender choose actions simultaneously; outcome depends on the matchup.
+- **Stance decision layer** — the hero alternates between choosing an attack and reading an enemy
+  attack with a defensive stance. Choices are private on the controller; results are public.
 - **Stats** — HP, attack, defense, magic, speed (or our equivalents), how they're computed from level + class + equipment.
 - **Damage formulas** — basic attack, strike, counter, magic, skill.
 - **Status effects** — poison, sleep, curse, seal, fear, etc.
@@ -25,9 +26,20 @@ Dokapon's combat is a simultaneous-reveal RPS over multiple rounds, with role-sw
 - `status-effects.md` — full effect list and combat interactions (planned)
 - `pvp-rules.md` — give-up, looting, death penalty (planned)
 
+## Playable PvE rules
+
+- Attack phase: choose Quick Stab, High Charge, Side Rush, Leaping Strike, or an elemental spell.
+- Quick Stab is reliable and neutral into every guard. Each committed technique is strong against
+  one guard, neutral against one, and weak against one.
+- Defense phase: choose High Guard, Side Guard, or Brace against the enemy's hidden attack.
+- High Charge is stopped by High Guard and punishes Side Guard. Side Rush is stopped by Side Guard
+  and punishes Brace. Leaping Strike is stopped by Brace and punishes High Guard.
+- Roles alternate until the monster or hero reaches zero HP. Victory pays the listed gold reward;
+  defeat restores the hero to 1 HP and loses up to 3 gold.
+
 ## Open questions
 
 - Keep the 5-stat shape (HP/AT/DF/MG/SP) or simplify?
-- How many RPS actions in the MVP — keep all 8 or trim?
+- PvP simultaneous reveal and role initiative remain to be designed; the current loop is PvE.
 - Variance level: keep ×0.95–1.05 multiplier or wider?
 - Battle skills per class: how many, when unlocked?

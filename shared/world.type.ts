@@ -10,7 +10,13 @@ export type WorldNode = {
     visualId: WorldVisualId
     x: number
     z: number
-    neighbors: number[]
+}
+
+export type WorldRoad = {
+    id: string
+    from: number
+    to: number
+    bidirectional: boolean
 }
 
 export type LogicalGameWorld = {
@@ -18,4 +24,5 @@ export type LogicalGameWorld = {
     label: string
     version: number
     nodes: WorldNode[]
+    roads: WorldRoad[]
 }

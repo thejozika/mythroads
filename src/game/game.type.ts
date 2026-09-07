@@ -7,8 +7,15 @@ export type Room = {
     lastRoll?: number[]
     message: string
     round: number
-    phase?: 'awaitingRoll' | 'moving' | 'revealingEncounter' | 'shopping'
+    phase?:
+        | 'awaitingRoll'
+        | 'moving'
+        | 'revealingEncounter'
+        | 'shopping'
+        | 'combatAttack'
+        | 'combatDefend'
     activeEncounterId?: string
+    activeCombatId?: string
     shopKind?: 'armoury' | 'jeweller' | 'weapons' | 'items' | 'magic'
 }
 
@@ -22,6 +29,9 @@ export type Player = {
     hp: number
     maxHp: number
     attack: number
+    magic?: number
+    mp?: number
+    maxMp?: number
     dice: number[]
     joinedAt: number
 }
@@ -51,9 +61,31 @@ export type RoomCamera = {
     distance: number
 }
 
+export type Combat = {
+    _id: string
+    playerId: string
+    enemyName: string
+    enemyElement: 'fire' | 'water' | 'wind' | 'earth'
+    enemyHp: number
+    enemyMaxHp: number
+    round: number
+    phase: 'attack' | 'defend' | 'resolved'
+    lastAttack?: string
+    lastGuard?: string
+    lastDamage?: number
+    message: string
+}
+
+export type MovementSelection = {
+    playerId: string
+    destination: number
+}
+
 export type RoomState = {
     room: Room
     players: Player[]
     encounter: Encounter | null
+    combat: Combat | null
+    selection: MovementSelection | null
     camera: RoomCamera | null
 } | null

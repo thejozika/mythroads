@@ -1,6 +1,7 @@
 import { QRCodeSVG } from 'qrcode.react'
 import { BoardScene } from '../board/Board.scene'
 import type { RoomState } from '../game.type'
+import { CombatArena } from './CombatArena.component'
 import { EncounterWheel } from './EncounterWheel.component'
 
 type BoardDisplayProps = {
@@ -21,6 +22,7 @@ export function BoardDisplay({ state, onStart }: BoardDisplayProps) {
                     activePlayer={active}
                     remainingMoves={room.remainingMoves}
                     cameraState={state.camera}
+                    selectedDestination={state.selection?.destination}
                 />
             </div>
             <header className="display-header">
@@ -90,6 +92,7 @@ export function BoardDisplay({ state, onStart }: BoardDisplayProps) {
                 </div>
             )}
             {state.encounter && <EncounterWheel encounter={state.encounter} />}
+            {state.combat && <CombatArena combat={state.combat} player={active} />}
         </main>
     )
 }

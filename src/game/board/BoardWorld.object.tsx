@@ -1,5 +1,5 @@
 import { Float, Line, Text } from '@react-three/drei'
-import { availableSteps, BOARD, getNode } from '../../../shared/board.system'
+import { availableSteps, BOARD, getNode, WORLD } from '../../../shared/board.system'
 import type { Player } from '../game.type'
 import { SPACE_VISUALS } from './world.material'
 
@@ -7,12 +7,12 @@ function Ground() {
     return (
         <>
             <mesh receiveShadow position={[0, -0.42, 0]}>
-                <cylinderGeometry args={[9.1, 9.7, 0.65, 16]} />
+                <cylinderGeometry args={[10.1, 10.7, 0.65, 20]} />
                 <meshStandardMaterial color="#243a32" roughness={0.92} />
             </mesh>
             {Array.from({ length: 24 }).map((_, index) => {
                 const angle = (index / 24) * Math.PI * 2
-                const radius = 7.7 + (index % 3) * 0.4
+                const radius = 8.7 + (index % 3) * 0.4
                 return (
                     <group
                         key={`tree-${angle}`}
@@ -34,38 +34,50 @@ function Ground() {
 }
 
 function Roads() {
-    const seen = new Set<string>()
-    return BOARD.flatMap((node) =>
-        node.neighbors.map((neighborId) => {
-            const key = [node.id, neighborId].sort((a, b) => a - b).join('-')
-            if (seen.has(key)) return null
-            seen.add(key)
-            const neighbor = getNode(neighborId)
-            return (
+    return WORLD.roads.map((road) => {
+        const from = getNode(road.from)
+        const to = getNode(road.to)
+        const midpoint: [number, number, number] = [(from.x + to.x) / 2, 0.08, (from.z + to.z) / 2]
+        const angle = Math.atan2(to.x - from.x, to.z - from.z)
+        return (
+            <group key={road.id}>
                 <Line
-                    key={key}
                     points={[
-                        [node.x, -0.02, node.z],
-                        [neighbor.x, -0.02, neighbor.z],
+                        [from.x, -0.02, from.z],
+                        [to.x, -0.02, to.z],
                     ]}
-                    color="#d5bd84"
-                    lineWidth={12}
+                    color={road.bidirectional ? '#d5bd84' : '#f2c14e'}
+                    lineWidth={10}
                 />
-            )
-        }),
-    )
+                {!road.bidirectional && (
+                    <mesh position={midpoint} rotation={[Math.PI / 2, angle, 0]}>
+                        <coneGeometry args={[0.22, 0.52, 3]} />
+                        <meshStandardMaterial color="#fff2b2" emissive="#db8b16" />
+                    </mesh>
+                )}
+            </group>
+        )
+    })
 }
 
-function Space({ node, reachable }: { node: (typeof BOARD)[number]; reachable: boolean }) {
+function Space({
+    node,
+    reachable,
+    selected,
+}: {
+    node: (typeof BOARD)[number]
+    reachable: boolean
+    selected: boolean
+}) {
     const visual = SPACE_VISUALS[node.visualId]
     return (
         <group position={[node.x, -0.01, node.z]}>
-            <mesh castShadow receiveShadow scale={reachable ? 1.16 : 1}>
+            <mesh castShadow receiveShadow scale={selected ? 1.32 : reachable ? 1.16 : 1}>
                 <cylinderGeometry args={[0.58, 0.61, 0.16, 32]} />
                 <meshStandardMaterial
                     color={visual.color}
-                    emissive={reachable ? '#f7cf67' : '#000000'}
-                    emissiveIntensity={reachable ? 0.85 : 0}
+                    emissive={selected ? '#ffffff' : reachable ? '#f7cf67' : '#000000'}
+                    emissiveIntensity={selected ? 1.2 : reachable ? 0.85 : 0}
                     roughness={0.55}
                 />
             </mesh>
@@ -110,9 +122,19 @@ function Pawn({ player, offset }: { player: Player; offset: number }) {
     )
 }
 
-type BoardWorldProps = { players: Player[]; activePlayer?: Player; remainingMoves: number }
+type BoardWorldProps = {
+    players: Player[]
+    activePlayer?: Player
+    remainingMoves: number
+    selectedDestination?: number
+}
 
-export function BoardWorld({ players, activePlayer, remainingMoves }: BoardWorldProps) {
+export function BoardWorld({
+    players,
+    activePlayer,
+    remainingMoves,
+    selectedDestination,
+}: BoardWorldProps) {
     const reachable = new Set(
         activePlayer && remainingMoves > 0
             ? availableSteps(activePlayer.position, activePlayer.previousPosition)
@@ -123,7 +145,12 @@ export function BoardWorld({ players, activePlayer, remainingMoves }: BoardWorld
             <Ground />
             <Roads />
             {BOARD.map((node) => (
-                <Space key={node.id} node={node} reachable={reachable.has(node.id)} />
+                <Space
+                    key={node.id}
+                    node={node}
+                    reachable={reachable.has(node.id)}
+                    selected={node.id === selectedDestination}
+                />
             ))}
             {players.map((player, index) => (
                 <Pawn key={player._id} player={player} offset={index - (players.length - 1) / 2} />
