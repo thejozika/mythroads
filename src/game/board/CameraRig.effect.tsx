@@ -31,7 +31,7 @@ export function CameraRig({ activePlayer, cameraState, combatActive, targeting }
             : combatActive
               ? 8.3
               : activePlayer && !targeting
-                ? 7.2
+                ? 9.2
                 : 13.4
         if (combatActive) {
             desired.set(0, distance * 0.72, distance * 0.86)

@@ -24,6 +24,7 @@ input {
 }
 button,
 .button-link {
+    min-height: 3rem;
     border: 1px solid rgba(255, 255, 255, 0.16);
     border-radius: 999px;
     padding: 0.85rem 1.25rem;
@@ -36,10 +37,18 @@ button,
         background 0.18s;
     text-decoration: none;
 }
-button:hover,
-.button-link:hover {
-    transform: translateY(-2px);
-    background: rgba(255, 255, 255, 0.12);
+@media (hover: hover) and (pointer: fine) {
+    button:hover,
+    .button-link:hover {
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.12);
+    }
+}
+button:focus-visible,
+.button-link:focus-visible,
+input:focus-visible {
+    outline: 3px solid #f7cf67;
+    outline-offset: 3px;
 }
 button:disabled {
     opacity: 0.4;
@@ -69,4 +78,15 @@ p {
     font-weight: 700;
     letter-spacing: 0.15em;
     text-transform: uppercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto;
+        transition-duration: 0.01ms;
+        animation-duration: 0.01ms;
+        animation-iteration-count: 1;
+    }
 }

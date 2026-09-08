@@ -41,6 +41,12 @@ export function BoardDisplay({ state, onStart }: BoardDisplayProps) {
                         <span>
                             <i className="event-dot" /> Event
                         </span>
+                        <span>
+                            <i className="shop-dot" /> Shop
+                        </span>
+                        <span>
+                            <i className="castle-dot" /> Castle
+                        </span>
                     </div>
                 </header>
             )}
@@ -74,11 +80,10 @@ export function BoardDisplay({ state, onStart }: BoardDisplayProps) {
                             <strong>
                                 {active ? `${active.name}'s turn` : 'Adventure complete'}
                             </strong>
-                            <span>
-                                {room.remainingMoves > 0
-                                    ? `${room.remainingMoves} steps remaining`
-                                    : room.message}
-                            </span>
+                            <span>{room.message}</span>
+                            {room.remainingMoves > 0 && (
+                                <small>{room.remainingMoves} movement</small>
+                            )}
                         </>
                     )}
                 </section>

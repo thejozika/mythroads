@@ -42,7 +42,7 @@ Dokapon's combat is a simultaneous-reveal RPS over multiple rounds, with role-sw
 - AT drives physical damage, DF resists it, MG drives and resists magic, ATH strengthens committed
   techniques and Brace, and AGI controls physical accuracy/evasion.
 - Roles alternate until the monster or hero reaches zero HP. Victory pays the listed gold reward;
-  defeat restores the hero to 1 HP and loses up to 3 gold.
+  defeat returns the hero to Hearthkeep Castle at full HP and loses up to 3 gold.
 
 ## Open questions
 

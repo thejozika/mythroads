@@ -202,6 +202,7 @@ function ConnectedJoin({ code }: { code: string }) {
                         <button
                             type="button"
                             aria-label={choice}
+                            aria-pressed={color === choice}
                             className={color === choice ? 'selected' : ''}
                             style={{ background: choice }}
                             onClick={() => setColor(choice)}

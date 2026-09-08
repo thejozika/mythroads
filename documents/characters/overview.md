@@ -4,7 +4,7 @@ Player characters: how they level up, change jobs, master classes, grow stats, l
 
 ## Scope
 
-- **Stats** — the six attributes (HP / MP / AT / DF / MG / SP) and where they come from.
+- **Stats** — HP / AT / DF / MG / Athletics / Agility and where they come from.
 - **Character level** — XP curve to Lv 50, what each level grants.
 - **Jobs / classes** — 3 starter jobs, 9 advanced jobs, the tree, change requirements.
 - **Job mastery** — within-job progression, the permanent bonuses from mastering jobs.
@@ -13,7 +13,7 @@ Player characters: how they level up, change jobs, master classes, grow stats, l
 
 ## Dokapon reference
 
-Two parallel progression tracks (character level + job level), with mastery as the dominant meta-progression. We mirror the structure (12 jobs total in a 3-starter / 9-advanced tree), keep the +1-stat-per-level-forever mastery payoff, and add two new mastery rewards (+1 active dice slot, +1 inventory slot) to keep dice and inventory tied to the same loop. Character level cap reduced from 99 to 50 for shorter sessions. We add MP as a sixth stat to make magic a managed resource. See `../../sources/dokapon-jobs/notes.md`.
+Two parallel progression tracks (character level + job level), with mastery as the dominant meta-progression. We mirror the structure (12 jobs total in a 3-starter / 9-advanced tree), keep the +1-stat-per-level-forever mastery payoff, and add two new mastery rewards (+1 active dice slot, +1 inventory slot) to keep dice and inventory tied to the same loop. Character level cap reduced from 99 to 50 for shorter sessions. We avoid MP and split Dokapon's Speed into Athletics and Agility. See `../../sources/dokapon-jobs/notes.md`.
 
 ## Files in this folder
 
@@ -28,7 +28,7 @@ Two parallel progression tracks (character level + job level), with mastery as t
 
 ## Decisions confirmed
 
-- Stat list: HP / MP / AT / DF / MG / SP (6 stats with MP).
+- Stat list: HP / AT / DF / MG / Athletics / Agility (no MP resource).
 - Level cap: 50, moderate curve.
 - Job count: 3 starters + 9 advanced = 12 total.
 - Job tree shape: Dokapon-style with 6 single-prereq + 3 dual-prereq advanced.
@@ -38,7 +38,6 @@ Two parallel progression tracks (character level + job level), with mastery as t
 
 ## Open questions
 
-- MP regeneration mechanism (per-week / per-turn / item-only / never).
 - Stat-allocation choice on level-up — currently automatic; could be player-chosen.
 - Stat selection on mastery — player-chosen vs fixed per job.
 - Inventory growth pacing per class (uniform vs class-specific).

@@ -9,6 +9,12 @@ The shared map players move across, the spaces they land on, the dice/spinner th
 - **Movement** — dice/spinner mechanics, range, branching choice at junctions, items that modify movement.
 - **Turn structure** — day, week, turn order, round resolution, simultaneous vs sequential phases.
 
+## Hearthkeep Castle
+
+- Every hero starts at Hearthkeep on space 0.
+- Landing there restores the hero to full HP before the turn advances.
+- A combat defeat returns the hero to Hearthkeep at full HP after applying the gold penalty.
+
 ## Dokapon reference
 
 Dokapon's board is a graph of color-coded panels: red (battle), blue (gold), green (item), orange (town), white (event), plus stores, banks, castles, and special spaces (vending/quiz/warp/trap). 1 day = one round of turns; 7 days = 1 week. Spinner is 1–6 (with rare modifiers). See `../../sources/dokapon-core-loop/notes.md` and `../../sources/dokapon-items-economy/notes.md`.

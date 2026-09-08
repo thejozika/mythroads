@@ -29,7 +29,17 @@ export async function resolveLanding(
         await startEvent(ctx, room._id, player, destination)
         return
     }
-    await advanceTurn(ctx, room, player._id, `${player.name} returned safely to camp.`)
+    if (landed.kind === 'castle') {
+        await ctx.db.patch(player._id, { hp: player.maxHp })
+        await advanceTurn(
+            ctx,
+            room,
+            player._id,
+            `${player.name} rested at Hearthkeep and recovered all health.`,
+        )
+        return
+    }
+    await advanceTurn(ctx, room, player._id, `${player.name} completed the journey.`)
 }
 
 async function startEvent(

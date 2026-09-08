@@ -188,6 +188,7 @@
     margin-top: 0.65rem;
 }
 .utility-controls button {
+    min-height: 3rem;
     border: 0;
     border-radius: 0.85rem;
     color: #53645d;
@@ -207,6 +208,7 @@ body[data-view="controller"] .phone-shell {
     padding: 0;
     place-items: stretch;
     overflow: hidden;
+    overscroll-behavior: none;
 }
 body[data-view="controller"] .controller-card {
     width: 100%;
@@ -224,14 +226,54 @@ body[data-view="controller"] .controller-card > * {
     min-width: 0;
 }
 body[data-view="controller"] .gamepad {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
     align-content: center;
     flex: 1;
 }
 body[data-view="controller"] .gamepad-labels,
 body[data-view="controller"] .move-options,
 body[data-view="controller"] .camera-mode-label {
-    grid-column: 1;
+    grid-column: 1 / -1;
+}
+@media (orientation: portrait) {
+    body[data-view="controller"] .controller-card {
+        padding: max(0.8rem, env(safe-area-inset-top)) max(0.8rem, env(safe-area-inset-right))
+            max(0.8rem, env(safe-area-inset-bottom)) max(0.8rem, env(safe-area-inset-left));
+    }
+
+    body[data-view="controller"] .stat-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.4rem;
+        margin: 0.6rem 0;
+    }
+
+    body[data-view="controller"] .stat-grid div {
+        padding: 0.55rem;
+    }
+
+    body[data-view="controller"] .dice-section {
+        padding: 0.65rem 0;
+    }
+
+    body[data-view="controller"] .die {
+        width: 3.25rem;
+        height: 3.25rem;
+    }
+
+    body[data-view="controller"] .gamepad {
+        gap: 0.4rem;
+        margin-top: 0.25rem;
+        padding-top: 0.55rem;
+    }
+
+    body[data-view="controller"] .gamepad-labels {
+        gap: 0.5rem;
+        font-size: 0.62rem;
+    }
+
+    body[data-view="controller"] .move-options {
+        display: none;
+    }
 }
 
 body[data-view="controller"] .camera-mode-label {
@@ -333,12 +375,15 @@ body[data-view="controller"] .camera-mode-label {
 .shop-panel {
     position: fixed;
     z-index: 12;
-    inset: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
-    max-width: 440px;
-    margin: auto;
-    padding: 1.25rem;
+    inset: 0;
+    width: 100vw;
+    height: 100dvh;
+    max-width: none;
+    margin: 0;
+    padding: max(1.25rem, env(safe-area-inset-top)) max(1.25rem, env(safe-area-inset-right))
+        max(1.25rem, env(safe-area-inset-bottom)) max(1.25rem, env(safe-area-inset-left));
     overflow-y: auto;
-    border-radius: 1.4rem;
+    border-radius: 0;
     color: var(--ink);
     background: var(--paper);
     box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
@@ -380,6 +425,7 @@ body[data-view="controller"] .camera-mode-label {
     font-size: 0.7rem;
 }
 .shop-item button {
+    min-width: 4.25rem;
     padding: 0.5rem 0.65rem;
     color: var(--ink);
     background: #f7cf67;

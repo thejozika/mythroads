@@ -9,7 +9,7 @@ const node = (definition: Omit<WorldNode, 'visualId'>): WorldNode => ({
 })
 
 const WORLD_NODES: Omit<WorldNode, 'visualId'>[] = [
-    { id: 0, label: 'Camp', kind: 'start', x: -5.8, z: 0 },
+    { id: 0, label: 'Hearthkeep', kind: 'castle', x: -5.8, z: 0 },
     { id: 1, label: 'Mossling', kind: 'combat', x: -5.6, z: 1.25 },
     { id: 2, label: 'Armoury', kind: 'armoury', x: -5, z: 2.45 },
     { id: 3, label: 'Lucky Well', kind: 'event', x: -4.1, z: 3.45 },
@@ -40,6 +40,7 @@ const ringRoads: WorldRoad[] = WORLD_NODES.map((current, index) => ({
     from: current.id,
     to: WORLD_NODES[(index + 1) % WORLD_NODES.length].id,
     bidirectional: true,
+    bridge: current.id === 17,
 }))
 
 const SHORTCUTS: WorldRoad[] = [
@@ -60,24 +61,47 @@ const SHORTCUTS: WorldRoad[] = [
             { x: 4.15, z: -1.45 },
         ],
     },
-    {
-        id: 'goblin-ferry-run',
-        from: 16,
-        to: 20,
-        bidirectional: false,
-        via: [
-            { x: 0.55, z: -3.45 },
-            { x: -1.45, z: -3.35 },
-        ],
-    },
 ]
 
 export const WORLD: LogicalGameWorld = {
     id: 'wildroot-crossing',
     label: 'Wildroot Crossing',
-    version: 3,
+    version: 4,
     nodes: WORLD_NODES.map(node),
     roads: [...ringRoads, ...SHORTCUTS],
+    terrain: [
+        {
+            id: 'heartmere',
+            kind: 'lake',
+            visualId: 'terrain.lake',
+            x: 0.2,
+            z: -0.2,
+            radiusX: 1.35,
+            radiusZ: 0.72,
+        },
+        {
+            id: 'silverrun',
+            kind: 'river',
+            visualId: 'terrain.river',
+            width: 0.52,
+            points: [
+                { x: 0.2, z: -0.2 },
+                { x: 0.15, z: -1.25 },
+                { x: 0.35, z: -2.5 },
+                { x: 0.45, z: -4.05 },
+                { x: 0.45, z: -5.85 },
+            ],
+        },
+        {
+            id: 'greenwatch-hill',
+            kind: 'hill',
+            visualId: 'terrain.hill',
+            x: -2.4,
+            z: 1.8,
+            radius: 0.82,
+            height: 0.48,
+        },
+    ],
 }
 
 export const BOARD = WORLD.nodes
@@ -101,36 +125,23 @@ export const availableRoads = (position: number): AvailableRoad[] =>
 export const canTraverse = (from: number, to: number) =>
     availableRoads(from).some((road) => road.destination === to)
 
-export const availableSteps = (position: number, previousPosition?: number) => {
-    const destinations = availableRoads(position).map((road) => road.destination)
-    const forward = destinations.filter((id) => id !== previousPosition)
-    return forward.length > 0 ? forward : destinations
-}
-
 export type ReachableRoute = { destination: number; path: number[] }
 
 export function reachableRoutes(
     position: number,
-    previousPosition: number | undefined,
+    _previousPosition: number | undefined,
     steps: number,
 ) {
     if (steps <= 0) return []
-    type RouteState = { current: number; previous?: number; path: number[] }
-    let routes = new Map<string, RouteState>([
-        [
-            `${position}:${previousPosition ?? 'none'}`,
-            { current: position, previous: previousPosition, path: [] },
-        ],
-    ])
+    type RouteState = { current: number; path: number[] }
+    let routes = new Map<number, RouteState>([[position, { current: position, path: [] }]])
     for (let step = 0; step < steps; step += 1) {
-        const nextRoutes = new Map<string, RouteState>()
+        const nextRoutes = new Map<number, RouteState>()
         for (const route of routes.values()) {
-            for (const destination of availableSteps(route.current, route.previous)) {
-                const key = `${destination}:${route.current}`
-                if (!nextRoutes.has(key)) {
-                    nextRoutes.set(key, {
+            for (const { destination } of availableRoads(route.current)) {
+                if (!nextRoutes.has(destination)) {
+                    nextRoutes.set(destination, {
                         current: destination,
-                        previous: route.current,
                         path: [...route.path, destination],
                     })
                 }
@@ -138,8 +149,8 @@ export function reachableRoutes(
         }
         routes = nextRoutes
     }
-    const destinations = new Map<number, number[]>()
-    for (const route of routes.values())
-        if (!destinations.has(route.current)) destinations.set(route.current, route.path)
-    return [...destinations].map(([destination, path]) => ({ destination, path }))
+    return [...routes.values()].map((route) => ({
+        destination: route.current,
+        path: route.path,
+    }))
 }

@@ -47,8 +47,6 @@ export default defineSchema({
         magic: v.optional(v.number()),
         athletics: v.optional(v.number()),
         agility: v.optional(v.number()),
-        mp: v.optional(v.number()),
-        maxMp: v.optional(v.number()),
         dice: v.array(v.number()),
         joinedAt: v.number(),
     }).index('by_room', ['roomId']),

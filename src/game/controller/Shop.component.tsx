@@ -34,6 +34,7 @@ export function Shop({ kind, gold, onBuy, onLeave }: ShopProps) {
                         </div>
                         <button
                             type="button"
+                            aria-label={`Buy ${item.name} for ${item.price} gold`}
                             disabled={gold < item.price}
                             onClick={() => onBuy(item.id)}
                         >

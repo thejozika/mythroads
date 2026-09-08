@@ -28,8 +28,9 @@ How a turn unfolds: rolling, choosing direction, traveling, and what happens whe
   receives the shared crosshair.
 - **The D-pad moves the crosshair spatially.** **A confirms the complete route once** and **B exits
   destination mode** without moving.
-- **No immediate backtracking within a route.** At each junction the route continues forward unless
-  it reaches a dead end. One-way roads are respected by both route search and server validation.
+- **Backtracking is legal on bidirectional roads.** A player may spend movement retracing a road;
+  this makes it possible to deliberately burn an awkward roll. One-way roads still reject the
+  reverse direction in both route search and server validation.
 
 ## Directed roads
 
@@ -68,4 +69,5 @@ This makes camping a real strategic choice — you forfeit movement to threaten 
 - **Status effects on movement** — sleep skips a turn; poison costs HP per move; speed-up grants extra dice or +N to total. To be defined in [`../combat/status-effects.md`](../combat/status-effects.md).
 - **Stat-based movement bonuses** — does Speed (or our equivalent stat) modify the roll, grant slots, or both? Currently undecided. Affects how "speed builds" feel.
 - **Intercept exhaustion** — does intercept persist multi-turn (until triggered) or clear at start of standing player's next turn? Current spec: clears at start of next turn. Worth playtesting.
-- **Reverse movement** — any mechanic to send a player backwards? Currently none. Could be an item effect.
+- **Forced reverse movement** — voluntary backtracking is supported; items or effects that force a
+  route direction remain undecided.

@@ -258,12 +258,17 @@ export async function chooseGuard(
     })
     if (hp === 0) {
         const loss = Math.min(3, player.gold)
-        await ctx.db.patch(player._id, { hp: 1, gold: player.gold - loss })
+        await ctx.db.patch(player._id, {
+            hp: player.maxHp,
+            gold: player.gold - loss,
+            position: 0,
+            previousPosition: undefined,
+        })
         await advanceTurn(
             ctx,
             room,
             player._id,
-            `${player.name} escaped ${combat.enemyName}, losing ${loss} gold.`,
+            `${player.name} fell to ${combat.enemyName} and awoke at Hearthkeep, losing ${loss} gold.`,
         )
         return
     }

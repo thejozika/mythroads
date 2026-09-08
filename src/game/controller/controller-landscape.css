@@ -79,6 +79,39 @@
         margin-top: 0;
     }
 
+    body[data-view="controller"] .inventory-panel .equipment-grid {
+        grid-template-columns: repeat(6, 1fr);
+    }
+
+    body[data-view="controller"] .inventory-panel .equipment-slot {
+        min-height: 4rem;
+        grid-column: auto;
+        grid-row: auto;
+    }
+
+    body[data-view="controller"] .shop-panel {
+        padding: max(0.75rem, env(safe-area-inset-top)) max(0.9rem, env(safe-area-inset-right))
+            max(0.75rem, env(safe-area-inset-bottom)) max(0.9rem, env(safe-area-inset-left));
+    }
+
+    body[data-view="controller"] .shop-panel h2 {
+        margin-bottom: 0.55rem;
+        font-size: 1.7rem;
+    }
+
+    body[data-view="controller"] .shop-list {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.4rem;
+    }
+
+    body[data-view="controller"] .shop-item {
+        padding: 0.45rem;
+    }
+
+    body[data-view="controller"] .shop-panel .inventory-back {
+        margin-top: 0.5rem;
+    }
+
     body[data-view="controller"] .phone-message,
     body[data-view="controller"] .waiting-card {
         grid-row: 4;
@@ -89,14 +122,14 @@
 
 @media (orientation: landscape) and (max-height: 520px) {
     body[data-view="controller"] .dpad {
-        grid-template-columns: repeat(3, 2.65rem);
-        grid-template-rows: repeat(3, 2.65rem);
+        grid-template-columns: repeat(3, 3rem);
+        grid-template-rows: repeat(3, 3rem);
     }
     body[data-view="controller"] .action-pad {
-        grid-template-columns: repeat(3, 2.75rem);
-        grid-template-rows: repeat(3, 2.75rem);
+        grid-template-columns: repeat(3, 3rem);
+        grid-template-rows: repeat(3, 3rem);
     }
     body[data-view="controller"] .gamepad-labels {
-        font-size: 0.6rem;
+        font-size: 0.68rem;
     }
 }

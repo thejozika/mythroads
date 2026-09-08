@@ -19,25 +19,25 @@ export function DiceThrow({ results, originId }: { results?: number[]; originId:
         group.current.rotation.x += delta * 7
         group.current.rotation.y += delta * 9
         const age = (performance.now() - startedAt.current) / 1000
-        group.current.position.y = 1.1 + Math.sin(Math.min(1, age) * Math.PI) * 1.2
+        group.current.position.y = 1.25 + Math.sin(Math.min(1, age) * Math.PI) * 0.85
         if (age > 1.45) setVisible(false)
     })
     if (!visible || !results?.length) return null
     const node = getNode(originId)
     return (
-        <group ref={group} position={[node.x, 1.1, node.z]}>
+        <group ref={group} position={[node.x + 0.55, 1.25, node.z]}>
             {results
                 .map((result, index) => ({
                     result,
-                    offset: (index - (results.length - 1) / 2) * 0.72,
+                    offset: (index - (results.length - 1) / 2) * 0.48,
                 }))
                 .map(({ result, offset }) => (
                     <group position={[offset, 0, 0]} key={`${result}-${offset}`}>
                         <mesh castShadow>
-                            <boxGeometry args={[0.55, 0.55, 0.55]} />
+                            <boxGeometry args={[0.38, 0.38, 0.38]} />
                             <meshStandardMaterial color="#fff8db" roughness={0.42} />
                         </mesh>
-                        <Text position={[0, 0, 0.281]} fontSize={0.28} color="#263631">
+                        <Text position={[0, 0, 0.195]} fontSize={0.2} color="#263631">
                             {result}
                         </Text>
                     </group>

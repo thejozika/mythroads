@@ -1,5 +1,8 @@
 import { useMemo } from 'react'
 import { Shape } from 'three'
+import { WORLD } from '../../../shared/board.system'
+import type { WorldTerrainFeature } from '../../../shared/world.type'
+import { ribbonGeometry } from './board-path.geometry'
 
 const ISLAND_EDGE = [
     [-7.1, -1.2],
@@ -62,6 +65,51 @@ function Scenery() {
     ))
 }
 
+function Hill({ feature }: { feature: Extract<WorldTerrainFeature, { kind: 'hill' }> }) {
+    return (
+        <group position={[feature.x, -0.03, feature.z]}>
+            <mesh receiveShadow scale={[feature.radius, feature.height, feature.radius]}>
+                <sphereGeometry args={[1, 14, 7, 0, Math.PI * 2, 0, Math.PI / 2]} />
+                <meshStandardMaterial color="#6e8957" roughness={1} />
+            </mesh>
+            <mesh castShadow position={[0, feature.height * 0.72, 0]}>
+                <coneGeometry args={[0.32, 0.9, 7]} />
+                <meshStandardMaterial color="#315f47" roughness={0.9} />
+            </mesh>
+        </group>
+    )
+}
+
+function Water() {
+    const lake = WORLD.terrain.find(
+        (feature): feature is Extract<WorldTerrainFeature, { kind: 'lake' }> =>
+            feature.kind === 'lake',
+    )
+    const river = WORLD.terrain.find(
+        (feature): feature is Extract<WorldTerrainFeature, { kind: 'river' }> =>
+            feature.kind === 'river',
+    )
+    return (
+        <>
+            {river && (
+                <mesh geometry={ribbonGeometry(river.points, river.width, -0.065)}>
+                    <meshStandardMaterial color="#5598a3" roughness={0.35} />
+                </mesh>
+            )}
+            {lake && (
+                <mesh
+                    position={[lake.x, -0.06, lake.z]}
+                    rotation={[-Math.PI / 2, 0, 0]}
+                    scale={[lake.radiusX, lake.radiusZ, 1]}
+                >
+                    <circleGeometry args={[1, 24]} />
+                    <meshStandardMaterial color="#5598a3" roughness={0.35} />
+                </mesh>
+            )}
+        </>
+    )
+}
+
 export function BoardGround() {
     const island = useMemo(() => {
         const shape = new Shape()
@@ -82,14 +130,15 @@ export function BoardGround() {
             <TerrainPatch position={[2.9, -0.09, 2.1]} scale={[2.1, 1.45]} color="#66845a" />
             <TerrainPatch position={[1.9, -0.085, -2.5]} scale={[2.7, 1.2]} color="#496f52" />
             <TerrainPatch position={[-2.7, -0.08, -2.5]} scale={[1.7, 1.15]} color="#57764e" />
-            <mesh
-                position={[0.2, -0.07, -0.2]}
-                rotation={[-Math.PI / 2, 0, 0]}
-                scale={[1.6, 0.8, 1]}
-            >
-                <circleGeometry args={[1, 18]} />
-                <meshStandardMaterial color="#538b91" roughness={0.45} />
-            </mesh>
+            <Water />
+            {WORLD.terrain
+                .filter(
+                    (feature): feature is Extract<WorldTerrainFeature, { kind: 'hill' }> =>
+                        feature.kind === 'hill',
+                )
+                .map((feature) => (
+                    <Hill feature={feature} key={feature.id} />
+                ))}
             <Scenery />
         </>
     )

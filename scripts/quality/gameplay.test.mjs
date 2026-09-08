@@ -1,13 +1,7 @@
 import assert from 'node:assert/strict'
 import { readdirSync, readFileSync } from 'node:fs'
 import test from 'node:test'
-import {
-    availableSteps,
-    canTraverse,
-    getNode,
-    reachableRoutes,
-    WORLD,
-} from '../../shared/board.system.ts'
+import { canTraverse, getNode, reachableRoutes, WORLD } from '../../shared/board.system.ts'
 import { directionalTargets } from '../../shared/controller-input.system.ts'
 import { physicalMatchup, strikeDamage } from '../../shared/combat.system.ts'
 import { equippedMagic, itemsForShop } from '../../shared/item.system.ts'
@@ -40,9 +34,16 @@ test('one-way roads only permit travel in their declared direction', () => {
     assert.equal(canTraverse(8, 7), true)
 })
 
-test('movement excludes the previous field when another exit exists', () => {
-    assert.equal(availableSteps(10, 9).includes(9), false)
-    assert.equal(availableSteps(10, 9).includes(14), true)
+test('exact-roll routes may retrace bidirectional roads', () => {
+    const routes = reachableRoutes(1, 0, 2)
+    assert.ok(routes.some((route) => route.path[0] === 0 && route.path[1] === 1))
+})
+
+test('the world defines a healing castle and a river bridge', () => {
+    assert.equal(getNode(0).kind, 'castle')
+    assert.ok(WORLD.terrain.some((feature) => feature.kind === 'hill'))
+    assert.ok(WORLD.terrain.some((feature) => feature.kind === 'river'))
+    assert.ok(WORLD.roads.some((road) => road.bridge))
 })
 
 test('destination mode exposes exact-roll routes and spatial crosshair targets', () => {

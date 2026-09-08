@@ -40,6 +40,7 @@
     margin-top: 1.5rem;
 }
 input {
+    min-height: 3rem;
     width: 100%;
     border: 1px solid rgba(23, 34, 30, 0.16);
     background: #fffdf5;
@@ -112,7 +113,7 @@ code {
 }
 .legend {
     display: flex;
-    gap: 1.2rem;
+    gap: 0.8rem;
     padding: 0.65rem 1rem;
     border-radius: 999px;
     background: rgba(247, 241, 222, 0.72);
@@ -135,6 +136,12 @@ code {
 }
 .event-dot {
     background: #8d7cf6;
+}
+.shop-dot {
+    background: #61ad79;
+}
+.castle-dot {
+    background: #f7cf67;
 }
 .roster {
     position: absolute;
@@ -190,7 +197,18 @@ code {
     backdrop-filter: blur(14px);
 }
 .status-ribbon span {
+    flex: 1;
     color: #586a62;
+    text-align: center;
+}
+.status-ribbon small {
+    align-self: center;
+    padding: 0.28rem 0.55rem;
+    border-radius: 999px;
+    color: #53645d;
+    background: #e7dfc9;
+    font-weight: 800;
+    white-space: nowrap;
 }
 .join-panel {
     position: absolute;
@@ -392,13 +410,14 @@ code {
     gap: 0.65rem;
 }
 .color-picker button {
-    width: 2.6rem;
-    height: 2.6rem;
+    width: 3rem;
+    height: 3rem;
     padding: 0;
     border: 4px solid transparent;
 }
 .color-picker button.selected {
     border-color: var(--ink);
+    box-shadow: 0 0 0 3px var(--paper);
 }
 .big {
     width: 100%;

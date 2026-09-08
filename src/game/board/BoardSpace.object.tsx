@@ -12,11 +12,38 @@ function FieldGeometry({ node }: { node: BoardNode }) {
     return <cylinderGeometry args={[0.53, 0.53, 0.035, 8]} />
 }
 
+function Castle() {
+    return (
+        <group position={[0, 0.17, 0]}>
+            <mesh castShadow position={[0, 0.22, 0]}>
+                <boxGeometry args={[0.42, 0.44, 0.34]} />
+                <meshStandardMaterial color="#f0dfac" roughness={0.8} />
+            </mesh>
+            {[-0.27, 0.27].map((x) => (
+                <group position={[x, 0.2, 0]} key={x}>
+                    <mesh castShadow>
+                        <cylinderGeometry args={[0.14, 0.17, 0.48, 8]} />
+                        <meshStandardMaterial color="#e6d29b" roughness={0.82} />
+                    </mesh>
+                    <mesh castShadow position={[0, 0.32, 0]}>
+                        <coneGeometry args={[0.19, 0.25, 8]} />
+                        <meshStandardMaterial color="#c65f55" roughness={0.72} />
+                    </mesh>
+                </group>
+            ))}
+            <mesh position={[0, 0.11, 0.176]}>
+                <planeGeometry args={[0.13, 0.2]} />
+                <meshBasicMaterial color="#513f34" />
+            </mesh>
+        </group>
+    )
+}
+
 function DestinationArrow({ selected }: { selected: boolean }) {
     return (
         <Float speed={3} floatIntensity={0.22} rotationIntensity={0}>
-            <Billboard position={[0, selected ? 1.42 : 1.18, 0]}>
-                <Text fontSize={selected ? 0.48 : 0.36} color={selected ? '#fff7b2' : '#ffffff'}>
+            <Billboard position={[0, selected ? 0.92 : 0.72, 0]}>
+                <Text fontSize={selected ? 0.42 : 0.32} color={selected ? '#fff7b2' : '#ffffff'}>
                     ▼
                 </Text>
             </Billboard>
@@ -61,14 +88,18 @@ export function BoardSpace({
                 <FieldGeometry node={node} />
                 <meshStandardMaterial color={visual.color} roughness={0.82} />
             </mesh>
-            <Text
-                position={[0, 0.03, 0]}
-                rotation={[-Math.PI / 2, 0, 0]}
-                fontSize={0.25}
-                color="#17221e"
-            >
-                {visual.icon}
-            </Text>
+            {node.kind === 'castle' ? (
+                <Castle />
+            ) : (
+                <Text
+                    position={[0, 0.03, 0]}
+                    rotation={[-Math.PI / 2, 0, 0]}
+                    fontSize={0.25}
+                    color="#17221e"
+                >
+                    {visual.icon}
+                </Text>
+            )}
             {reachable && <DestinationArrow selected={selected} />}
             {selected && <Crosshair />}
         </group>
