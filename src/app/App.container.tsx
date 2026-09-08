@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { api } from '../../convex/_generated/api'
 import { Controller } from '../game/controller/Controller.container'
 import { BoardDisplay } from '../game/display/BoardDisplay.component'
+import { gameCommand } from '../game/game-event.util'
 import type { RoomState } from '../game/game.type'
 
 const pathParts = () => window.location.pathname.split('/').filter(Boolean)
@@ -35,7 +36,7 @@ function ConnectedHome() {
     const [code, setCode] = useState('')
 
     const create = async () => {
-        const result = await dispatch({ event: { type: 'room.create', subjects: {}, data: {} } })
+        const result = await dispatch(gameCommand({ type: 'room.create', subjects: {}, data: {} }))
         if (result.kind === 'room.created') window.location.href = `/display/${result.code}`
     }
 
@@ -95,9 +96,13 @@ function LiveDisplay({ code }: { code: string }) {
         <BoardDisplay
             state={state}
             onStart={() =>
-                dispatch({
-                    event: { type: 'game.start', subjects: { roomId: state.room._id }, data: {} },
-                })
+                dispatch(
+                    gameCommand({
+                        type: 'game.start',
+                        subjects: { roomId: state.room._id },
+                        data: {},
+                    }),
+                )
             }
         />
     )
@@ -157,9 +162,13 @@ function ConnectedJoin({ code }: { code: string }) {
     const join = async (event: React.FormEvent) => {
         event.preventDefault()
         try {
-            const result = await dispatch({
-                event: { type: 'player.join', subjects: { code }, data: { name, color } },
-            })
+            const result = await dispatch(
+                gameCommand({
+                    type: 'player.join',
+                    subjects: { code },
+                    data: { name, color },
+                }),
+            )
             if (result.kind === 'player.joined') {
                 localStorage.setItem(`dicebound:${code}`, result.playerId)
                 window.location.href = `/controller/${code}`

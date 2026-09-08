@@ -5,6 +5,7 @@ import { availableSteps, canTraverse } from '../../shared/board.system.ts'
 import { physicalMatchup, strikeDamage } from '../../shared/combat.system.ts'
 import { equippedMagic, itemsForShop } from '../../shared/item.system.ts'
 import { elementMatchup, MAGIC_LOADOUTS } from '../../shared/magic.system.ts'
+import { isPersistentGameEvent } from '../../convex/events/policy.ts'
 
 test('game state has one public mutation entry point', () => {
     const convexDirectory = new URL('../../convex/', import.meta.url)
@@ -14,6 +15,15 @@ test('game state has one public mutation entry point', () => {
             /\bmutation\s*\(\s*\{/.test(readFileSync(new URL(file, convexDirectory), 'utf8')),
         )
     assert.deepEqual(registrations, ['game.ts'])
+})
+
+test('camera controls are ephemeral rather than durable game events', () => {
+    const subjects = { roomId: 'room', playerId: 'player' }
+    assert.equal(
+        isPersistentGameEvent({ type: 'camera.move', subjects, data: { direction: 'up' } }),
+        false,
+    )
+    assert.equal(isPersistentGameEvent({ type: 'movement.roll', subjects, data: {} }), true)
 })
 
 test('one-way roads only permit travel in their declared direction', () => {

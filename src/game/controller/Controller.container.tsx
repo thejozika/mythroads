@@ -5,6 +5,7 @@ import type { Id } from '../../../convex/_generated/dataModel'
 import { availableRoads, availableSteps, getNode } from '../../../shared/board.system'
 import { directionalSteps } from '../../../shared/controller-input.system'
 import type { ShopKind } from '../../../shared/item.system'
+import { gameCommand } from '../game-event.util'
 import { ControllerOverlays } from './ControllerOverlays.container'
 import { Gamepad } from './Gamepad.component'
 import { HeroStatus } from './HeroStatus.component'
@@ -63,13 +64,13 @@ export function Controller({ code }: { code: string }) {
                     ? 'one-way →'
                     : getNode(destination).kind,
                 run: () =>
-                    dispatch({
-                        event: {
+                    dispatch(
+                        gameCommand({
                             type: 'movement.select',
                             subjects: { roomId: state.room._id, playerId },
                             data: { destination },
-                        },
-                    }),
+                        }),
+                    ),
             },
         ]),
     )
@@ -80,13 +81,13 @@ export function Controller({ code }: { code: string }) {
                 label: 'Free camera',
                 kind: 'pan',
                 run: () =>
-                    dispatch({
-                        event: {
+                    dispatch(
+                        gameCommand({
                             type: 'camera.move',
                             subjects: { roomId: state.room._id, playerId },
                             data: { direction },
-                        },
-                    }),
+                        }),
+                    ),
             },
         ]),
     )
@@ -99,13 +100,13 @@ export function Controller({ code }: { code: string }) {
         ? () => {
               const index = selectedDestination ? destinations.indexOf(selectedDestination) : -1
               const destination = destinations[(index + 1) % destinations.length]
-              return dispatch({
-                  event: {
+              return dispatch(
+                  gameCommand({
                       type: 'movement.select',
                       subjects: { roomId: state.room._id, playerId },
                       data: { destination },
-                  },
-              })
+                  }),
+              )
           }
         : undefined
 
@@ -140,26 +141,26 @@ export function Controller({ code }: { code: string }) {
                     }
                     onPrimaryAction={() => {
                         if (cameraMode) {
-                            return dispatch({
-                                event: {
+                            return dispatch(
+                                gameCommand({
                                     type: 'camera.zoom',
                                     subjects: { roomId: state.room._id, playerId },
                                     data: { delta: -1 },
-                                },
-                            })
+                                }),
+                            )
                         }
                         if (selectedDestination !== undefined) {
-                            return dispatch({
-                                event: {
+                            return dispatch(
+                                gameCommand({
                                     type: 'movement.step',
                                     subjects: { roomId: state.room._id, playerId },
                                     data: { destination: selectedDestination },
-                                },
-                            })
+                                }),
+                            )
                         }
                         if (canResolve && state.encounter) {
-                            return dispatch({
-                                event: {
+                            return dispatch(
+                                gameCommand({
                                     type: 'encounter.resolve',
                                     subjects: {
                                         roomId: state.room._id,
@@ -167,36 +168,36 @@ export function Controller({ code }: { code: string }) {
                                         encounterId: state.encounter._id as Id<'encounters'>,
                                     },
                                     data: {},
-                                },
-                            })
+                                }),
+                            )
                         }
-                        return dispatch({
-                            event: {
+                        return dispatch(
+                            gameCommand({
                                 type: 'movement.roll',
                                 subjects: { roomId: state.room._id, playerId },
                                 data: {},
-                            },
-                        })
+                            }),
+                        )
                     }}
                     onInventory={() => setInventoryOpen(true)}
                     onBack={() => {
                         if (cameraMode) {
-                            return dispatch({
-                                event: {
+                            return dispatch(
+                                gameCommand({
                                     type: 'camera.zoom',
                                     subjects: { roomId: state.room._id, playerId },
                                     data: { delta: 1 },
-                                },
-                            })
+                                }),
+                            )
                         }
                         if (selectedDestination !== undefined) {
-                            return dispatch({
-                                event: {
+                            return dispatch(
+                                gameCommand({
                                     type: 'movement.cancel',
                                     subjects: { roomId: state.room._id, playerId },
                                     data: {},
-                                },
-                            })
+                                }),
+                            )
                         }
                         setInventoryOpen(false)
                     }}
@@ -214,13 +215,13 @@ export function Controller({ code }: { code: string }) {
                         className={cameraMode ? 'active' : ''}
                         disabled={!isActive || state.room.status !== 'playing'}
                         onClick={() =>
-                            dispatch({
-                                event: {
+                            dispatch(
+                                gameCommand({
                                     type: 'camera.toggle',
                                     subjects: { roomId: state.room._id, playerId },
                                     data: {},
-                                },
-                            })
+                                }),
+                            )
                         }
                     >
                         <span>◉</span> {cameraMode ? 'Follow hero' : 'Free camera'}

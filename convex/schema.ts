@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from 'convex/server'
 import { v } from 'convex/values'
+import { dispatchResultValidator, gameEventValidator } from './events/validators.ts'
 
 export default defineSchema({
     rooms: defineTable({
@@ -126,12 +127,33 @@ export default defineSchema({
         ),
         purchasedAt: v.number(),
     }).index('by_playerId', ['playerId']),
-    gameEvents: defineTable({
-        type: v.string(),
-        subjects: v.any(),
-        data: v.any(),
-        createdAt: v.number(),
-    }).index('by_createdAt', ['createdAt']),
+    gameEvents: defineTable(
+        v.union(
+            v.object({
+                type: v.string(),
+                subjects: v.any(),
+                data: v.any(),
+                createdAt: v.number(),
+            }),
+            v.object({
+                eventId: v.string(),
+                commandId: v.optional(v.string()),
+                schemaVersion: v.literal(1),
+                roomId: v.optional(v.id('rooms')),
+                actorPlayerId: v.optional(v.id('players')),
+                authority: v.object({
+                    mode: v.literal('prototypePlayerId'),
+                    actorPlayerId: v.optional(v.id('players')),
+                }),
+                event: gameEventValidator,
+                result: dispatchResultValidator,
+                createdAt: v.number(),
+            }),
+        ),
+    )
+        .index('by_createdAt', ['createdAt'])
+        .index('by_commandId', ['commandId'])
+        .index('by_roomId_and_createdAt', ['roomId', 'createdAt']),
     roomCameras: defineTable({
         roomId: v.id('rooms'),
         mode: v.union(v.literal('follow'), v.literal('free')),

@@ -3,6 +3,7 @@ import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import type { CombatAttack, GuardStance } from '../../../shared/combat.system'
 import type { EquipmentSlot, ShopKind } from '../../../shared/item.system'
+import { gameCommand } from '../game-event.util'
 import type { Combat, Player } from '../game.type'
 import { CombatControls } from './CombatControls.component'
 import { Inventory } from './Inventory.component'
@@ -35,9 +36,9 @@ export function ControllerOverlays({
     const items = useQuery(api.shops.inventory, { playerId })
     const subjects = { roomId, playerId }
     const attack = (choice: CombatAttack) =>
-        dispatch({ event: { type: 'combat.attack', subjects, data: { attack: choice } } })
+        dispatch(gameCommand({ type: 'combat.attack', subjects, data: { attack: choice } }))
     const guard = (choice: GuardStance) =>
-        dispatch({ event: { type: 'combat.guard', subjects, data: { guard: choice } } })
+        dispatch(gameCommand({ type: 'combat.guard', subjects, data: { guard: choice } }))
 
     return (
         <>
@@ -47,16 +48,16 @@ export function ControllerOverlays({
                     gold={player.gold}
                     items={items ?? []}
                     onEquip={(ownedItemId, slot: EquipmentSlot) =>
-                        dispatch({
-                            event: {
+                        dispatch(
+                            gameCommand({
                                 type: 'inventory.equip',
                                 subjects: {
                                     playerId,
                                     playerItemId: ownedItemId as Id<'playerItems'>,
                                 },
                                 data: { slot },
-                            },
-                        })
+                            }),
+                        )
                     }
                     onClose={onCloseInventory}
                 />
@@ -66,9 +67,11 @@ export function ControllerOverlays({
                     kind={shopKind}
                     gold={player.gold}
                     onBuy={(itemId) =>
-                        dispatch({ event: { type: 'shop.buy', subjects, data: { itemId } } })
+                        dispatch(gameCommand({ type: 'shop.buy', subjects, data: { itemId } }))
                     }
-                    onLeave={() => dispatch({ event: { type: 'shop.leave', subjects, data: {} } })}
+                    onLeave={() =>
+                        dispatch(gameCommand({ type: 'shop.leave', subjects, data: {} }))
+                    }
                 />
             )}
             {active && combat && (
