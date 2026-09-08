@@ -84,7 +84,7 @@ export function Gamepad({
     onInventory,
     onBack,
     onSecondaryAction,
-    secondaryActionLabel = 'Cycle destination',
+    secondaryActionLabel = 'Choose destination',
     canBack,
     cameraMode,
 }: GamepadProps) {
@@ -154,7 +154,7 @@ export function Gamepad({
                 <span>D-pad · {cameraMode ? 'camera' : 'move'}</span>
                 <span>
                     A · {primaryActionLabel.toLowerCase()}
-                    {cameraMode ? ' · B zoom out' : ' · B back · Y cycle'}
+                    {cameraMode ? ' · B zoom out' : ' · Y targets · B back'}
                 </span>
             </div>
             {cameraMode ? (

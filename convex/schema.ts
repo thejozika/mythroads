@@ -105,6 +105,7 @@ export default defineSchema({
         roomId: v.id('rooms'),
         playerId: v.id('players'),
         destination: v.number(),
+        path: v.optional(v.array(v.number())),
         updatedAt: v.number(),
     }).index('by_roomId', ['roomId']),
     playerItems: defineTable({

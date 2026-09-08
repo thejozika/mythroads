@@ -1,12 +1,11 @@
 import { ConvexError, v } from 'convex/values'
-import { availableSteps, getNode, isShopKind } from '../shared/board.system'
-import { outcomesFor, pickEncounter } from '../shared/encounter.system'
+import { getNode, reachableRoutes } from '../shared/board.system'
 import type { Id } from './_generated/dataModel'
 import { type MutationCtx, query } from './_generated/server'
-import { advanceTurn, roomPhase } from './gameHelpers'
+import { roomPhase } from './gameHelpers'
+import { resolveLanding } from './landings'
 import { createPlayer } from './players'
 import schema from './schema'
-import { startCombat } from './combat'
 
 const roomCode = () => {
     const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -152,7 +151,7 @@ export async function rollMovement(
         lastRoll: results,
         remainingMoves: total,
         phase: 'moving',
-        message: `${player.name} rolled ${total}.`,
+        message: `${player.name} rolled ${total}. Press Y to choose a destination.`,
     })
 }
 
@@ -173,23 +172,23 @@ export async function selectDestination(
     }: { roomId: Id<'rooms'>; playerId: Id<'players'>; destination: number },
 ) {
     const [room, player] = await Promise.all([ctx.db.get(roomId), ctx.db.get(playerId)])
-    if (
-        !room ||
-        !player ||
-        room.activePlayerId !== playerId ||
-        roomPhase(room) !== 'moving' ||
-        !availableSteps(player.position, player.previousPosition).includes(destination)
-    )
+    if (!room || !player || room.activePlayerId !== playerId || roomPhase(room) !== 'moving')
         throw new ConvexError('That destination cannot be selected.')
+    const route = reachableRoutes(
+        player.position,
+        player.previousPosition,
+        room.remainingMoves,
+    ).find((candidate) => candidate.destination === destination)
+    if (!route) throw new ConvexError('That field cannot be reached with this roll.')
     const current = await ctx.db
         .query('roomSelections')
         .withIndex('by_roomId', (query) => query.eq('roomId', roomId))
         .first()
-    const value = { roomId, playerId, destination, updatedAt: Date.now() }
+    const value = { roomId, playerId, destination, path: route.path, updatedAt: Date.now() }
     if (current) await ctx.db.replace(current._id, value)
     else await ctx.db.insert('roomSelections', value)
     await ctx.db.patch(roomId, {
-        message: `Selected ${getNode(destination).label}. Press A to move.`,
+        message: `Targeting ${getNode(destination).label}. Press A to travel or B to cancel.`,
     })
 }
 
@@ -201,7 +200,7 @@ export async function cancelDestination(
     if (!room || room.activePlayerId !== playerId || roomPhase(room) !== 'moving')
         throw new ConvexError('There is no movement selection to cancel.')
     await clearSelection(ctx, roomId)
-    await ctx.db.patch(roomId, { message: 'Choose a reachable field.' })
+    await ctx.db.patch(roomId, { message: 'Press Y to choose a destination.' })
 }
 
 export async function movePlayer(
@@ -225,61 +224,21 @@ export async function movePlayer(
         roomPhase(room) !== 'moving'
     )
         throw new ConvexError('You cannot move now.')
-    const allowed = availableSteps(player.position, player.previousPosition)
     const selection = await ctx.db
         .query('roomSelections')
         .withIndex('by_roomId', (query) => query.eq('roomId', roomId))
         .first()
-    if (!allowed.includes(destination) || selection?.destination !== destination)
-        throw new ConvexError('That road is not available.')
+    const route = reachableRoutes(
+        player.position,
+        player.previousPosition,
+        room.remainingMoves,
+    ).find((candidate) => candidate.destination === destination)
+    if (!route || selection?.destination !== destination)
+        throw new ConvexError('That route is not available.')
     await clearSelection(ctx, roomId)
-    await ctx.db.patch(playerId, { previousPosition: player.position, position: destination })
-    const remaining = room.remainingMoves - 1
-    if (remaining > 0) {
-        await ctx.db.patch(roomId, { remainingMoves: remaining })
-        return
-    }
-
-    const landed = getNode(destination)
-    if (isShopKind(landed.kind)) {
-        await ctx.db.patch(roomId, {
-            remainingMoves: 0,
-            phase: 'shopping',
-            shopKind: landed.kind,
-            message: `${player.name} entered the ${landed.label}.`,
-        })
-        return
-    }
-    if (landed.kind === 'combat') {
-        await startCombat(ctx, room, player, destination)
-        return
-    }
-    if (landed.kind === 'event') {
-        const outcome = pickEncounter('event', Math.random())
-        const wheelIndex = outcomesFor('event').findIndex(
-            (candidate) => candidate.id === outcome.id,
-        )
-        const encounterId = await ctx.db.insert('encounters', {
-            roomId,
-            playerId,
-            spaceId: destination,
-            kind: 'event',
-            outcomeId: outcome.id,
-            title: outcome.title,
-            description: outcome.description,
-            goldDelta: outcome.goldDelta,
-            hpDelta: outcome.hpDelta,
-            wheelIndex,
-            status: 'revealing',
-            createdAt: Date.now(),
-        })
-        await ctx.db.patch(roomId, {
-            remainingMoves: 0,
-            phase: 'revealingEncounter',
-            activeEncounterId: encounterId,
-            message: `${player.name} spins the event wheel!`,
-        })
-        return
-    }
-    await advanceTurn(ctx, room, playerId, `${player.name} returned safely to camp.`)
+    await ctx.db.patch(playerId, {
+        previousPosition: route.path.at(-2) ?? player.position,
+        position: destination,
+    })
+    await resolveLanding(ctx, room, player, destination)
 }

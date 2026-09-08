@@ -1,4 +1,4 @@
-import { availableSteps, getNode } from './board.system'
+import { availableSteps, getNode } from './board.system.ts'
 
 export type CardinalDirection = 'up' | 'down' | 'left' | 'right'
 
@@ -16,6 +16,23 @@ export function directionalSteps(position: number, previousPosition?: number) {
     const result: Partial<Record<CardinalDirection, number>> = {}
     for (const destination of availableSteps(position, previousPosition)) {
         result[directionForStep(position, destination)] = destination
+    }
+    return result
+}
+
+export function directionalTargets(originId: number, destinations: number[]) {
+    const origin = getNode(originId)
+    const result: Partial<Record<CardinalDirection, number>> = {}
+    const distance: Partial<Record<CardinalDirection, number>> = {}
+    for (const destinationId of destinations) {
+        if (destinationId === originId) continue
+        const destination = getNode(destinationId)
+        const direction = directionForStep(originId, destinationId)
+        const squared = (destination.x - origin.x) ** 2 + (destination.z - origin.z) ** 2
+        if (distance[direction] === undefined || squared < (distance[direction] ?? Infinity)) {
+            result[direction] = destinationId
+            distance[direction] = squared
+        }
     }
     return result
 }

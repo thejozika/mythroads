@@ -171,7 +171,7 @@ function ConnectedJoin({ code }: { code: string }) {
             )
             if (result.kind === 'player.joined') {
                 localStorage.setItem(`dicebound:${code}`, result.playerId)
-                window.location.href = `/controller/${code}`
+                window.location.href = `/controller/${code}/${result.playerId}`
             }
         } catch (caught) {
             setError(caught instanceof Error ? caught.message : 'Could not join room')
@@ -239,6 +239,7 @@ export function App({ connected }: { connected: boolean }) {
     if (parts[0] === 'display' && code === 'DEMO') return <BoardDisplay state={DEMO_STATE} />
     if (parts[0] === 'display' && connected) return <LiveDisplay code={code} />
     if (parts[0] === 'join') return <Join code={code} connected={connected} />
-    if (parts[0] === 'controller' && connected) return <Controller code={code} />
+    if (parts[0] === 'controller' && connected)
+        return <Controller code={code} routePlayerId={parts[2]} />
     return <Home connected={connected} />
 }

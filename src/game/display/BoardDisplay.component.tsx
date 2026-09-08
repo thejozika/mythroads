@@ -23,6 +23,8 @@ export function BoardDisplay({ state, onStart }: BoardDisplayProps) {
                     remainingMoves={room.remainingMoves}
                     cameraState={state.camera}
                     selectedDestination={state.selection?.destination}
+                    selectedPath={state.selection?.path}
+                    lastRoll={room.lastRoll}
                     combat={state.combat}
                 />
             </div>

@@ -2,8 +2,8 @@ import { useMutation, useQuery } from 'convex/react'
 import { useEffect, useState } from 'react'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
-import { availableRoads, availableSteps, getNode } from '../../../shared/board.system'
-import { directionalSteps } from '../../../shared/controller-input.system'
+import { getNode, reachableRoutes } from '../../../shared/board.system'
+import { directionalTargets } from '../../../shared/controller-input.system'
 import type { ShopKind } from '../../../shared/item.system'
 import { gameCommand } from '../game-event.util'
 import { ControllerOverlays } from './ControllerOverlays.container'
@@ -12,12 +12,12 @@ import { HeroStatus } from './HeroStatus.component'
 import './controller.css'
 import './controller-landscape.css'
 
-export function Controller({ code }: { code: string }) {
+export function Controller({ code, routePlayerId }: { code: string; routePlayerId?: string }) {
     const [inventoryOpen, setInventoryOpen] = useState(false)
     const [encounterReady, setEncounterReady] = useState(false)
     const state = useQuery(api.rooms.byCode, { code })
     const dispatch = useMutation(api.game.dispatch)
-    const storedPlayerId = localStorage.getItem(`dicebound:${code}`)
+    const storedPlayerId = routePlayerId ?? localStorage.getItem(`dicebound:${code}`)
     const playerId = storedPlayerId as Id<'players'> | null
     const encounterId = state?.encounter?._id
     useEffect(() => {
@@ -49,20 +49,21 @@ export function Controller({ code }: { code: string }) {
     const cameraMode = state.camera?.mode === 'free'
     const selectedDestination =
         state.selection?.playerId === playerId ? state.selection.destination : undefined
-    const movementChoices =
+    const routes =
         isActive && phase === 'moving' && state.room.remainingMoves > 0
-            ? directionalSteps(player.position, player.previousPosition)
-            : {}
+            ? reachableRoutes(player.position, player.previousPosition, state.room.remainingMoves)
+            : []
+    const destinations = routes.map((route) => route.destination)
+    const destinationMode = selectedDestination !== undefined
+    const movementChoices = destinationMode
+        ? directionalTargets(selectedDestination, destinations)
+        : {}
     const moveDirections = Object.fromEntries(
         Object.entries(movementChoices).map(([direction, destination]) => [
             direction,
             {
                 label: getNode(destination).label,
-                kind: availableRoads(player.position).find(
-                    (road) => road.destination === destination,
-                )?.oneWay
-                    ? 'one-way →'
-                    : getNode(destination).kind,
+                kind: getNode(destination).kind,
                 run: () =>
                     dispatch(
                         gameCommand({
@@ -92,23 +93,21 @@ export function Controller({ code }: { code: string }) {
         ]),
     )
     const directions = cameraMode && isActive ? cameraDirections : moveDirections
-    const destinations =
-        isActive && phase === 'moving'
-            ? availableSteps(player.position, player.previousPosition)
-            : []
-    const cycleDestination = destinations.length
-        ? () => {
-              const index = selectedDestination ? destinations.indexOf(selectedDestination) : -1
-              const destination = destinations[(index + 1) % destinations.length]
-              return dispatch(
-                  gameCommand({
-                      type: 'movement.select',
-                      subjects: { roomId: state.room._id, playerId },
-                      data: { destination },
-                  }),
-              )
-          }
-        : undefined
+    const beginDestinationMode =
+        routes.length && !destinationMode
+            ? () =>
+                  dispatch(
+                      gameCommand({
+                          type: 'movement.select',
+                          subjects: { roomId: state.room._id, playerId },
+                          data: {
+                              destination:
+                                  routes.find((route) => route.destination !== player.position)
+                                      ?.destination ?? routes[0].destination,
+                          },
+                      }),
+                  )
+            : undefined
 
     return (
         <main className="phone-shell" style={{ '--hero': player.color } as React.CSSProperties}>
@@ -202,8 +201,8 @@ export function Controller({ code }: { code: string }) {
                         setInventoryOpen(false)
                     }}
                     canBack={inventoryOpen || cameraMode || selectedDestination !== undefined}
-                    onSecondaryAction={!cameraMode ? cycleDestination : undefined}
-                    secondaryActionLabel="Cycle reachable fields"
+                    onSecondaryAction={!cameraMode ? beginDestinationMode : undefined}
+                    secondaryActionLabel="Choose destination"
                     cameraMode={cameraMode}
                 />
                 <div className="utility-controls">

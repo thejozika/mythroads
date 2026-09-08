@@ -92,6 +92,7 @@ export type Combat = {
 export type MovementSelection = {
     playerId: string
     destination: number
+    path?: number[]
 }
 
 export type RoomState = {

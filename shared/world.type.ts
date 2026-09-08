@@ -17,6 +17,8 @@ export type WorldRoad = {
     from: number
     to: number
     bidirectional: boolean
+    via?: { x: number; z: number }[]
+    bridge?: boolean
 }
 
 export type LogicalGameWorld = {

@@ -1,7 +1,14 @@
 import assert from 'node:assert/strict'
 import { readdirSync, readFileSync } from 'node:fs'
 import test from 'node:test'
-import { availableSteps, canTraverse } from '../../shared/board.system.ts'
+import {
+    availableSteps,
+    canTraverse,
+    getNode,
+    reachableRoutes,
+    WORLD,
+} from '../../shared/board.system.ts'
+import { directionalTargets } from '../../shared/controller-input.system.ts'
 import { physicalMatchup, strikeDamage } from '../../shared/combat.system.ts'
 import { equippedMagic, itemsForShop } from '../../shared/item.system.ts'
 import { elementMatchup, MAGIC_LOADOUTS } from '../../shared/magic.system.ts'
@@ -27,15 +34,49 @@ test('camera controls are ephemeral rather than durable game events', () => {
 })
 
 test('one-way roads only permit travel in their declared direction', () => {
-    assert.equal(canTraverse(4, 18), true)
-    assert.equal(canTraverse(18, 4), false)
-    assert.equal(canTraverse(7, 14), true)
-    assert.equal(canTraverse(14, 7), true)
+    assert.equal(canTraverse(10, 14), true)
+    assert.equal(canTraverse(14, 10), false)
+    assert.equal(canTraverse(7, 8), true)
+    assert.equal(canTraverse(8, 7), true)
 })
 
 test('movement excludes the previous field when another exit exists', () => {
-    assert.equal(availableSteps(4, 3).includes(3), false)
-    assert.equal(availableSteps(4, 3).includes(18), true)
+    assert.equal(availableSteps(10, 9).includes(9), false)
+    assert.equal(availableSteps(10, 9).includes(14), true)
+})
+
+test('destination mode exposes exact-roll routes and spatial crosshair targets', () => {
+    const routes = reachableRoutes(0, undefined, 5)
+    assert.ok(routes.length > 1)
+    assert.ok(routes.every((route) => route.path.length === 5))
+    const directions = directionalTargets(
+        routes[0].destination,
+        routes.map((route) => route.destination),
+    )
+    assert.ok(Object.keys(directions).length > 0)
+})
+
+test('road segments only cross when one of them is a bridge', () => {
+    const segments = WORLD.roads.flatMap((road) => {
+        const points = [getNode(road.from), ...(road.via ?? []), getNode(road.to)]
+        return points.slice(1).map((to, index) => ({ road, from: points[index], to }))
+    })
+    const orientation = (a, b, c) => (b.x - a.x) * (c.z - a.z) - (b.z - a.z) * (c.x - a.x)
+    const crosses = (first, second) =>
+        orientation(first.from, first.to, second.from) *
+            orientation(first.from, first.to, second.to) <
+            0 &&
+        orientation(second.from, second.to, first.from) *
+            orientation(second.from, second.to, first.to) <
+            0
+    for (let left = 0; left < segments.length; left += 1) {
+        for (let right = left + 1; right < segments.length; right += 1) {
+            const a = segments[left]
+            const b = segments[right]
+            if (a.road.id === b.road.id || a.road.bridge || b.road.bridge) continue
+            assert.equal(crosses(a, b), false, `${a.road.id} crosses ${b.road.id}`)
+        }
+    }
 })
 
 test('each committed charge has a strong neutral and weak guard matchup', () => {
