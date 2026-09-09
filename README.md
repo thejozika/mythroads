@@ -9,8 +9,9 @@ A small 3D, web-based vertical slice for the Dice RPG design documents in this r
 - Private player stats and movement controls at `/controller/:roomCode`
 - Convex-synchronized rooms, turns, players, health, and gold
 - A `D4 + D6` starter movement loadout
-- Exact movement with step-by-step choices at junctions and no immediate backtracking
+- Exact movement with a refundable route preview and one final commit
 - Automatic first-pass combat and event resolution
+- Hanko-backed controller accounts and Convex-enforced hero ownership
 - An offline visual board at `/display/demo`
 
 ## Run the visual demo
@@ -34,6 +35,11 @@ a room, and scan its QR code from phones on the same network.
 
 The phone route is `/controller/:roomCode`. It contains a virtual D-pad, ABXY buttons, private
 stats, and inventory. The D-pad becomes active after the current player presses A to roll.
+
+Authentication setup and deployment variables are documented in
+[`documents/engineering/authentication.md`](documents/engineering/authentication.md). Until a
+dedicated Hanko tenant is connected, the local Convex deployment may use its explicit development
+auth bypass; preview and production must never enable it.
 
 ## Repository checks
 

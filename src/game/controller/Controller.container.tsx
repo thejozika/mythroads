@@ -15,10 +15,13 @@ import './controller-landscape.css'
 export function Controller({ code, routePlayerId }: { code: string; routePlayerId?: string }) {
     const [inventoryOpen, setInventoryOpen] = useState(false)
     const [encounterReady, setEncounterReady] = useState(false)
-    const state = useQuery(api.rooms.byCode, { code })
-    const dispatch = useMutation(api.game.dispatch)
     const storedPlayerId = routePlayerId ?? localStorage.getItem(`dicebound:${code}`)
     const playerId = storedPlayerId as Id<'players'> | null
+    const state = useQuery(
+        api.rooms.queries.controllerByCode,
+        playerId ? { code, playerId } : 'skip',
+    )
+    const dispatch = useMutation(api.game.dispatch)
     const encounterId = state?.encounter?._id
     useEffect(() => {
         setEncounterReady(false)

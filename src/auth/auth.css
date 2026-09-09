@@ -1,0 +1,57 @@
+.auth-shell {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: max(1.25rem, env(safe-area-inset-top)) 1.25rem
+        max(1.25rem, env(safe-area-inset-bottom));
+}
+
+.auth-card {
+    width: min(100%, 440px);
+    padding: clamp(1.4rem, 5vw, 2.4rem);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 1.8rem;
+    color: var(--ink);
+    background: var(--paper);
+    box-shadow: 0 28px 90px rgba(0, 0, 0, 0.38);
+}
+
+.auth-card h1 {
+    margin-top: 0.4rem;
+    font-size: clamp(2.4rem, 10vw, 4rem);
+}
+
+.auth-card p {
+    color: #64766f;
+}
+
+.auth-loading {
+    padding: 1rem 0;
+    color: #64766f;
+    font-weight: 700;
+}
+
+hanko-auth {
+    display: block;
+    --brand-color: #203b34;
+    --brand-contrast-color: #fff8e6;
+    --color: #17221e;
+    --background-color: #f7f1de;
+    --error-color: #b53745;
+    --link-color: #287e72;
+    --input-background-color: #fffdf5;
+    --border-radius: 0.8rem;
+    --font-family: "DM Sans", sans-serif;
+}
+
+.auth-sign-out.compact {
+    position: fixed;
+    z-index: 80;
+    top: max(0.6rem, env(safe-area-inset-top));
+    right: max(0.6rem, env(safe-area-inset-right));
+    min-height: 2.5rem;
+    padding: 0.55rem 0.9rem;
+    color: #f7f1de;
+    background: rgba(16, 25, 35, 0.7);
+    backdrop-filter: blur(12px);
+}

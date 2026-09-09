@@ -37,6 +37,11 @@ export type Player = {
     joinedAt: number
 }
 
+export type PublicPlayer = Pick<
+    Player,
+    '_id' | 'name' | 'color' | 'position' | 'previousPosition' | 'joinedAt'
+>
+
 export type Encounter = {
     _id: string
     playerId: string
@@ -98,6 +103,16 @@ export type MovementSelection = {
 export type RoomState = {
     room: Room
     players: Player[]
+    encounter: Encounter | null
+    combat: Combat | null
+    selection: MovementSelection | null
+    camera: RoomCamera | null
+} | null
+
+export type DisplayRoomState = {
+    room: Room
+    players: PublicPlayer[]
+    canStart: boolean
     encounter: Encounter | null
     combat: Combat | null
     selection: MovementSelection | null

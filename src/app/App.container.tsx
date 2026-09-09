@@ -1,10 +1,13 @@
 import { useMutation, useQuery } from 'convex/react'
 import { useEffect, useMemo, useState } from 'react'
 import { api } from '../../convex/_generated/api'
+import { AuthGate } from '../auth/AuthGate.container'
+import { HankoSignIn } from '../auth/HankoSignIn.container'
+import { SignOutButton } from '../auth/SignOutButton.container'
 import { Controller } from '../game/controller/Controller.container'
 import { BoardDisplay } from '../game/display/BoardDisplay.component'
 import { gameCommand } from '../game/game-event.util'
-import type { RoomState } from '../game/game.type'
+import type { DisplayRoomState } from '../game/game.type'
 
 const pathParts = () => window.location.pathname.split('/').filter(Boolean)
 
@@ -88,27 +91,30 @@ function Home({ connected }: { connected: boolean }) {
 }
 
 function LiveDisplay({ code }: { code: string }) {
-    const state = useQuery(api.rooms.byCode, { code })
+    const state = useQuery(api.rooms.queries.displayByCode, { code })
     const dispatch = useMutation(api.game.dispatch)
     if (state === undefined) return <div className="loading">Summoning the board…</div>
     if (!state) return <div className="loading">Room not found.</div>
     return (
         <BoardDisplay
             state={state}
-            onStart={() =>
-                dispatch(
-                    gameCommand({
-                        type: 'game.start',
-                        subjects: { roomId: state.room._id },
-                        data: {},
-                    }),
-                )
+            onStart={
+                state.canStart
+                    ? () =>
+                          dispatch(
+                              gameCommand({
+                                  type: 'game.start',
+                                  subjects: { roomId: state.room._id },
+                                  data: {},
+                              }),
+                          )
+                    : undefined
             }
         />
     )
 }
 
-const DEMO_STATE: NonNullable<RoomState> = {
+const DEMO_STATE: NonNullable<DisplayRoomState> = {
     room: {
         _id: 'demo',
         code: 'DEMO',
@@ -126,11 +132,6 @@ const DEMO_STATE: NonNullable<RoomState> = {
             color: '#4bd3c2',
             position: 4,
             previousPosition: 3,
-            gold: 12,
-            hp: 9,
-            maxHp: 10,
-            attack: 2,
-            dice: [4, 6],
             joinedAt: 1,
         },
         {
@@ -138,11 +139,6 @@ const DEMO_STATE: NonNullable<RoomState> = {
             name: 'Bram',
             color: '#ffbd59',
             position: 9,
-            gold: 8,
-            hp: 7,
-            maxHp: 10,
-            attack: 3,
-            dice: [4, 6],
             joinedAt: 2,
         },
     ],
@@ -150,14 +146,22 @@ const DEMO_STATE: NonNullable<RoomState> = {
     combat: null,
     selection: null,
     camera: null,
+    canStart: false,
 }
 
 function ConnectedJoin({ code }: { code: string }) {
     const dispatch = useMutation(api.game.dispatch)
+    const existingPlayerId = useQuery(api.rooms.queries.myPlayerByCode, { code })
     const [name, setName] = useState('')
     const [error, setError] = useState('')
     const colors = ['#4bd3c2', '#ffbd59', '#f875aa', '#71a7ff']
     const [color, setColor] = useState(colors[0])
+
+    useEffect(() => {
+        if (!existingPlayerId) return
+        localStorage.setItem(`dicebound:${code}`, existingPlayerId)
+        window.location.replace(`/controller/${code}/${existingPlayerId}`)
+    }, [code, existingPlayerId])
 
     const join = async (event: React.FormEvent) => {
         event.preventDefault()
@@ -184,7 +188,9 @@ function ConnectedJoin({ code }: { code: string }) {
                 <span className="eyebrow">Joining room {code}</span>
                 <h1>Choose your hero</h1>
                 <p className="rejoin-hint">
-                    Returning? Enter the same name and choose the same color to reconnect.
+                    {existingPlayerId === undefined
+                        ? 'Checking for your hero…'
+                        : 'Your account securely reconnects to this hero on every device.'}
                 </p>
                 <label>
                     Name
@@ -231,7 +237,27 @@ function Join({ code, connected }: { code: string; connected: boolean }) {
     )
 }
 
-export function App({ connected }: { connected: boolean }) {
+function AuthSetupRequired() {
+    return (
+        <main className="auth-shell">
+            <section className="auth-card">
+                <span className="eyebrow">Authentication setup</span>
+                <h1>Connect Hanko</h1>
+                <p>Add VITE_HANKO_API_URL to enable secure accounts on this deployment.</p>
+            </section>
+        </main>
+    )
+}
+
+export function App({
+    connected,
+    authConfigured,
+    authBypassed,
+}: {
+    connected: boolean
+    authConfigured: boolean
+    authBypassed: boolean
+}) {
     const parts = useMemo(pathParts, [])
     const [code] = useState(() => (parts[1] ?? '').toUpperCase())
     useEffect(() => {
@@ -239,8 +265,34 @@ export function App({ connected }: { connected: boolean }) {
     }, [parts])
     if (parts[0] === 'display' && code === 'DEMO') return <BoardDisplay state={DEMO_STATE} />
     if (parts[0] === 'display' && connected) return <LiveDisplay code={code} />
-    if (parts[0] === 'join') return <Join code={code} connected={connected} />
+    if (parts[0] === 'sign-in') {
+        if (!authConfigured) return <AuthSetupRequired />
+        return <HankoSignIn next={new URLSearchParams(window.location.search).get('next') ?? '/'} />
+    }
+    if (!authConfigured) {
+        if (!authBypassed) return <AuthSetupRequired />
+        if (parts[0] === 'join') return <Join code={code} connected={connected} />
+        if (parts[0] === 'controller' && connected)
+            return <Controller code={code} routePlayerId={parts[2]} />
+        return <Home connected={connected} />
+    }
+    if (parts[0] === 'join')
+        return (
+            <AuthGate>
+                <ConnectedJoin code={code} />
+            </AuthGate>
+        )
     if (parts[0] === 'controller' && connected)
-        return <Controller code={code} routePlayerId={parts[2]} />
-    return <Home connected={connected} />
+        return (
+            <AuthGate>
+                <Controller code={code} routePlayerId={parts[2]} />
+                <SignOutButton compact />
+            </AuthGate>
+        )
+    return (
+        <AuthGate>
+            <Home connected={connected} />
+            <SignOutButton compact />
+        </AuthGate>
+    )
 }

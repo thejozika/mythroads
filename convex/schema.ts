@@ -5,6 +5,7 @@ import { dispatchResultValidator, gameEventValidator } from './events/validators
 export default defineSchema({
     rooms: defineTable({
         code: v.string(),
+        hostAuthId: v.optional(v.string()),
         status: v.union(v.literal('lobby'), v.literal('playing'), v.literal('finished')),
         activePlayerId: v.optional(v.id('players')),
         remainingMoves: v.number(),
@@ -35,6 +36,7 @@ export default defineSchema({
     }).index('by_code', ['code']),
     players: defineTable({
         roomId: v.id('rooms'),
+        authId: v.optional(v.string()),
         name: v.string(),
         color: v.string(),
         position: v.number(),
@@ -49,7 +51,9 @@ export default defineSchema({
         agility: v.optional(v.number()),
         dice: v.array(v.number()),
         joinedAt: v.number(),
-    }).index('by_room', ['roomId']),
+    })
+        .index('by_room', ['roomId'])
+        .index('by_room_and_authId', ['roomId', 'authId']),
     encounters: defineTable({
         roomId: v.id('rooms'),
         playerId: v.id('players'),
@@ -141,8 +145,13 @@ export default defineSchema({
                 roomId: v.optional(v.id('rooms')),
                 actorPlayerId: v.optional(v.id('players')),
                 authority: v.object({
-                    mode: v.literal('prototypePlayerId'),
+                    mode: v.union(
+                        v.literal('prototypePlayerId'),
+                        v.literal('authenticated'),
+                        v.literal('developmentBypass'),
+                    ),
                     actorPlayerId: v.optional(v.id('players')),
+                    actorAuthId: v.optional(v.string()),
                 }),
                 event: gameEventValidator,
                 result: dispatchResultValidator,

@@ -5,9 +5,11 @@ export async function createPlayer(
     ctx: MutationCtx,
     roomId: Id<'rooms'>,
     data: { name: string; color: string },
+    authId?: string,
 ) {
     const playerId = await ctx.db.insert('players', {
         roomId,
+        ...(authId ? { authId } : {}),
         name: data.name,
         color: data.color,
         position: 0,

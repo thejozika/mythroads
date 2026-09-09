@@ -1,7 +1,7 @@
-import type { Combat, Player } from '../game.type'
+import type { Combat, PublicPlayer } from '../game.type'
 import './combat-arena.css'
 
-export function CombatArena({ combat, player }: { combat: Combat; player?: Player }) {
+export function CombatArena({ combat, player }: { combat: Combat; player?: PublicPlayer }) {
     return (
         <section className="combat-arena" aria-live="polite">
             <header>
@@ -11,9 +11,7 @@ export function CombatArena({ combat, player }: { combat: Combat; player?: Playe
             <div className="combatants">
                 <div>
                     <small>{player?.name ?? 'Hero'}</small>
-                    <strong>
-                        ♥ {player?.hp ?? 0}/{player?.maxHp ?? 0}
-                    </strong>
+                    <strong>Choosing privately</strong>
                 </div>
                 <b>VS</b>
                 <div>

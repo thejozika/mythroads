@@ -14,14 +14,23 @@ import {
 import { buyItem, equipItem, leaveShop } from '../shops'
 import type { DispatchResult, GameEvent } from './validators.ts'
 
-export async function routeGameEvent(ctx: MutationCtx, event: GameEvent): Promise<DispatchResult> {
+export async function routeGameEvent(
+    ctx: MutationCtx,
+    event: GameEvent,
+    actorAuthId: string | null,
+): Promise<DispatchResult> {
     switch (event.type) {
         case 'room.create':
-            return { kind: 'room.created', code: await createRoom(ctx) }
+            return { kind: 'room.created', code: await createRoom(ctx, actorAuthId ?? undefined) }
         case 'player.join':
             return {
                 kind: 'player.joined',
-                playerId: await joinRoom(ctx, event.subjects.code, event.data),
+                playerId: await joinRoom(
+                    ctx,
+                    event.subjects.code,
+                    event.data,
+                    actorAuthId ?? undefined,
+                ),
             }
         case 'game.start':
             await startRoom(ctx, event.subjects.roomId)

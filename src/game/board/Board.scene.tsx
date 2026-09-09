@@ -1,13 +1,13 @@
 import { Canvas } from '@react-three/fiber'
 import { CombatStage } from '../combat/CombatStage.object'
-import type { Combat, Player, RoomCamera } from '../game.type'
+import type { Combat, PublicPlayer, RoomCamera } from '../game.type'
 import { BoardWorld } from './BoardWorld.object'
 import { CameraRig } from './CameraRig.effect'
 import { DiceThrow } from './DiceThrow.object'
 
 type BoardSceneProps = {
-    players: Player[]
-    activePlayer?: Player
+    players: PublicPlayer[]
+    activePlayer?: PublicPlayer
     remainingMoves: number
     cameraState: RoomCamera | null
     selectedDestination?: number

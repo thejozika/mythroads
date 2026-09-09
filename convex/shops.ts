@@ -2,17 +2,20 @@ import { ConvexError, v } from 'convex/values'
 import { getItem } from '../shared/item.system'
 import type { Id } from './_generated/dataModel'
 import { type MutationCtx, query } from './_generated/server'
+import { requirePlayerOwner } from './auth/authorization'
 import { advanceTurn, roomPhase } from './gameHelpers'
 import schema from './schema'
 
 export const inventory = query({
     args: { playerId: v.id('players') },
     returns: v.array(schema.doc('playerItems')),
-    handler: async (ctx, { playerId }) =>
-        await ctx.db
+    handler: async (ctx, { playerId }) => {
+        await requirePlayerOwner(ctx, playerId)
+        return await ctx.db
             .query('playerItems')
             .withIndex('by_playerId', (q) => q.eq('playerId', playerId))
-            .take(40),
+            .take(40)
+    },
 })
 
 export async function buyItem(

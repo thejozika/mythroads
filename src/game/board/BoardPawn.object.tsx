@@ -4,14 +4,14 @@ import { useMemo, useRef } from 'react'
 import type { Group } from 'three'
 import { Vector3 } from 'three'
 import { getNode } from '../../../shared/board.system'
-import type { Player } from '../game.type'
+import type { PublicPlayer } from '../game.type'
 
 export function BoardPawn({
     player,
     offset,
     movementPoints,
 }: {
-    player: Player
+    player: PublicPlayer
     offset: number
     movementPoints?: number
 }) {

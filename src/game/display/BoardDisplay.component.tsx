@@ -1,11 +1,11 @@
 import { QRCodeSVG } from 'qrcode.react'
 import { BoardScene } from '../board/Board.scene'
-import type { RoomState } from '../game.type'
+import type { DisplayRoomState } from '../game.type'
 import { CombatArena } from './CombatArena.component'
 import { EncounterWheel } from './EncounterWheel.component'
 
 type BoardDisplayProps = {
-    state: NonNullable<RoomState>
+    state: NonNullable<DisplayRoomState>
     onStart?: () => void
 }
 
@@ -65,7 +65,7 @@ export function BoardDisplay({ state, onStart }: BoardDisplayProps) {
                             <div>
                                 <strong>{player.name}</strong>
                                 <small>
-                                    ♥ {player.hp}/{player.maxHp} · ◈ {player.gold}
+                                    {active?._id === player._id ? 'Taking a turn' : 'Exploring'}
                                 </small>
                             </div>
                         </div>

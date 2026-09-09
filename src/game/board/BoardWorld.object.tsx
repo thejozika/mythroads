@@ -1,13 +1,13 @@
 import { BOARD, reachableRoutes } from '../../../shared/board.system'
-import type { Player } from '../game.type'
+import type { PublicPlayer } from '../game.type'
 import { BoardGround } from './BoardGround.object'
 import { BoardPawn } from './BoardPawn.object'
 import { BoardRoads } from './BoardRoads.object'
 import { BoardSpace } from './BoardSpace.object'
 
 type BoardWorldProps = {
-    players: Player[]
-    activePlayer?: Player
+    players: PublicPlayer[]
+    activePlayer?: PublicPlayer
     remainingMoves: number
     selectedDestination?: number
     selectedPath?: number[]

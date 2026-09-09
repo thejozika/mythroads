@@ -2,10 +2,10 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useMemo } from 'react'
 import { PerspectiveCamera, Vector3 } from 'three'
 import { getNode } from '../../../shared/board.system'
-import type { Player, RoomCamera } from '../game.type'
+import type { PublicPlayer, RoomCamera } from '../game.type'
 
 type CameraRigProps = {
-    activePlayer?: Player
+    activePlayer?: PublicPlayer
     cameraState: RoomCamera | null
     combatActive?: boolean
     targeting?: boolean

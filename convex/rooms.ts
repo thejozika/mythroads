@@ -1,11 +1,10 @@
-import { ConvexError, v } from 'convex/values'
+import { ConvexError } from 'convex/values'
 import { canTraverse, getNode, previewRouteStep } from '../shared/board.system'
 import type { Id } from './_generated/dataModel'
-import { type MutationCtx, query } from './_generated/server'
+import type { MutationCtx } from './_generated/server'
 import { roomPhase } from './gameHelpers'
 import { resolveLanding } from './landings'
 import { createPlayer } from './players'
-import schema from './schema'
 
 const roomCode = () => {
     const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -15,7 +14,7 @@ const roomCode = () => {
     ).join('')
 }
 
-export async function createRoom(ctx: MutationCtx) {
+export async function createRoom(ctx: MutationCtx, hostAuthId?: string) {
     let code = roomCode()
     while (
         await ctx.db
@@ -26,6 +25,7 @@ export async function createRoom(ctx: MutationCtx) {
         code = roomCode()
     await ctx.db.insert('rooms', {
         code,
+        ...(hostAuthId ? { hostAuthId } : {}),
         status: 'lobby',
         remainingMoves: 0,
         message: 'Scan the code to join the adventure.',
@@ -35,54 +35,11 @@ export async function createRoom(ctx: MutationCtx) {
     return code
 }
 
-export const byCode = query({
-    args: { code: v.string() },
-    returns: v.union(
-        v.null(),
-        v.object({
-            room: schema.doc('rooms'),
-            players: v.array(schema.doc('players')),
-            encounter: v.union(v.null(), schema.doc('encounters')),
-            combat: v.union(v.null(), schema.doc('combats')),
-            selection: v.union(v.null(), schema.doc('roomSelections')),
-            camera: v.union(v.null(), schema.doc('roomCameras')),
-        }),
-    ),
-    handler: async (ctx, { code }) => {
-        const room = await ctx.db
-            .query('rooms')
-            .withIndex('by_code', (q) => q.eq('code', code.toUpperCase()))
-            .unique()
-        if (!room) return null
-        const players = await ctx.db
-            .query('players')
-            .withIndex('by_room', (q) => q.eq('roomId', room._id))
-            .take(4)
-        const encounter = room.activeEncounterId ? await ctx.db.get(room.activeEncounterId) : null
-        const combat = room.activeCombatId ? await ctx.db.get(room.activeCombatId) : null
-        const selection = await ctx.db
-            .query('roomSelections')
-            .withIndex('by_roomId', (query) => query.eq('roomId', room._id))
-            .first()
-        const camera = await ctx.db
-            .query('roomCameras')
-            .withIndex('by_roomId', (query) => query.eq('roomId', room._id))
-            .unique()
-        return {
-            room,
-            players: players.sort((a, b) => a.joinedAt - b.joinedAt),
-            encounter,
-            combat,
-            selection,
-            camera,
-        }
-    },
-})
-
 export async function joinRoom(
     ctx: MutationCtx,
     code: string,
     data: { name: string; color: string },
+    authId?: string,
 ) {
     const normalizedName = data.name.trim().slice(0, 16)
     if (!normalizedName) throw new ConvexError('Choose a hero name.')
@@ -95,13 +52,19 @@ export async function joinRoom(
         .query('players')
         .withIndex('by_room', (q) => q.eq('roomId', room._id))
         .take(4)
+    const ownedPlayer = authId ? players.find((player) => player.authId === authId) : undefined
+    if (ownedPlayer) return ownedPlayer._id
     const namedPlayer = players.find(
         (player) => player.name.toLocaleLowerCase() === normalizedName.toLocaleLowerCase(),
     )
     if (namedPlayer) {
+        if (namedPlayer.authId && namedPlayer.authId !== authId) {
+            throw new ConvexError('That hero name belongs to another account.')
+        }
         if (namedPlayer.color.toLocaleLowerCase() !== data.color.toLocaleLowerCase()) {
             throw new ConvexError('That hero exists. Select their original color to rejoin.')
         }
+        if (authId && !namedPlayer.authId) await ctx.db.patch(namedPlayer._id, { authId })
         return namedPlayer._id
     }
     if (room.status !== 'lobby') {
@@ -110,7 +73,7 @@ export async function joinRoom(
         )
     }
     if (players.length >= 4) throw new ConvexError('That room is full.')
-    return await createPlayer(ctx, room._id, { name: normalizedName, color: data.color })
+    return await createPlayer(ctx, room._id, { name: normalizedName, color: data.color }, authId)
 }
 
 export async function startRoom(ctx: MutationCtx, roomId: Id<'rooms'>) {

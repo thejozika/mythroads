@@ -1,7 +1,7 @@
 import { Float, Text } from '@react-three/drei'
 import { ATTACK_LABELS, isMagicTechnique, type CombatAttack } from '../../../shared/combat.system'
 import { MAGIC_TECHNIQUES, type Element } from '../../../shared/magic.system'
-import type { Combat, Player } from '../game.type'
+import type { Combat, PublicPlayer } from '../game.type'
 
 const ELEMENT_COLOR: Record<Element, string> = {
     fire: '#ff6b4a',
@@ -29,7 +29,7 @@ function ArenaFloor({ element }: { element: Element }) {
     )
 }
 
-function Hero({ player }: { player: Player }) {
+function Hero({ player }: { player: PublicPlayer }) {
     return (
         <group position={[-2.1, 0.55, 0]} rotation={[0, 0.45, 0]}>
             <mesh castShadow>
@@ -98,7 +98,7 @@ function LastAction({ combat }: { combat: Combat }) {
     )
 }
 
-export function CombatStage({ combat, player }: { combat: Combat; player: Player }) {
+export function CombatStage({ combat, player }: { combat: Combat; player: PublicPlayer }) {
     return (
         <>
             <ArenaFloor element={combat.enemyElement} />
