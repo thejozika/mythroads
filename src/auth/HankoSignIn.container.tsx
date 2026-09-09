@@ -31,7 +31,7 @@ export function HankoSignIn({ next }: { next?: string }) {
     return (
         <main className="auth-shell">
             <section className="auth-card">
-                <span className="eyebrow">Dicebound account</span>
+                <span className="eyebrow">Mythroads account</span>
                 <h1>Enter the adventure</h1>
                 <p>Your account securely reconnects you to the same hero on every device.</p>
                 {!ready && !error && <div className="auth-loading">Opening the gate…</div>}

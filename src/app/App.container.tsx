@@ -47,7 +47,7 @@ function ConnectedHome() {
         <main className="home">
             <div className="brand-mark">D20</div>
             <span className="eyebrow">A tiny playable beginning</span>
-            <h1>Dicebound</h1>
+            <h1>Mythroads</h1>
             <p>Collect your movement dice. Choose the road. Survive what waits there.</p>
             <div className="button-row">
                 <button type="button" className="primary" onClick={create}>
