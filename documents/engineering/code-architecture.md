@@ -27,6 +27,7 @@ Line limits are intentionally strict while the project is young; exceptions tend
 | `*.component.tsx` | Presentational DOM UI | Convex calls or route/storage orchestration |
 | `*.context.tsx` | A provider and its consumer hook | Feature UI |
 | `*.container.tsx` | Convex subscriptions, mutations, routing, storage, screen orchestration | Low-level geometry or materials |
+| `*.generated.ts` | Lean-emitted endpoint definitions and stable rule artifacts | Hand-authored behavior |
 
 Runtime dependencies flow upward: types/utilities/systems → hooks/resources → renderable UI →
 containers. Type-only imports may cross tiers because they produce no runtime coupling.
@@ -66,6 +67,7 @@ src/
   lib/                 narrow cross-feature integrations
 shared/                deterministic rules also imported by Convex
 convex/                authoritative commands, queries, and persistence
+proofs/Mythroads/      Lean endpoint manifests, deterministic models, and theorems
 ```
 
 When a folder approaches 12 files, split by concept (`board/terrain`, `board/pawns`) rather than by

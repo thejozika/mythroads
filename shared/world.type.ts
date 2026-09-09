@@ -10,6 +10,11 @@ export type WorldNode = {
     visualId: WorldVisualId
     x: number
     z: number
+    landmark?: {
+        visualId: 'landmark.castle'
+        offsetX: number
+        offsetZ: number
+    }
 }
 
 export type WorldRoad = {

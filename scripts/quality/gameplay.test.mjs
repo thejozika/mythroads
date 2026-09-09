@@ -19,7 +19,7 @@ test('game state has one public mutation entry point', () => {
     const registrations = readdirSync(convexDirectory)
         .filter((file) => file.endsWith('.ts'))
         .filter((file) =>
-            /\bmutation\s*\(\s*\{/.test(readFileSync(new URL(file, convexDirectory), 'utf8')),
+            /\bmutation\s*\(/.test(readFileSync(new URL(file, convexDirectory), 'utf8')),
         )
     assert.deepEqual(registrations, ['game.ts'])
 })
@@ -34,8 +34,8 @@ test('camera controls are ephemeral rather than durable game events', () => {
 })
 
 test('one-way roads only permit travel in their declared direction', () => {
-    assert.equal(canTraverse(10, 14), true)
-    assert.equal(canTraverse(14, 10), false)
+    assert.equal(canTraverse(12, 13), true)
+    assert.equal(canTraverse(13, 12), false)
     assert.equal(canTraverse(7, 8), true)
     assert.equal(canTraverse(8, 7), true)
 })
@@ -47,8 +47,8 @@ test('route preview refunds immediate bidirectional backtracking', () => {
 })
 
 test('route preview cannot reverse a one-way road', () => {
-    assert.deepEqual(previewRouteStep(10, [], 14, 4), [14])
-    assert.equal(previewRouteStep(10, [14], 10, 4), null)
+    assert.deepEqual(previewRouteStep(12, [], 13, 4), [13])
+    assert.equal(previewRouteStep(12, [13], 12, 4), null)
 })
 
 test('the world defines a healing castle and a river bridge', () => {
@@ -64,6 +64,16 @@ test('destination mode exposes exact-roll endpoints and adjacent roads', () => {
     assert.ok(routes.every((route) => route.path.length === 5))
     const directions = directionalRoads(0)
     assert.ok(Object.keys(directions).length > 0)
+})
+
+test('the board is a branching network rather than a single ring', () => {
+    const degree = new Map(WORLD.nodes.map((node) => [node.id, 0]))
+    for (const road of WORLD.roads) {
+        degree.set(road.from, (degree.get(road.from) ?? 0) + 1)
+        degree.set(road.to, (degree.get(road.to) ?? 0) + 1)
+    }
+    assert.ok([...degree.values()].filter((connections) => connections >= 3).length >= 8)
+    assert.ok(WORLD.roads.length > WORLD.nodes.length)
 })
 
 test('road segments only cross when one of them is a bridge', () => {

@@ -10,6 +10,7 @@ not specification.
   development-fragment checks.
 - `npm run lint` / `npm run lint:fix` — Biome correctness and style checks.
 - `npm run format` / `npm run format:check` — deterministic formatting.
+- `npm run proofs:check` — compile Lean proofs and reject stale generated Convex code.
 - `npm run check` — the complete blocking gate, including the production build.
 
 Do not weaken a check merely to land a change. Split or correct the code. Generated files under
@@ -24,8 +25,11 @@ Do not weaken a check merely to land a change. Split or correct the code. Genera
   role. Do not create global dumping grounds such as `helpers/` or `misc/`.
 - Use the filename taxonomy documented in `documents/engineering/code-architecture.md`. A suffix is
   a contract, not decoration.
-- Deterministic game rules belong in `*.system.ts` and must run identically in the browser and
-  Convex. Rendering never decides game outcomes.
+- Stable deterministic rules and endpoint manifests belong in `proofs/Mythroads/` and generate
+  checked TypeScript boundaries. Provisional deterministic rules remain in `*.system.ts` and must
+  run identically in the browser and Convex. Rendering never decides game outcomes.
+- Files matching `*.generated.ts` are build artifacts emitted from Lean and are never edited by
+  hand. Public Convex modules may only register their generated query or mutation definitions.
 - Only `*.container.tsx` may query Convex, access storage, or orchestrate routes. Three.js scenes and
   objects receive serializable state through props.
 

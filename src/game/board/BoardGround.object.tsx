@@ -5,20 +5,18 @@ import type { WorldTerrainFeature } from '../../../shared/world.type'
 import { ribbonGeometry } from './board-path.geometry'
 
 const ISLAND_EDGE = [
-    [-7.1, -1.2],
-    [-6.6, -3.6],
-    [-4.8, -5.7],
-    [-2.1, -6.2],
-    [0.4, -6],
-    [3.3, -5.8],
-    [5.8, -4.2],
-    [6.9, -1.6],
-    [6.7, 1.8],
-    [5.1, 4.8],
-    [2.4, 6],
-    [-0.8, 6.2],
-    [-3.8, 5.7],
-    [-6.2, 3.7],
+    [-6.4, -2.5],
+    [-3.2, -2.8],
+    [0.1, -2.65],
+    [3.5, -2.8],
+    [5.8, -2.25],
+    [6.1, 0.8],
+    [5.9, 3.6],
+    [4.2, 5.3],
+    [0.4, 5.65],
+    [-3.1, 5.5],
+    [-6.2, 4.55],
+    [-6.6, 1.2],
 ] as const
 
 function TerrainPatch({
@@ -40,16 +38,16 @@ function TerrainPatch({
 
 function Scenery() {
     const trees = [
-        [-3.8, 1.2],
-        [-2.8, 2.1],
-        [-1.8, 1.45],
-        [2.1, 1.9],
-        [3.1, 1.25],
-        [2.4, -1.5],
-        [1.4, -2.15],
-        [-2.4, -1.8],
-        [-3.5, -1.25],
-        [0.1, 2.3],
+        [-5, 1.5],
+        [-4.2, 0.5],
+        [-4.8, -1],
+        [-2.2, 2.7],
+        [-1, 3.2],
+        [1.4, 3.2],
+        [2.7, 3.1],
+        [4.7, 1.4],
+        [4.6, -0.4],
+        [-1, -2],
     ] as const
     return trees.map(([x, z], index) => (
         <group position={[x, 0, z]} key={`grove-${x}-${z}`}>
@@ -114,8 +112,8 @@ export function BoardGround() {
     const island = useMemo(() => {
         const shape = new Shape()
         ISLAND_EDGE.forEach(([x, z], index) => {
-            if (index === 0) shape.moveTo(x, z)
-            else shape.lineTo(x, z)
+            if (index === 0) shape.moveTo(x, -z)
+            else shape.lineTo(x, -z)
         })
         shape.closePath()
         return shape
@@ -126,10 +124,10 @@ export function BoardGround() {
                 <shapeGeometry args={[island]} />
                 <meshStandardMaterial color="#3d664c" roughness={1} />
             </mesh>
-            <TerrainPatch position={[-2.7, -0.095, 2.2]} scale={[2.3, 1.5]} color="#527b50" />
-            <TerrainPatch position={[2.9, -0.09, 2.1]} scale={[2.1, 1.45]} color="#66845a" />
-            <TerrainPatch position={[1.9, -0.085, -2.5]} scale={[2.7, 1.2]} color="#496f52" />
-            <TerrainPatch position={[-2.7, -0.08, -2.5]} scale={[1.7, 1.15]} color="#57764e" />
+            <TerrainPatch position={[-4.5, -0.095, 1]} scale={[1.4, 2]} color="#527b50" />
+            <TerrainPatch position={[2.8, -0.09, 3.2]} scale={[2.2, 1.45]} color="#66845a" />
+            <TerrainPatch position={[3.9, -0.085, -0.8]} scale={[1.8, 1.2]} color="#496f52" />
+            <TerrainPatch position={[-1.4, -0.08, -1.4]} scale={[1.6, 0.8]} color="#57764e" />
             <Water />
             {WORLD.terrain
                 .filter(

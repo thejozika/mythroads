@@ -1,0 +1,10 @@
+name = "mythroads_rules"
+version = "0.1.0"
+defaultTargets = ["mythroads-codegen"]
+
+[[lean_lib]]
+name = "Mythroads"
+
+[[lean_exe]]
+name = "mythroads-codegen"
+root = "Main"

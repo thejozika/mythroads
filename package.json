@@ -13,8 +13,10 @@
         "lint:fix": "biome lint --write .",
         "format": "biome format --write .",
         "format:check": "biome format .",
+        "proofs:check": "node scripts/lean/check-generated.mjs",
+        "proofs:generate": "node scripts/lean/check-generated.mjs --write",
         "check:architecture": "node scripts/quality/check-architecture.mjs",
-        "check": "npm run check:architecture && npm run test:quality && npm run test:convex && npm run lint && npm run format:check && npm run build",
+        "check": "npm run check:architecture && npm run proofs:check && npm run test:quality && npm run test:convex && npm run lint && npm run format:check && npm run build",
         "test:convex": "vitest run",
         "test:quality": "node --test scripts/quality/*.test.mjs",
         "setup:hooks": "node scripts/quality/install-git-hooks.mjs"

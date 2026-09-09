@@ -13,5 +13,12 @@ jobs:
               with:
                   node-version: 22
                   cache: npm
+            - uses: leanprover/lean-action@v1
+              with:
+                  lake-package-directory: proofs
+                  build: true
+                  test: false
+                  lint: false
+                  axiom-audit: true
             - run: npm ci
             - run: npm run check

@@ -2,6 +2,7 @@ node_modules
 dist
 .env.local
 .convex
+proofs/.lake
 convex/_generated/ai
 *.log
 .DS_Store

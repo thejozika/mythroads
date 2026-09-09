@@ -6,10 +6,7 @@ type BoardNode = (typeof BOARD)[number]
 
 function FieldGeometry({ node }: { node: BoardNode }) {
     const shop = ['armoury', 'jeweller', 'weapons', 'items', 'magic'].includes(node.kind)
-    if (shop) return <boxGeometry args={[0.78, 0.035, 0.62]} />
-    if (node.kind === 'event') return <cylinderGeometry args={[0.49, 0.49, 0.035, 4]} />
-    if (node.kind === 'combat') return <cylinderGeometry args={[0.5, 0.5, 0.035, 6]} />
-    return <cylinderGeometry args={[0.53, 0.53, 0.035, 8]} />
+    return <boxGeometry args={[shop ? 0.82 : 0.74, 0.035, shop ? 0.66 : 0.62]} />
 }
 
 function Castle() {
@@ -88,17 +85,18 @@ export function BoardSpace({
                 <FieldGeometry node={node} />
                 <meshStandardMaterial color={visual.color} roughness={0.82} />
             </mesh>
-            {node.kind === 'castle' ? (
-                <Castle />
-            ) : (
-                <Text
-                    position={[0, 0.03, 0]}
-                    rotation={[-Math.PI / 2, 0, 0]}
-                    fontSize={0.25}
-                    color="#17221e"
-                >
-                    {visual.icon}
-                </Text>
+            <Text
+                position={[0, 0.03, 0]}
+                rotation={[-Math.PI / 2, 0, 0]}
+                fontSize={0.25}
+                color="#17221e"
+            >
+                {visual.icon}
+            </Text>
+            {node.landmark?.visualId === 'landmark.castle' && (
+                <group position={[node.landmark.offsetX, 0, node.landmark.offsetZ]}>
+                    <Castle />
+                </group>
             )}
             {reachable && <DestinationArrow selected={selected} />}
             {selected && <Crosshair />}

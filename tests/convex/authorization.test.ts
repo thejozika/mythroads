@@ -78,6 +78,7 @@ describe('Hanko-backed game authorization', () => {
         await expect(
             t.withIdentity(stranger).query(api.shops.inventory, { playerId }),
         ).rejects.toThrow(/another account/)
+        await expect(t.query(api.shops.inventory, { playerId })).rejects.toThrow(/Sign in/)
     })
 
     test('only the authenticated host can start a room', async () => {
