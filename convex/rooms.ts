@@ -1,5 +1,5 @@
 import { ConvexError, v } from 'convex/values'
-import { getNode, reachableRoutes } from '../shared/board.system'
+import { canTraverse, getNode, previewRouteStep } from '../shared/board.system'
 import type { Id } from './_generated/dataModel'
 import { type MutationCtx, query } from './_generated/server'
 import { roomPhase } from './gameHelpers'
@@ -174,21 +174,32 @@ export async function selectDestination(
     const [room, player] = await Promise.all([ctx.db.get(roomId), ctx.db.get(playerId)])
     if (!room || !player || room.activePlayerId !== playerId || roomPhase(room) !== 'moving')
         throw new ConvexError('That destination cannot be selected.')
-    const route = reachableRoutes(
-        player.position,
-        player.previousPosition,
-        room.remainingMoves,
-    ).find((candidate) => candidate.destination === destination)
-    if (!route) throw new ConvexError('That field cannot be reached with this roll.')
     const current = await ctx.db
         .query('roomSelections')
         .withIndex('by_roomId', (query) => query.eq('roomId', roomId))
         .first()
-    const value = { roomId, playerId, destination, path: route.path, updatedAt: Date.now() }
+    const currentPath = current?.path ?? []
+    if (!current && destination !== player.position)
+        throw new ConvexError('Start route planning from the hero.')
+    const path = current
+        ? previewRouteStep(player.position, currentPath, destination, room.remainingMoves)
+        : []
+    if (!path) throw new ConvexError('That road cannot be used from here.')
+    const previewDestination = path.at(-1) ?? player.position
+    const remaining = room.remainingMoves - path.length
+    const value = {
+        roomId,
+        playerId,
+        destination: previewDestination,
+        path,
+        updatedAt: Date.now(),
+    }
     if (current) await ctx.db.replace(current._id, value)
     else await ctx.db.insert('roomSelections', value)
     await ctx.db.patch(roomId, {
-        message: `Targeting ${getNode(destination).label}. Press A to travel or B to cancel.`,
+        message: remaining
+            ? `Planning through ${getNode(previewDestination).label}. ${remaining} movement left.`
+            : `Route ends at ${getNode(previewDestination).label}. Press A to travel.`,
     })
 }
 
@@ -228,16 +239,22 @@ export async function movePlayer(
         .query('roomSelections')
         .withIndex('by_roomId', (query) => query.eq('roomId', roomId))
         .first()
-    const route = reachableRoutes(
-        player.position,
-        player.previousPosition,
-        room.remainingMoves,
-    ).find((candidate) => candidate.destination === destination)
-    if (!route || selection?.destination !== destination)
+    const path = selection?.path ?? []
+    const validRoute = path.reduce(
+        (valid, step, index) =>
+            valid && canTraverse(index ? path[index - 1] : player.position, step),
+        true,
+    )
+    if (
+        !selection ||
+        selection.destination !== destination ||
+        path.length !== room.remainingMoves ||
+        !validRoute
+    )
         throw new ConvexError('That route is not available.')
     await clearSelection(ctx, roomId)
     await ctx.db.patch(playerId, {
-        previousPosition: route.path.at(-2) ?? player.position,
+        previousPosition: path.at(-2) ?? player.position,
         position: destination,
     })
     await resolveLanding(ctx, room, player, destination)

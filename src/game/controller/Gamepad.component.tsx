@@ -154,7 +154,7 @@ export function Gamepad({
                 <span>D-pad · {cameraMode ? 'camera' : 'move'}</span>
                 <span>
                     A · {primaryActionLabel.toLowerCase()}
-                    {cameraMode ? ' · B zoom out' : ' · Y targets · B back'}
+                    {cameraMode ? ' · B zoom out' : ' · Y route · B cancel'}
                 </span>
             </div>
             {cameraMode ? (

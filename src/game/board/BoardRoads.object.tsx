@@ -60,18 +60,30 @@ function Road({ road }: { road: (typeof WORLD.roads)[number] }) {
 }
 
 function SelectedRoute({ nodeIds }: { nodeIds: number[] }) {
-    const geometries = useMemo(
+    const segments = useMemo(
         () =>
             nodeIds.slice(1).flatMap((nodeId, index) => {
                 const points = roadBetween(nodeIds[index], nodeId)
-                return points ? [ribbonGeometry(points, 0.16, 0.015)] : []
+                return points
+                    ? [
+                          {
+                              ribbon: ribbonGeometry(points, 0.16, 0.015),
+                              arrows: arrowGeometry(points, 0.023),
+                          },
+                      ]
+                    : []
             }),
         [nodeIds],
     )
-    return geometries.map((geometry, index) => (
-        <mesh geometry={geometry} key={`selected-road-${nodeIds[index]}-${nodeIds[index + 1]}`}>
-            <meshBasicMaterial color="#fff2a8" />
-        </mesh>
+    return segments.map((segment, index) => (
+        <group key={`selected-road-${nodeIds[index]}-${nodeIds[index + 1]}`}>
+            <mesh geometry={segment.ribbon}>
+                <meshBasicMaterial color="#fff2a8" />
+            </mesh>
+            <mesh geometry={segment.arrows}>
+                <meshBasicMaterial color="#725628" />
+            </mesh>
+        </group>
     ))
 }
 

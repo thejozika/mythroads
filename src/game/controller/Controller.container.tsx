@@ -2,8 +2,8 @@ import { useMutation, useQuery } from 'convex/react'
 import { useEffect, useState } from 'react'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
-import { getNode, reachableRoutes } from '../../../shared/board.system'
-import { directionalTargets } from '../../../shared/controller-input.system'
+import { getNode } from '../../../shared/board.system'
+import { directionalRoads } from '../../../shared/controller-input.system'
 import type { ShopKind } from '../../../shared/item.system'
 import { gameCommand } from '../game-event.util'
 import { ControllerOverlays } from './ControllerOverlays.container'
@@ -49,21 +49,24 @@ export function Controller({ code, routePlayerId }: { code: string; routePlayerI
     const cameraMode = state.camera?.mode === 'free'
     const selectedDestination =
         state.selection?.playerId === playerId ? state.selection.destination : undefined
-    const routes =
-        isActive && phase === 'moving' && state.room.remainingMoves > 0
-            ? reachableRoutes(player.position, player.previousPosition, state.room.remainingMoves)
-            : []
-    const destinations = routes.map((route) => route.destination)
+    const selectedPath = state.selection?.playerId === playerId ? (state.selection.path ?? []) : []
     const destinationMode = selectedDestination !== undefined
-    const movementChoices = destinationMode
-        ? directionalTargets(selectedDestination, destinations)
-        : {}
+    const previewPosition = selectedDestination ?? player.position
+    const previewRemaining = Math.max(0, state.room.remainingMoves - selectedPath.length)
+    const previewPrevious =
+        selectedPath.length > 1
+            ? selectedPath.at(-2)
+            : selectedPath.length === 1
+              ? player.position
+              : undefined
+    const movementChoices =
+        destinationMode && previewRemaining > 0 ? directionalRoads(previewPosition) : {}
     const moveDirections = Object.fromEntries(
         Object.entries(movementChoices).map(([direction, destination]) => [
             direction,
             {
                 label: getNode(destination).label,
-                kind: getNode(destination).kind,
+                kind: destination === previewPrevious ? 'back · +1' : getNode(destination).kind,
                 run: () =>
                     dispatch(
                         gameCommand({
@@ -94,17 +97,13 @@ export function Controller({ code, routePlayerId }: { code: string; routePlayerI
     )
     const directions = cameraMode && isActive ? cameraDirections : moveDirections
     const beginDestinationMode =
-        routes.length && !destinationMode
+        isActive && phase === 'moving' && state.room.remainingMoves > 0 && !destinationMode
             ? () =>
                   dispatch(
                       gameCommand({
                           type: 'movement.select',
                           subjects: { roomId: state.room._id, playerId },
-                          data: {
-                              destination:
-                                  routes.find((route) => route.destination !== player.position)
-                                      ?.destination ?? routes[0].destination,
-                          },
+                          data: { destination: player.position },
                       }),
                   )
             : undefined
@@ -117,7 +116,7 @@ export function Controller({ code, routePlayerId }: { code: string; routePlayerI
                     player={player}
                     active={isActive}
                     lastRoll={state.room.lastRoll}
-                    remainingMoves={state.room.remainingMoves}
+                    remainingMoves={destinationMode ? previewRemaining : state.room.remainingMoves}
                 />
                 <Gamepad
                     directions={directions}
@@ -125,13 +124,15 @@ export function Controller({ code, routePlayerId }: { code: string; routePlayerI
                         (cameraMode && isActive) ||
                         canRoll ||
                         canResolve ||
-                        selectedDestination !== undefined
+                        (selectedDestination !== undefined && previewRemaining === 0)
                     }
                     primaryActionLabel={
                         cameraMode
                             ? 'Zoom in'
                             : selectedDestination !== undefined
-                              ? `Move to ${getNode(selectedDestination).label}`
+                              ? previewRemaining === 0
+                                  ? `Travel to ${getNode(selectedDestination).label}`
+                                  : `${previewRemaining} moves left`
                               : phase === 'revealingEncounter'
                                 ? encounterReady
                                     ? 'Reveal result'
@@ -148,7 +149,7 @@ export function Controller({ code, routePlayerId }: { code: string; routePlayerI
                                 }),
                             )
                         }
-                        if (selectedDestination !== undefined) {
+                        if (selectedDestination !== undefined && previewRemaining === 0) {
                             return dispatch(
                                 gameCommand({
                                     type: 'movement.step',
@@ -202,7 +203,7 @@ export function Controller({ code, routePlayerId }: { code: string; routePlayerI
                     }}
                     canBack={inventoryOpen || cameraMode || selectedDestination !== undefined}
                     onSecondaryAction={!cameraMode ? beginDestinationMode : undefined}
-                    secondaryActionLabel="Choose destination"
+                    secondaryActionLabel="Plan route"
                     cameraMode={cameraMode}
                 />
                 <div className="utility-controls">

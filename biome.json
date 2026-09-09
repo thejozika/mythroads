@@ -8,7 +8,15 @@
         }
     },
     "files": {
-        "includes": ["**", "!node_modules", "!dist", "!convex/_generated", "!.agents", "!.claude"]
+        "includes": [
+            "**",
+            "!node_modules",
+            "!dist",
+            "!convex/_generated",
+            "!.convex/local",
+            "!.agents",
+            "!.claude"
+        ]
     },
     "formatter": {
         "enabled": true,

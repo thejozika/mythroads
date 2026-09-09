@@ -21,13 +21,22 @@ export function BoardWorld({
     selectedPath,
 }: BoardWorldProps) {
     const targeting = selectedDestination !== undefined
+    const previewPath = selectedPath ?? []
+    const previewPosition = selectedDestination ?? activePlayer?.position
+    const previewRemaining = Math.max(0, remainingMoves - previewPath.length)
+    const previewPrevious =
+        previewPath.length > 1
+            ? previewPath.at(-2)
+            : previewPath.length === 1
+              ? activePlayer?.position
+              : undefined
     const reachable = new Set(
-        targeting && activePlayer && remainingMoves > 0
-            ? reachableRoutes(
-                  activePlayer.position,
-                  activePlayer.previousPosition,
-                  remainingMoves,
-              ).map((route) => route.destination)
+        targeting && previewPosition !== undefined
+            ? previewRemaining === 0
+                ? [previewPosition]
+                : reachableRoutes(previewPosition, previewPrevious, previewRemaining).map(
+                      (route) => route.destination,
+                  )
             : [],
     )
     const selectedRoute =
@@ -49,6 +58,9 @@ export function BoardWorld({
                     key={player._id}
                     player={player}
                     offset={index - (players.length - 1) / 2}
+                    movementPoints={
+                        targeting && player._id === activePlayer?._id ? previewRemaining : undefined
+                    }
                 />
             ))}
         </>

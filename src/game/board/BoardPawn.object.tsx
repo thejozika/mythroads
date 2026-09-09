@@ -1,4 +1,4 @@
-import { Float, Text } from '@react-three/drei'
+import { Billboard, Float, Text } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { useMemo, useRef } from 'react'
 import type { Group } from 'three'
@@ -6,7 +6,15 @@ import { Vector3 } from 'three'
 import { getNode } from '../../../shared/board.system'
 import type { Player } from '../game.type'
 
-export function BoardPawn({ player, offset }: { player: Player; offset: number }) {
+export function BoardPawn({
+    player,
+    offset,
+    movementPoints,
+}: {
+    player: Player
+    offset: number
+    movementPoints?: number
+}) {
     const node = getNode(player.position)
     const group = useRef<Group>(null)
     const target = useMemo(() => new Vector3(), [])
@@ -34,6 +42,25 @@ export function BoardPawn({ player, offset }: { player: Player; offset: number }
                 <Text position={[0, 0.86, 0]} fontSize={0.18} color="white">
                     {player.name}
                 </Text>
+                {movementPoints !== undefined && (
+                    <Billboard position={[0, 1.36, 0]}>
+                        <mesh>
+                            <circleGeometry args={[0.23, 24]} />
+                            <meshBasicMaterial color="#203b34" depthTest={false} />
+                        </mesh>
+                        <Text
+                            position={[0, 0, 0.01]}
+                            fontSize={0.25}
+                            color="#fff2a8"
+                            anchorX="center"
+                            anchorY="middle"
+                            outlineWidth={0.012}
+                            outlineColor="#203b34"
+                        >
+                            {movementPoints}
+                        </Text>
+                    </Billboard>
+                )}
             </group>
         </Float>
     )

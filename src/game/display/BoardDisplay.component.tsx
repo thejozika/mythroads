@@ -13,6 +13,10 @@ export function BoardDisplay({ state, onStart }: BoardDisplayProps) {
     const { room, players } = state
     const active = players.find((player) => player._id === room.activePlayerId)
     const joinUrl = `${window.location.origin}/join/${room.code}`
+    const movementRemaining = Math.max(
+        0,
+        room.remainingMoves - (state.selection?.path?.length ?? 0),
+    )
 
     return (
         <main className="display-shell">
@@ -81,9 +85,7 @@ export function BoardDisplay({ state, onStart }: BoardDisplayProps) {
                                 {active ? `${active.name}'s turn` : 'Adventure complete'}
                             </strong>
                             <span>{room.message}</span>
-                            {room.remainingMoves > 0 && (
-                                <small>{room.remainingMoves} movement</small>
-                            )}
+                            {room.remainingMoves > 0 && <small>{movementRemaining} movement</small>}
                         </>
                     )}
                 </section>

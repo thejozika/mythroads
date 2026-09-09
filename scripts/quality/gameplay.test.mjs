@@ -1,8 +1,14 @@
 import assert from 'node:assert/strict'
 import { readdirSync, readFileSync } from 'node:fs'
 import test from 'node:test'
-import { canTraverse, getNode, reachableRoutes, WORLD } from '../../shared/board.system.ts'
-import { directionalTargets } from '../../shared/controller-input.system.ts'
+import {
+    canTraverse,
+    getNode,
+    previewRouteStep,
+    reachableRoutes,
+    WORLD,
+} from '../../shared/board.system.ts'
+import { directionalRoads } from '../../shared/controller-input.system.ts'
 import { physicalMatchup, strikeDamage } from '../../shared/combat.system.ts'
 import { equippedMagic, itemsForShop } from '../../shared/item.system.ts'
 import { elementMatchup, MAGIC_LOADOUTS } from '../../shared/magic.system.ts'
@@ -34,9 +40,15 @@ test('one-way roads only permit travel in their declared direction', () => {
     assert.equal(canTraverse(8, 7), true)
 })
 
-test('exact-roll routes may retrace bidirectional roads', () => {
-    const routes = reachableRoutes(1, 0, 2)
-    assert.ok(routes.some((route) => route.path[0] === 0 && route.path[1] === 1))
+test('route preview refunds immediate bidirectional backtracking', () => {
+    const forward = previewRouteStep(0, [], 1, 4)
+    assert.deepEqual(forward, [1])
+    assert.deepEqual(previewRouteStep(0, forward, 0, 4), [])
+})
+
+test('route preview cannot reverse a one-way road', () => {
+    assert.deepEqual(previewRouteStep(10, [], 14, 4), [14])
+    assert.equal(previewRouteStep(10, [14], 10, 4), null)
 })
 
 test('the world defines a healing castle and a river bridge', () => {
@@ -46,14 +58,11 @@ test('the world defines a healing castle and a river bridge', () => {
     assert.ok(WORLD.roads.some((road) => road.bridge))
 })
 
-test('destination mode exposes exact-roll routes and spatial crosshair targets', () => {
+test('destination mode exposes exact-roll endpoints and adjacent roads', () => {
     const routes = reachableRoutes(0, undefined, 5)
     assert.ok(routes.length > 1)
     assert.ok(routes.every((route) => route.path.length === 5))
-    const directions = directionalTargets(
-        routes[0].destination,
-        routes.map((route) => route.destination),
-    )
+    const directions = directionalRoads(0)
     assert.ok(Object.keys(directions).length > 0)
 })
 

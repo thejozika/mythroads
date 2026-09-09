@@ -125,23 +125,49 @@ export const availableRoads = (position: number): AvailableRoad[] =>
 export const canTraverse = (from: number, to: number) =>
     availableRoads(from).some((road) => road.destination === to)
 
+export const availableSteps = (position: number, previousPosition?: number) => {
+    const destinations = availableRoads(position).map((road) => road.destination)
+    const forward = destinations.filter((id) => id !== previousPosition)
+    return forward.length > 0 ? forward : destinations
+}
+
+export function previewRouteStep(
+    origin: number,
+    path: number[],
+    destination: number,
+    totalSteps: number,
+) {
+    const current = path.at(-1) ?? origin
+    const previous = path.length > 1 ? path.at(-2) : path.length === 1 ? origin : undefined
+    if (destination === previous && canTraverse(current, destination)) return path.slice(0, -1)
+    if (path.length >= totalSteps || !canTraverse(current, destination)) return null
+    return [...path, destination]
+}
+
 export type ReachableRoute = { destination: number; path: number[] }
 
 export function reachableRoutes(
     position: number,
-    _previousPosition: number | undefined,
+    previousPosition: number | undefined,
     steps: number,
 ) {
     if (steps <= 0) return []
-    type RouteState = { current: number; path: number[] }
-    let routes = new Map<number, RouteState>([[position, { current: position, path: [] }]])
+    type RouteState = { current: number; previous?: number; path: number[] }
+    let routes = new Map<string, RouteState>([
+        [
+            `${position}:${previousPosition ?? 'none'}`,
+            { current: position, previous: previousPosition, path: [] },
+        ],
+    ])
     for (let step = 0; step < steps; step += 1) {
-        const nextRoutes = new Map<number, RouteState>()
+        const nextRoutes = new Map<string, RouteState>()
         for (const route of routes.values()) {
-            for (const { destination } of availableRoads(route.current)) {
-                if (!nextRoutes.has(destination)) {
-                    nextRoutes.set(destination, {
+            for (const destination of availableSteps(route.current, route.previous)) {
+                const key = `${destination}:${route.current}`
+                if (!nextRoutes.has(key)) {
+                    nextRoutes.set(key, {
                         current: destination,
+                        previous: route.current,
                         path: [...route.path, destination],
                     })
                 }
@@ -149,8 +175,8 @@ export function reachableRoutes(
         }
         routes = nextRoutes
     }
-    return [...routes.values()].map((route) => ({
-        destination: route.current,
-        path: route.path,
-    }))
+    const destinations = new Map<number, number[]>()
+    for (const route of routes.values())
+        if (!destinations.has(route.current)) destinations.set(route.current, route.path)
+    return [...destinations].map(([destination, path]) => ({ destination, path }))
 }
