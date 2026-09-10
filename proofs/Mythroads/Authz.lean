@@ -1,9 +1,7 @@
 import Mythroads.Convex
+import Mythroads.Identity
 
 namespace Mythroads.Authz
-
-abbrev AuthId := String
-abbrev PlayerId := String
 
 structure Player where
   id : PlayerId

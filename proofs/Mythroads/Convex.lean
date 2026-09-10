@@ -28,9 +28,11 @@ inductive MutationStep where
   | persistEvent
   deriving Repr, DecidableEq
 
+/-- Describes whether a generated endpoint reads, executes a transaction, or forwards to one. -/
 inductive EndpointPlan where
   | query (steps : List QueryStep)
   | mutation (steps : List MutationStep)
+  | forwardMutation (functionReference : String)
   deriving Repr, DecidableEq
 
 structure Endpoint where
@@ -48,6 +50,7 @@ def inventoryEndpoint : Endpoint where
   auth := .inventoryOwner "playerId"
   plan := .query [.readOwnedInventory "playerId" "playerItems" "by_playerId" 40]
 
+/-- The only client-callable mutation. It delegates without writing state itself. -/
 def dispatchEndpoint : Endpoint where
   exportName := "dispatchMutationDefinition"
   args := [
@@ -56,8 +59,17 @@ def dispatchEndpoint : Endpoint where
   ]
   returnsValidator := "dispatchResultValidator"
   auth := .eventActor
+  plan := .forwardMutation "internal.game.execute"
+
+/-- The internal transactional event loop: authorize, deduplicate, route, and persist. -/
+def executeEndpoint : Endpoint where
+  exportName := "executeMutationDefinition"
+  args := dispatchEndpoint.args
+  returnsValidator := "dispatchResultValidator"
+  auth := .eventActor
   plan := .mutation [.authorizeEvent, .returnPriorCommand, .routeEvent, .persistEvent]
 
-def gameApi : List Endpoint := [dispatchEndpoint]
+/-- All generated registrations that form the write-side game API. -/
+def gameApi : List Endpoint := [dispatchEndpoint, executeEndpoint]
 
 end Mythroads.Convex

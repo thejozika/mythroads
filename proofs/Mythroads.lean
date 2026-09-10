@@ -33,3 +33,4 @@ import Mythroads.Game.Random
 import Mythroads.Game.Schema
 import Mythroads.Game.Turn
 import Mythroads.Game.World
+import Mythroads.Identity

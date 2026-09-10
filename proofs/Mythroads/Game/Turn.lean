@@ -11,6 +11,6 @@ theorem nextIndexIsValid (current playerCount : Nat) (positive : 0 < playerCount
 
 theorem roundNeverDecreases (round current playerCount : Nat) :
     round ≤ nextRound round current playerCount := by
-  simp [nextRound]
+  simp only [nextRound]; split <;> omega
 
 end Mythroads.Game.Turn

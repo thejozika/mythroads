@@ -1,14 +1,11 @@
 import Mythroads.Convex.TypeScript
 import Mythroads.Game.Magic
+import Mythroads.Identity
 
 namespace Mythroads.Game.Inventory
 
 open Mythroads.Convex.TypeScript
 open Mythroads.Game.Magic
-
-abbrev AuthId := String
-abbrev PlayerId := String
-abbrev ItemId := String
 
 inductive EquipmentSlot where
   | weapon

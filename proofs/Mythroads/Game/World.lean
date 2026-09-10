@@ -4,25 +4,30 @@ namespace Mythroads.Game.World
 
 open Mythroads.Convex.TypeScript
 
+/-- The gameplay role attached to a board node. Rendering derives its visual identifier from this value. -/
 inductive SpaceKind where
   | castle | combat | event | armoury | jeweller | weapons | items | magic
   deriving Repr, DecidableEq
 
+/-- Converts a space kind to the stable lowercase value emitted into TypeScript. -/
 def SpaceKind.label : SpaceKind → String
   | .castle => "castle" | .combat => "combat" | .event => "event"
   | .armoury => "armoury" | .jeweller => "jeweller" | .weapons => "weapons"
   | .items => "items" | .magic => "magic"
 
+/-- An integer board-space coordinate. Emitters divide values by 100 for Three.js world units. -/
 structure Point where
   x : Int
   z : Int
   deriving Repr, DecidableEq
 
+/-- A landmark's offset from its associated playable node. Landmarks do not replace the node itself. -/
 structure Landmark where
   offsetX : Int
   offsetZ : Int
   deriving Repr, DecidableEq
 
+/-- A playable destination in the logical board graph. -/
 structure Node where
   id : Nat
   label : String
@@ -31,6 +36,7 @@ structure Node where
   landmark : Option Landmark := none
   deriving Repr, DecidableEq
 
+/-- A directed graph edge. `bidirectional` adds the reverse edge; `bridge` is visual metadata. -/
 structure Road where
   origin : Nat
   destination : Nat
@@ -38,6 +44,13 @@ structure Road where
   bridge : Bool := false
   deriving Repr, DecidableEq
 
+/-- The complete traversable board: playable nodes plus the roads connecting them. -/
+structure BoardGraph where
+  nodes : List Node
+  roads : List Road
+  deriving Repr, DecidableEq
+
+/-- Non-playable world geometry positioned around and beneath the graph. -/
 inductive Terrain where
   | lake (id : String) (point : Point) (radiusX radiusZ : Nat)
   | river (id : String) (width : Nat) (points : List Point)
@@ -47,6 +60,7 @@ inductive Terrain where
 private def n (id : Nat) (label : String) (kind : SpaceKind) (x z : Int) : Node :=
   { id, label, kind, point := { x, z } }
 
+/-- Every playable space in Wildroot Crossing. Node IDs are persistent game-state references. -/
 def nodes : List Node := [
   { id := 0, label := "Hearthkeep", kind := .castle, point := { x := -540, z := 320 },
     landmark := some { offsetX := 0, offsetZ := 90 } },
@@ -68,6 +82,7 @@ def nodes : List Node := [
 private def r (origin destination : Nat) (bidirectional := true) (bridge := false) : Road :=
   { origin, destination, bidirectional, bridge }
 
+/-- The board's edges. A road with `bidirectional := false` may only be traversed origin-to-destination. -/
 def roads : List Road := [
   r 0 1, r 1 2, r 2 3, r 3 4, r 4 5, r 5 6 true true, r 6 7, r 7 8, r 8 9,
   r 2 10, r 10 11, r 11 12, r 12 13 false true, r 13 14, r 14 15, r 15 9,
@@ -76,6 +91,12 @@ def roads : List Road := [
   r 4 11, r 6 13, r 8 15, r 12 18, r 14 20, r 17 23, r 20 25
 ]
 
+/-- The authoritative graph value consumed by movement rules and TypeScript generation. -/
+def boardGraph : BoardGraph where
+  nodes := nodes
+  roads := roads
+
+/-- Decorative and collision-free terrain; terrain never decides legal movement. -/
 def terrain : List Terrain := [
   .lake "heartmere" { x := 25, z := -200 } 105 42,
   .river "silverrun" 52 [
@@ -85,19 +106,31 @@ def terrain : List Terrain := [
   .hill "greenwatch-hill" { x := -450, z := -30 } 90 52
 ]
 
+/-- A legal outgoing movement option as seen from one node. -/
 structure AvailableRoad where
   destination : Nat
   oneWay : Bool
   deriving Repr, DecidableEq
 
-def availableRoads (position : Nat) : List AvailableRoad := roads.filterMap fun road =>
-  if road.origin = position then some { destination := road.destination, oneWay := !road.bidirectional }
-  else if road.bidirectional ∧ road.destination = position then
-    some { destination := road.origin, oneWay := false }
-  else none
+/-- Computes outgoing edges, including reverse edges only for bidirectional roads. -/
+def BoardGraph.availableRoads (graph : BoardGraph) (position : Nat) : List AvailableRoad :=
+  graph.roads.filterMap fun road =>
+    if road.origin = position then
+      some { destination := road.destination, oneWay := !road.bidirectional }
+    else if road.bidirectional ∧ road.destination = position then
+      some { destination := road.origin, oneWay := false }
+    else none
 
+/-- Decides whether the graph contains a legal edge between two node IDs. -/
+def BoardGraph.canTraverse (graph : BoardGraph) (origin destination : Nat) : Bool :=
+  (graph.availableRoads origin).any fun road => road.destination = destination
+
+/-- Looks up movement options in the authoritative board graph. -/
+def availableRoads (position : Nat) : List AvailableRoad := boardGraph.availableRoads position
+
+/-- Checks a movement step against the authoritative board graph. -/
 def canTraverse (origin destination : Nat) : Bool :=
-  (availableRoads origin).any fun road => road.destination = destination
+  boardGraph.canTraverse origin destination
 
 theorem oneWayBridgeAllowsForward : canTraverse 12 13 = true := by native_decide
 theorem oneWayBridgeRejectsReverse : canTraverse 13 12 = false := by native_decide
@@ -143,9 +176,11 @@ def emitTypeScript : String :=
   "import type { ShopKind } from '../item.system'\nimport type { LogicalGameWorld, SpaceKind, WorldNode, WorldRoad } from '../world.type'\n\n" ++
   "export type { SpaceKind, WorldNode as BoardNode } from '../world.type'\n" ++
   "const node = (definition: Omit<WorldNode, 'visualId'>): WorldNode => ({ ...definition, visualId: `space.${definition.kind}` })\n" ++
-  "const WORLD_NODES: Omit<WorldNode, 'visualId'>[] = [\n" ++ join "" (nodes.map renderNode) ++ "]\n" ++
+  "const WORLD_NODES: Omit<WorldNode, 'visualId'>[] = [\n" ++
+  join "" (boardGraph.nodes.map renderNode) ++ "]\n" ++
   "const road = (from: number, to: number, options: Partial<WorldRoad> = {}): WorldRoad => ({ id: `${from}-${to}`, from, to, bidirectional: true, ...options })\n" ++
-  "const WORLD_ROADS: WorldRoad[] = [\n" ++ join "" (roads.map renderRoad) ++ "]\n" ++
+  "const WORLD_ROADS: WorldRoad[] = [\n" ++
+  join "" (boardGraph.roads.map renderRoad) ++ "]\n" ++
   "export const WORLD: LogicalGameWorld = { id: 'wildroot-crossing', label: 'Wildroot Crossing', version: 5, nodes: WORLD_NODES.map(node), roads: WORLD_ROADS, terrain: [\n" ++
   join "" (terrain.map renderTerrain) ++ "] }\n" ++
   "export const BOARD = WORLD.nodes\n" ++

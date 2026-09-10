@@ -8,7 +8,7 @@ import { Controller } from '../game/controller/Controller.container'
 import { BoardDisplay } from '../game/display/BoardDisplay.component'
 import { gameCommand } from '../game/game-event.util'
 import type { DisplayRoomState } from '../game/game.type'
-
+import { LeanDefinitions } from './LeanDefinitions.component'
 const pathParts = () => window.location.pathname.split('/').filter(Boolean)
 
 function OfflineNotice() {
@@ -263,6 +263,7 @@ export function App({
     useEffect(() => {
         document.body.dataset.view = parts[0] ?? 'home'
     }, [parts])
+    if (parts[0] === 'lean') return <LeanDefinitions />
     if (parts[0] === 'display' && code === 'DEMO') return <BoardDisplay state={DEMO_STATE} />
     if (parts[0] === 'display' && connected) return <LiveDisplay code={code} />
     if (parts[0] === 'sign-in') {

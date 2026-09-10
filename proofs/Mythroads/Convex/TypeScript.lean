@@ -19,6 +19,7 @@ structure Parameter where
   type : TsType
   deriving Repr
 
+/-- A TypeScript expression represented as typed Lean data before code generation. -/
 inductive Expr where
   | identifier (name : String)
   | boolean (value : Bool)
@@ -42,6 +43,7 @@ inductive Expr where
   | asConst (value : Expr)
   deriving Repr
 
+/-- A state-changing or control-flow statement in a generated TypeScript function body. -/
 inductive Statement where
   | constDecl (name : String) (value : Expr)
   | constDeclTyped (name : String) (type : TsType) (value : Expr)
@@ -61,6 +63,7 @@ inductive Statement where
   | whileDo (condition : Expr) (body : List Statement)
   deriving Repr
 
+/-- A complete generated TypeScript function: visibility, parameters, result type, and body. -/
 structure Function where
   isExported : Bool := true
   isAsync : Bool := true
@@ -163,6 +166,7 @@ end
 def emitParameter (parameter : Parameter) : String :=
   s!"{parameter.name}: {emitType parameter.type}"
 
+/-- Renders a Lean-authored `Function` syntax tree as executable TypeScript source. -/
 def emitFunction (function : Function) : String :=
   let exportPrefix := if function.isExported then "export " else ""
   let asyncPrefix := if function.isAsync then "async " else ""

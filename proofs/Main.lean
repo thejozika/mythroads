@@ -49,27 +49,35 @@ def emitMutationSteps : List MutationStep → String
   | _ => "        throw new Error('Unsupported generated mutation plan.')\n"
 
 def emitEndpoint (endpoint : Endpoint) : String :=
-  let context := match endpoint.plan with | .query _ => "QueryCtx" | .mutation _ => "MutationCtx"
+  let context := match endpoint.plan with
+    | .query _ => "QueryCtx"
+    | .mutation _ | .forwardMutation _ => "MutationCtx"
   let body := match endpoint.plan with
     | .query steps => join "" (steps.map emitQueryStep)
     | .mutation steps => emitMutationSteps steps
+    | .forwardMutation functionReference =>
+        s!"        return await ctx.runMutation({functionReference}, \u007b commandId, event \u007d)\n"
+  let returnType := match endpoint.plan with
+    | .query _ => ""
+    | .mutation _ | .forwardMutation _ => ": Promise<DispatchResult>"
   "export const " ++ endpoint.exportName ++ " = {\n" ++
   "    args: { " ++ emitArgs endpoint.args ++ " },\n" ++
   s!"    returns: {endpoint.returnsValidator},\n" ++
   "    handler: async (ctx: " ++ context ++ ", { " ++
   join ", " (endpoint.args.map (·.name)) ++ " }: { " ++ emitArgType endpoint.args ++
-  " }) => {\n" ++
+  " })" ++ returnType ++ " => {\n" ++
   body ++ "    },\n}\n"
 
 def generatedHeader : String :=
   "/** Generated from proofs/Mythroads/*.lean. Do not edit by hand. */\n" ++
   "import { v } from 'convex/values'\n" ++
+  "import { internal } from '../_generated/api'\n" ++
   "import type { MutationCtx } from '../_generated/server'\n" ++
   "import { authorizeGameEvent } from '../auth/authorization'\n" ++
   "import { persistGameEvent, priorDispatchResult } from '../events/persistence'\n" ++
   "import { routeGameEvent } from '../events/router'\n" ++
   "import { dispatchResultValidator, gameEventValidator } from '../events/validators'\n" ++
-  "import type { GameEvent } from '../events/validators'\n\n"
+  "import type { DispatchResult, GameEvent } from '../events/validators'\n\n"
 
 def main : IO Unit :=
   IO.print (generatedHeader ++ join "\n" (gameApi.map emitEndpoint))
