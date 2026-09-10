@@ -324,8 +324,9 @@ declared together, but the type system does not yet force an `inventoryOwner` ru
 with `readOwnedInventory`. The concrete endpoint is proved to carry the guard and the generator
 emits the check, but a future typed plan should make an invalid pairing impossible.
 
-The broader design and migration stages are documented in
-[`formal-rules.md`](formal-rules.md).
+The broader design is documented in [`formal-rules.md`](formal-rules.md). The researched path from
+this initial slice to an almost entirely Lean-authored backend is in
+[`lean-full-backend-plan.md`](lean-full-backend-plan.md).
 
 ## How to extend it safely
 
