@@ -1,4 +1,6 @@
 /** Generated from proofs/Mythroads/Game/Random.lean. Do not edit by hand. */
+import type { Id } from '../_generated/dataModel'
+import type { MutationCtx } from '../_generated/server'
 
 export function normalizeSeed(seed: number): number {
     const whole = Math.trunc(Math.abs(seed))
@@ -22,4 +24,18 @@ export function chanceHits(favorable: number, possible: number, roll: number): b
         throw new RangeError('Chance bounds must be non-negative and possible must be positive.')
     }
     return roll < favorable
+}
+
+export async function drawRoomRandom(
+    ctx: MutationCtx,
+    roomId: Id<'rooms'>,
+    bound: number,
+): Promise<number> {
+    const room = await ctx.db.get(roomId)
+    if (!room) {
+        throw new Error('Cannot draw randomness for a missing room.')
+    }
+    const draw = drawBounded(room.rngState ?? normalizeSeed(room._creationTime), bound)
+    await ctx.db.patch(roomId, { rngState: draw.state, rngCounter: (room.rngCounter ?? 0) + 1 })
+    return draw.value
 }

@@ -24,3 +24,51 @@ root = "RandomMain"
 [[lean_exe]]
 name = "mythroads-events-codegen"
 root = "EventsMain"
+
+[[lean_exe]]
+name = "mythroads-router-codegen"
+root = "RouterMain"
+
+[[lean_exe]]
+name = "mythroads-policy-codegen"
+root = "PolicyMain"
+
+[[lean_exe]]
+name = "mythroads-authorization-codegen"
+root = "AuthorizationMain"
+
+[[lean_exe]]
+name = "mythroads-authority-codegen"
+root = "AuthorityMain"
+
+[[lean_exe]]
+name = "mythroads-persistence-codegen"
+root = "PersistenceMain"
+
+[[lean_exe]]
+name = "mythroads-retention-codegen"
+root = "RetentionMain"
+
+[[lean_exe]]
+name = "mythroads-player-codegen"
+root = "PlayerMain"
+
+[[lean_exe]]
+name = "mythroads-shop-codegen"
+root = "ShopMain"
+
+[[lean_exe]]
+name = "mythroads-turn-codegen"
+root = "TurnMain"
+
+[[lean_exe]]
+name = "mythroads-encounter-codegen"
+root = "EncounterMain"
+
+[[lean_exe]]
+name = "mythroads-landing-codegen"
+root = "LandingMain"
+
+[[lean_exe]]
+name = "mythroads-camera-codegen"
+root = "CameraMain"

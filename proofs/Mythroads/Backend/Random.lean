@@ -72,8 +72,36 @@ def chanceHitsFunction : Function where
     ],
     .return (.binary (id "roll") "<" (id "favorable"))
   ]
+
+def drawRoomRandomFunction : Function where
+  name := "drawRoomRandom"
+  parameters := [
+    { name := "ctx", type := .named "MutationCtx" },
+    { name := "roomId", type := .id "rooms" }, { name := "bound", type := .number }
+  ]
+  returns := .promise .number
+  body := [
+    .constDecl "room" (.await (call (prop (prop (id "ctx") "db") "get") [id "roomId"])),
+    .ifThen (.prefix "!" (id "room")) [
+      .throw (.new "Error" [.string "Cannot draw randomness for a missing room."])
+    ],
+    .constDecl "draw" (call (id "drawBounded") [
+      .binary (prop (id "room") "rngState") "??"
+        (call (id "normalizeSeed") [prop (id "room") "_creationTime"]),
+      id "bound"
+    ]),
+    .expression (.await (call (prop (prop (id "ctx") "db") "patch") [
+      id "roomId", .object [
+        ("rngState", prop (id "draw") "state"),
+        ("rngCounter", .binary
+          (.binary (prop (id "room") "rngCounter") "??" (.number 0)) "+" (.number 1))
+      ]
+    ])),
+    .return (prop (id "draw") "value")
+  ]
 def emitRandomBackend : String :=
   emitFunction normalizeSeedFunction ++ "\n" ++ emitFunction nextRandomFunction ++ "\n" ++
   emitFunction drawBoundedFunction ++ "\n" ++ emitFunction chanceHitsFunction
+  ++ "\n" ++ emitFunction drawRoomRandomFunction
 
 end Mythroads.Backend.Random

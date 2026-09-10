@@ -9,6 +9,18 @@ const generatedModules = [
     { executable: 'mythroads-schema-codegen', file: 'schema.generated.ts' },
     { executable: 'mythroads-random-codegen', file: 'random.generated.ts' },
     { executable: 'mythroads-events-codegen', file: '../events/validators.generated.ts' },
+    { executable: 'mythroads-router-codegen', file: '../events/router.generated.ts' },
+    { executable: 'mythroads-policy-codegen', file: '../events/policy.generated.ts' },
+    { executable: 'mythroads-authorization-codegen', file: '../auth/authorization.generated.ts' },
+    { executable: 'mythroads-authority-codegen', file: '../events/authority.generated.ts' },
+    { executable: 'mythroads-persistence-codegen', file: '../events/persistence.generated.ts' },
+    { executable: 'mythroads-retention-codegen', file: '../events/retention.generated.ts' },
+    { executable: 'mythroads-player-codegen', file: 'player.generated.ts' },
+    { executable: 'mythroads-shop-codegen', file: 'shop.generated.ts' },
+    { executable: 'mythroads-turn-codegen', file: 'turn.generated.ts' },
+    { executable: 'mythroads-encounter-codegen', file: 'encounter.generated.ts' },
+    { executable: 'mythroads-landing-codegen', file: 'landing.generated.ts' },
+    { executable: 'mythroads-camera-codegen', file: 'camera.generated.ts' },
 ]
 
 for (const module of generatedModules) {

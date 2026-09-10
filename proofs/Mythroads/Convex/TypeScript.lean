@@ -20,11 +20,13 @@ structure Parameter where
 
 inductive Expr where
   | identifier (name : String)
+  | boolean (value : Bool)
   | string (value : String)
   | number (value : Nat)
   | null
   | undefined
   | property (target : Expr) (name : String)
+  | index (target index : Expr)
   | call (callee : Expr) (arguments : List Expr)
   | new (constructor : String) (arguments : List Expr)
   | await (value : Expr)
@@ -33,6 +35,8 @@ inductive Expr where
   | conditional (condition whenTrue whenFalse : Expr)
   | arrow (parameters : List String) (body : Expr)
   | object (fields : List (String × Expr))
+  | array (values : List Expr)
+  | asConst (value : Expr)
   deriving Repr
 
 inductive Statement where
@@ -41,6 +45,10 @@ inductive Statement where
   | ifThen (condition : Expr) (body : List Statement)
   | throw (error : Expr)
   | return (value : Expr)
+  | returnVoid
+  | break
+  | switch (value : Expr) (cases : List (String × List Statement))
+  | forOf (binding : String) (values : Expr) (body : List Statement)
   deriving Repr
 
 structure Function where
@@ -75,11 +83,13 @@ partial def emitType : TsType → String
 
 partial def emitExpr : Expr → String
   | .identifier name => name
+  | .boolean value => if value then "true" else "false"
   | .string value => quote value
   | .number value => toString value
   | .null => "null"
   | .undefined => "undefined"
   | .property target name => s!"{emitExpr target}.{name}"
+  | .index target index => s!"{emitExpr target}[{emitExpr index}]"
   | .call callee arguments =>
       s!"{emitExpr callee}({join ", " (arguments.map emitExpr)})"
   | .new constructor arguments =>
@@ -92,6 +102,8 @@ partial def emitExpr : Expr → String
   | .arrow parameters body => s!"({join ", " parameters}) => {emitExpr body}"
   | .object fields =>
       "{ " ++ join ", " (fields.map fun (name, value) => s!"{name}: {emitExpr value}") ++ " }"
+  | .array values => "[" ++ join ", " (values.map emitExpr) ++ "]"
+  | .asConst value => s!"{emitExpr value} as const"
 
 def indentation (depth : Nat) : String := String.ofList (List.replicate (depth * 4) ' ')
 
@@ -104,6 +116,18 @@ mutual
         emitStatements (depth + 1) body ++ s!"{indentation depth}\u007d\n"
     | .throw error => s!"{indentation depth}throw {emitExpr error}\n"
     | .return value => s!"{indentation depth}return {emitExpr value}\n"
+    | .returnVoid => s!"{indentation depth}return\n"
+    | .break => s!"{indentation depth}break\n"
+    | .switch value cases =>
+        s!"{indentation depth}switch ({emitExpr value}) \u007b\n" ++
+        join "" (cases.map fun (label, body) =>
+          s!"{indentation (depth + 1)}case {quote label}: \u007b\n" ++
+          emitStatements (depth + 2) body ++
+          s!"{indentation (depth + 1)}\u007d\n") ++
+        s!"{indentation depth}\u007d\n"
+    | .forOf binding values body =>
+        s!"{indentation depth}for (const {binding} of {emitExpr values}) \u007b\n" ++
+        emitStatements (depth + 1) body ++ s!"{indentation depth}\u007d\n"
 
   partial def emitStatements (depth : Nat) (statements : List Statement) : String :=
     join "" (statements.map (emitStatement depth))

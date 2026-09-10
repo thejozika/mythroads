@@ -20,10 +20,13 @@ Lean now owns and generates these live backend surfaces:
 - the single public game mutation definition;
 - the private inventory query and the `inventory.equip` mutation logic;
 - the seeded Park–Miller random generator used by room codes, movement, encounters, and combat.
+- event routing, authorization, authority attribution, persistence policy, persistence, and retention;
+- player creation, shop transitions, turn advancement, encounter resolution, landing resolution,
+  camera control, and room-random-state consumption.
 
-The remaining room, movement, combat, encounter, shop, camera, authorization, and persistence
-orchestration is still handwritten TypeScript. The migration is therefore substantial but not yet
-the claimed end state of a fully Lean-authored backend.
+The remaining large handwritten backend surfaces are room/movement transitions, combat, reactive
+room queries, and the shared board/item/magic/encounter catalogues they consume. The migration is
+therefore not yet the claimed end state of a fully Lean-authored backend.
 
 ## Why `Mythroads.Convex` is called a module
 
