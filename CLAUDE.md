@@ -10,6 +10,10 @@ A Dokapon Kingdom-inspired game (board-game RPG hybrid).
 ## Engineering workflow
 
 Read `AGENTS.md` and `documents/engineering/code-architecture.md` before creating source files.
+The game rules exist once, in Lean: `proofs/Mythroads/Engine/**` defines `State`, `Event`, `Effect`,
+`Error` and the single transition `step`, and Convex runs that function compiled from Lean. Read
+`documents/engineering/lean-code-walkthrough.md` before changing a rule; never write a rule in
+TypeScript.
 Every frontend file uses a role suffix. The edit hook in `.claude/settings.json` reports taxonomy,
 size, folder-density, and Biome findings after writes. Run `npm run check` before handing work off.
 

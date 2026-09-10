@@ -88,9 +88,10 @@ Several semantic constraints must be represented rather than treated as incident
 
 ## Implemented Mythroads backend surface
 
-Status, so this section is read as a record rather than a proposal: phases 0 to 4 below are done,
-phase 5 is partly done, and phase 6 is where the current work is. The game itself now exists once,
-as `Mythroads.Engine.step`; see `documents/engineering/lean-code-walkthrough.md`.
+Status, so this section is read as a record rather than a proposal: phases 0 to 5 below are done
+(phase 5 except the noninterference proofs), phase 6 is partly done, and phase 7 has not been
+needed. The game exists once, as `Mythroads.Engine.step`, and Convex runs it compiled from Lean;
+see `documents/engineering/lean-code-walkthrough.md`.
 
 The current repository is small enough to migrate incrementally:
 
@@ -541,16 +542,14 @@ Estimated effort: 2–4 focused days.
 Exit criterion: all public and private read surfaces are generated and tested as anonymous, owner,
 other player, and host identities.
 
-### Phase 6 — hardening and compiler assurance (in progress)
+### Phase 6 — hardening and compiler assurance (partly done)
 
-Estimated effort: 3–6 focused days.
-
-- Add source maps from generated TypeScript lines back to Lean declarations where practical.
-- Snapshot the restricted TypeScript AST as well as formatted output.
-- Generate random/reference test vectors from Lean and execute them in TypeScript.
-- Add a compiler-version manifest and fail on Convex target-version drift.
-- Run `lean4checker` or the strongest practical independent proof check in CI.
-- Prove structural properties of the emitted module manifest.
+- Done: random and scenario test vectors generated from the Lean `step` (`mythroads-oracle`) and
+  executed against the compiled engine in `tests/engine`; the axiom audit; whole-tree drift checks
+  that also reject generated files with no Lean producer.
+- Open: source maps from generated TypeScript back to Lean declarations; a compiler-version
+  manifest that fails on Convex target-version drift; `lean4checker` or another independent proof
+  check in CI; structural theorems about the emitted module manifest.
 
 Exit criterion: generated drift, missing validators, unsupported operations, unbounded reads, API
 version skew, and public-mutation proliferation all fail CI.
@@ -575,16 +574,17 @@ are exposed through narrow typed ports rather than arbitrary embedded TypeScript
 
 ## Immediate next change
 
-The generators are done; the gap is that Convex still runs generated *handlers* rather than the
-engine itself. The next implementation is the load–step–save boundary:
+The load–step–save boundary is in place: `convex/generated/aggregate/boundary.generated.ts` loads
+the room aggregate, calls the compiled `step`, and `saveState` performs the effects; the per-domain
+handlers are gone. What remains, in order of value:
 
-1. finish `Mythroads.Compile` and its parity oracle so `shared/generated/engine.generated.ts` is
-   the Lean `step`, not a transcription of it;
-2. add the Convex interpreter that loads a room into a `State`, calls `step`, raises the matching
-   `ConvexError` on refusal, and performs the returned `Effect` list;
-3. retire the per-domain generated handlers once the interpreter passes the existing `convex-test`
-   suites unchanged;
-4. add a snapshot table, which `replay_append` already proves sound.
+1. compile the browser combat preview from the engine so the number a player previews is the
+   number the server writes (today `shared/generated/combat.generated.ts` rounds in floats);
+2. add a snapshot table, which `replay_append` already proves sound;
+3. derive `isPersistentGameEvent` from `Engine.Event.durable` instead of holding them equal with a
+   `#guard`, and schedule or delete the retention batch;
+4. bound every stored `Nat` below 2^53 in Lean, closing the one representation assumption the
+   compiler makes.
 
 ## Sources
 

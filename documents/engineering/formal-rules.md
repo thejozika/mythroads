@@ -211,9 +211,9 @@ bounds before constructing the Lean-modeled input.
 
 ## Migration sequence
 
-Phases 1 to 3 are done, and phase 4 has been overtaken: rather than a free effect language
-interpreted twice, the game became one Lean function returning a list of `Effect` requests, which
-is the same separation with a smaller surface. Phase 5 is in progress.
+Phases 1 to 4 are done. Phase 4 was overtaken rather than executed as written: instead of a free
+effect language interpreted twice, the game became one Lean function returning a list of `Effect`
+requests, and Convex runs that function compiled from Lean. Phase 5 is partly done.
 
 ### Phase 1 — endpoint compiler vertical slice (done)
 
@@ -245,18 +245,28 @@ is the same separation with a smaller surface. Phase 5 is in progress.
 - `Effect` is what it returns instead of performing; the room invariant `Ok` is preserved by every
   accepted transition, and therefore by `replay`.
 - `replay_append` makes snapshots sound before a snapshot table exists.
-- Remaining: the Convex interpreter that loads a `State`, calls `step`, and performs the effects,
-  replacing the generated per-domain handlers.
+- Convex runs `step` itself: `convex/generated/aggregate/boundary.generated.ts` loads the room
+  aggregate into a `State`, calls the compiled `step`, raises `Error.message` as a `ConvexError` on
+  refusal, and `saveState` performs the returned effects. The Lean sources are
+  `proofs/Mythroads/Backend/Aggregate/**`; the fourteen per-domain handler modules are deleted.
+- Two behaviours stay boundary policies rather than rules because they need a wall clock or a
+  database read: the 2200 ms encounter reveal delay and the room-code collision retry.
 
-### Phase 5 — compiler assurance (in progress)
+### Phase 5 — compiler assurance (partly done)
 
 - Done: byte-for-byte drift checking of the whole generated tree, an axiom audit that rejects
   `sorry` and `native_decide`, and compile-time `#guard`s pinning the engine's event alphabet to
   the wire manifest.
-- In progress: `Mythroads.Compile`, a compiler from Lean's monomorphised LCNF to TypeScript, so the
-  shared engine is the Lean definition rather than a transcription of it, checked against Lean by a
-  parity oracle.
-- Not started: proving the emitter preserves the semantics of the TypeScript AST.
+- Done: `Mythroads.Compile`, a compiler from Lean's monomorphised LCNF to TypeScript, so
+  `shared/generated/engine.generated.ts` is the Lean definition rather than a transcription of it;
+  `mythroads-oracle` runs the Lean `step` over scenarios and fuzzed envelopes and `tests/engine`
+  compares the compiled engine against that fixture on every check.
+- Not started: proving the emitter preserves the semantics of the TypeScript AST, and a Lean-side
+  bound showing every stored `Nat` stays below 2^53 (the compiler represents `Nat` as `number`).
+- Known follow-ups: the browser combat preview in `shared/generated/combat.generated.ts` still
+  computes `strikeDamage` in floats and can differ by one from the fixed-point engine on an exact
+  half; `isPersistentGameEvent` duplicates `Engine.Event.durable` (held equal by a `#guard`);
+  `saveState` patches every hero column on each `persistPlayer`; the retention batch is unscheduled.
 - Wasm remains out of scope until a measured, pure, computation-heavy function justifies it.
 
 ## Developer workflow

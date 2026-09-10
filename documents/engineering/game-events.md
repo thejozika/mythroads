@@ -20,14 +20,17 @@ The authoritative logical map is `WORLD` in `shared/board.system.ts`. Each node 
 (kind, coordinates, graph neighbors) and a stable `visualId`. The Three.js layer resolves that ID in
 `src/game/board/world.material.ts`; shared rules never import rendering code or asset paths.
 
-Add new mechanics by extending the event union, implementing one focused handler, and adding tests
-for allowed and rejected phase transitions. Do not add a second public gameplay mutation.
+Add new mechanics by adding a constructor to `Engine.Event` in `proofs/Mythroads/Engine/Event.lean`,
+classifying it (`name`, `authority`, `durable`, `permitted`), adding its arm to `transition`, its
+invariant lemma, its wire mapping in `Backend/Aggregate/Envelope.lean`, and tests for allowed and
+rejected phase transitions. Lean's exhaustiveness checks make a missing classification a build
+error. Do not add a second public gameplay mutation.
 
 Camera commands are explicitly ephemeral: they use the same realtime gateway and update the
 dedicated `roomCameras` projection, but are never appended to durable `gameEvents`. Follow mode
 derives its target from the active player's logical world node. Free mode shares a temporary display
 target and distance between the phone and main screen without changing logical game history.
 
-`retention.ts` contains the bounded deletion primitive for a future scheduled retention job. The
-current prototype player ID is recorded through `authority.ts`; its explicit `prototypePlayerId`
-mode must be replaced by server-verified identity before an internet release.
+`retention.ts` contains the bounded deletion primitive for a future scheduled retention job; nothing
+schedules it yet. The actor of every event is the verified Hanko identity from `ctx.auth`, and the
+engine's `authorized` gate decides account, room-host, or player-owner authority per event kind.
