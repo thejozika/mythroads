@@ -1,0 +1,3254 @@
+[
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.roll",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {}
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m7|roll=1-6|rng=52268981#6|shop=-|active=p0|Ava@0<-/hp10/g10,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=-|encounter=-|selection=-|camera=-"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 0
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m7|roll=1-6|rng=52268981#6|shop=-|active=p0|Ava@0<-/hp10/g10,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=-|encounter=-|selection=0:[]|camera=-"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 1
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m7|roll=1-6|rng=52268981#6|shop=-|active=p0|Ava@0<-/hp10/g10,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=-|encounter=-|selection=1:[1]|camera=-"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 2
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m7|roll=1-6|rng=52268981#6|shop=-|active=p0|Ava@0<-/hp10/g10,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=-|encounter=-|selection=2:[1-2]|camera=-"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 3
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m7|roll=1-6|rng=52268981#6|shop=-|active=p0|Ava@0<-/hp10/g10,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=-|encounter=-|selection=3:[1-2-3]|camera=-"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 4
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m7|roll=1-6|rng=52268981#6|shop=-|active=p0|Ava@0<-/hp10/g10,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=-|encounter=-|selection=4:[1-2-3-4]|camera=-"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 5
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m7|roll=1-6|rng=52268981#6|shop=-|active=p0|Ava@0<-/hp10/g10,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=-|encounter=-|selection=5:[1-2-3-4-5]|camera=-"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 6
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m7|roll=1-6|rng=52268981#6|shop=-|active=p0|Ava@0<-/hp10/g10,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=-|encounter=-|selection=6:[1-2-3-4-5-6]|camera=-"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "camera.toggle",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {}
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m7|roll=1-6|rng=52268981#6|shop=-|active=p0|Ava@0<-/hp10/g10,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=-|encounter=-|selection=6:[1-2-3-4-5-6]|camera=free:-5.40:3.20:8"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "camera.zoom",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "delta": 1
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m7|roll=1-6|rng=52268981#6|shop=-|active=p0|Ava@0<-/hp10/g10,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=-|encounter=-|selection=6:[1-2-3-4-5-6]|camera=free:-5.40:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "camera.move",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "direction": "left"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m7|roll=1-6|rng=52268981#6|shop=-|active=p0|Ava@0<-/hp10/g10,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=-|encounter=-|selection=6:[1-2-3-4-5-6]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 13
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m7|roll=1-6|rng=52268981#6|shop=-|active=p0|Ava@0<-/hp10/g10,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=-|encounter=-|selection=13:[1-2-3-4-5-6-13]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.step",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 13
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r1/m0|roll=1-6|rng=52268981#6|shop=-|active=p0|Ava@13<6/hp10/g10,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=Fen Slime:11/attack/r1/-:-:-|encounter=-|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "attack": "chargeHigh"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatDefend/r1/m0|roll=1-6|rng=1006449241#8|shop=-|active=p0|Ava@13<6/hp10/g10,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=Fen Slime:11/defend/r1/chargeHigh:side:0|encounter=-|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.guard",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "guard": "brace"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r1/m0|roll=1-6|rng=1936249877#9|shop=-|active=p0|Ava@13<6/hp10/g10,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=Fen Slime:11/attack/r2/undertow:brace:0|encounter=-|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "attack": "leap"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatDefend/r1/m0|roll=1-6|rng=418947695#11|shop=-|active=p0|Ava@13<6/hp10/g10,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=Fen Slime:11/defend/r2/leap:side:0|encounter=-|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.guard",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "guard": "high"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r1/m0|roll=1-6|rng=1221637074#13|shop=-|active=p0|Ava@13<6/hp8/g10,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=Fen Slime:11/attack/r3/chargeSide:high:2|encounter=-|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "attack": "scorchArmor"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatDefend/r1/m0|roll=1-6|rng=1889736081#14|shop=-|active=p0|Ava@13<6/hp8/g10,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=Fen Slime:11/defend/r3/scorchArmor:side:0|encounter=-|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.guard",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "guard": "brace"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r1/m0|roll=1-6|rng=434322425#16|shop=-|active=p0|Ava@13<6/hp7/g10,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=Fen Slime:11/attack/r4/stab:brace:1|encounter=-|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "attack": "chargeHigh"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatDefend/r1/m0|roll=1-6|rng=1107433597#18|shop=-|active=p0|Ava@13<6/hp7/g10,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=Fen Slime:6/defend/r4/chargeHigh:side:5|encounter=-|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.guard",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "guard": "high"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r1/m0|roll=1-6|rng=35847241#20|shop=-|active=p0|Ava@13<6/hp3/g10,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=Fen Slime:6/attack/r5/leap:high:4|encounter=-|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "attack": "leap"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatDefend/r1/m0|roll=1-6|rng=1497369188#22|shop=-|active=p0|Ava@13<6/hp3/g10,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=Fen Slime:6/defend/r5/leap:high:0|encounter=-|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.guard",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "guard": "brace"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r1/m0|roll=1-6|rng=1650966869#23|shop=-|active=p0|Ava@13<6/hp3/g10,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=Fen Slime:6/attack/r6/undertow:brace:0|encounter=-|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "attack": "scorchArmor"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatDefend/r1/m0|roll=1-6|rng=703593329#24|shop=-|active=p0|Ava@13<6/hp3/g10,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=Fen Slime:6/defend/r6/scorchArmor:side:0|encounter=-|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.guard",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "guard": "high"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r1/m0|roll=1-6|rng=2074233065#26|shop=-|active=p0|Ava@13<6/hp2/g10,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=Fen Slime:6/attack/r7/stab:high:1|encounter=-|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "attack": "chargeHigh"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatDefend/r1/m0|roll=1-6|rng=1312872911#28|shop=-|active=p0|Ava@13<6/hp2/g10,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=Fen Slime:1/defend/r7/chargeHigh:ward:5|encounter=-|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.guard",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "guard": "brace"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r1/m0|roll=1-6|rng=78320381#30|shop=-|active=p0|Ava@13<6/hp1/g10,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=Fen Slime:1/attack/r8/leap:brace:1|encounter=-|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "attack": "leap"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/awaitingRoll/r1/m0|roll=1-6|rng=1748655383#32|shop=-|active=p1|Ava@13<6/hp1/g16,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=-|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.roll",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {}
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m6|roll=4-2|rng=1985207599#34|shop=-|active=p1|Ava@13<6/hp1/g16,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=-|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 0
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m6|roll=4-2|rng=1985207599#34|shop=-|active=p1|Ava@13<6/hp1/g16,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=-|selection=0:[]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 1
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m6|roll=4-2|rng=1985207599#34|shop=-|active=p1|Ava@13<6/hp1/g16,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=-|selection=1:[1]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 2
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m6|roll=4-2|rng=1985207599#34|shop=-|active=p1|Ava@13<6/hp1/g16,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=-|selection=2:[1-2]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.cancel",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {}
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m6|roll=4-2|rng=1985207599#34|shop=-|active=p1|Ava@13<6/hp1/g16,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=-|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 0
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m6|roll=4-2|rng=1985207599#34|shop=-|active=p1|Ava@13<6/hp1/g16,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=-|selection=0:[]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 1
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m6|roll=4-2|rng=1985207599#34|shop=-|active=p1|Ava@13<6/hp1/g16,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=-|selection=1:[1]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 2
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m6|roll=4-2|rng=1985207599#34|shop=-|active=p1|Ava@13<6/hp1/g16,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=-|selection=2:[1-2]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 3
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m6|roll=4-2|rng=1985207599#34|shop=-|active=p1|Ava@13<6/hp1/g16,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=-|selection=3:[1-2-3]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 4
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m6|roll=4-2|rng=1985207599#34|shop=-|active=p1|Ava@13<6/hp1/g16,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=-|selection=4:[1-2-3-4]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 11
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m6|roll=4-2|rng=1985207599#34|shop=-|active=p1|Ava@13<6/hp1/g16,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=-|selection=11:[1-2-3-4-11]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 12
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m6|roll=4-2|rng=1985207599#34|shop=-|active=p1|Ava@13<6/hp1/g16,Bo@0<-/hp10/g10,Cy@0<-/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=-|selection=12:[1-2-3-4-11-12]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.step",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 12
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/revealingEncounter/r1/m0|roll=4-2|rng=793231248#35|shop=-|active=p1|Ava@13<6/hp1/g16,Bo@12<11/hp10/g10,Cy@0<-/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:revealing|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "encounter.resolve",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1",
+                "encounterId": "$encounter"
+            },
+            "data": {}
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/awaitingRoll/r1/m0|roll=4-2|rng=793231248#35|shop=-|active=p2|Ava@13<6/hp1/g16,Bo@12<11/hp10/g8,Cy@0<-/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.roll",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {}
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m7|roll=3-4|rng=1620460347#37|shop=-|active=p2|Ava@13<6/hp1/g16,Bo@12<11/hp10/g8,Cy@0<-/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 0
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m7|roll=3-4|rng=1620460347#37|shop=-|active=p2|Ava@13<6/hp1/g16,Bo@12<11/hp10/g8,Cy@0<-/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=0:[]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 1
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m7|roll=3-4|rng=1620460347#37|shop=-|active=p2|Ava@13<6/hp1/g16,Bo@12<11/hp10/g8,Cy@0<-/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=1:[1]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 2
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m7|roll=3-4|rng=1620460347#37|shop=-|active=p2|Ava@13<6/hp1/g16,Bo@12<11/hp10/g8,Cy@0<-/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=2:[1-2]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 3
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m7|roll=3-4|rng=1620460347#37|shop=-|active=p2|Ava@13<6/hp1/g16,Bo@12<11/hp10/g8,Cy@0<-/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=3:[1-2-3]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 4
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m7|roll=3-4|rng=1620460347#37|shop=-|active=p2|Ava@13<6/hp1/g16,Bo@12<11/hp10/g8,Cy@0<-/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=4:[1-2-3-4]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 11
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m7|roll=3-4|rng=1620460347#37|shop=-|active=p2|Ava@13<6/hp1/g16,Bo@12<11/hp10/g8,Cy@0<-/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=11:[1-2-3-4-11]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 10
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m7|roll=3-4|rng=1620460347#37|shop=-|active=p2|Ava@13<6/hp1/g16,Bo@12<11/hp10/g8,Cy@0<-/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=10:[1-2-3-4-11-10]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 16
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r1/m7|roll=3-4|rng=1620460347#37|shop=-|active=p2|Ava@13<6/hp1/g16,Bo@12<11/hp10/g8,Cy@0<-/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=16:[1-2-3-4-11-10-16]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.step",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 16
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r1/m0|roll=3-4|rng=1620460347#37|shop=-|active=p2|Ava@13<6/hp1/g16,Bo@12<11/hp10/g8,Cy@16<10/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "attack": "emberBlast"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatDefend/r1/m0|roll=3-4|rng=97316854#39|shop=-|active=p2|Ava@13<6/hp1/g16,Bo@12<11/hp10/g8,Cy@16<10/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "combat.guard",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "guard": "side"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r1/m0|roll=3-4|rng=941798846#41|shop=-|active=p2|Ava@13<6/hp1/g16,Bo@12<11/hp10/g8,Cy@16<10/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "attack": "stab"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatDefend/r1/m0|roll=3-4|rng=1021967810#43|shop=-|active=p2|Ava@13<6/hp1/g16,Bo@12<11/hp10/g8,Cy@16<10/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "combat.guard",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "guard": "ward"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r1/m0|roll=3-4|rng=1561301273#44|shop=-|active=p2|Ava@13<6/hp1/g16,Bo@12<11/hp10/g8,Cy@16<10/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "attack": "chargeSide"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatDefend/r1/m0|roll=3-4|rng=201940425#46|shop=-|active=p2|Ava@13<6/hp1/g16,Bo@12<11/hp10/g8,Cy@16<10/hp10/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "combat.guard",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "guard": "side"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r1/m0|roll=3-4|rng=1973165714#48|shop=-|active=p2|Ava@13<6/hp1/g16,Bo@12<11/hp10/g8,Cy@16<10/hp8/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "attack": "emberBlast"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatDefend/r1/m0|roll=3-4|rng=488293805#50|shop=-|active=p2|Ava@13<6/hp1/g16,Bo@12<11/hp10/g8,Cy@16<10/hp8/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "combat.guard",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "guard": "ward"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r1/m0|roll=3-4|rng=302242924#52|shop=-|active=p2|Ava@13<6/hp1/g16,Bo@12<11/hp10/g8,Cy@16<10/hp7/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "attack": "stab"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatDefend/r1/m0|roll=3-4|rng=137458624#54|shop=-|active=p2|Ava@13<6/hp1/g16,Bo@12<11/hp10/g8,Cy@16<10/hp7/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "combat.guard",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "guard": "side"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r1/m0|roll=3-4|rng=1688253521#55|shop=-|active=p2|Ava@13<6/hp1/g16,Bo@12<11/hp10/g8,Cy@16<10/hp7/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "attack": "chargeSide"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatDefend/r1/m0|roll=3-4|rng=1429681517#57|shop=-|active=p2|Ava@13<6/hp1/g16,Bo@12<11/hp10/g8,Cy@16<10/hp7/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "combat.guard",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "guard": "ward"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r1/m0|roll=3-4|rng=622027115#58|shop=-|active=p2|Ava@13<6/hp1/g16,Bo@12<11/hp10/g8,Cy@16<10/hp7/g10|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "attack": "emberBlast"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/awaitingRoll/r2/m0|roll=3-4|rng=47476927#60|shop=-|active=p0|Ava@13<6/hp1/g16,Bo@12<11/hp10/g8,Cy@16<10/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.roll",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {}
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r2/m5|roll=1-4|rng=817367925#62|shop=-|active=p0|Ava@13<-/hp1/g16,Bo@12<11/hp10/g8,Cy@16<10/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 13
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r2/m5|roll=1-4|rng=817367925#62|shop=-|active=p0|Ava@13<-/hp1/g16,Bo@12<11/hp10/g8,Cy@16<10/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=13:[]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 14
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r2/m5|roll=1-4|rng=817367925#62|shop=-|active=p0|Ava@13<-/hp1/g16,Bo@12<11/hp10/g8,Cy@16<10/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=14:[14]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 15
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r2/m5|roll=1-4|rng=817367925#62|shop=-|active=p0|Ava@13<-/hp1/g16,Bo@12<11/hp10/g8,Cy@16<10/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=15:[14-15]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 21
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r2/m5|roll=1-4|rng=817367925#62|shop=-|active=p0|Ava@13<-/hp1/g16,Bo@12<11/hp10/g8,Cy@16<10/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=21:[14-15-21]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 20
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r2/m5|roll=1-4|rng=817367925#62|shop=-|active=p0|Ava@13<-/hp1/g16,Bo@12<11/hp10/g8,Cy@16<10/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=20:[14-15-21-20]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 25
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r2/m5|roll=1-4|rng=817367925#62|shop=-|active=p0|Ava@13<-/hp1/g16,Bo@12<11/hp10/g8,Cy@16<10/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=25:[14-15-21-20-25]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.step",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 25
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r2/m0|roll=1-4|rng=817367925#62|shop=-|active=p0|Ava@25<20/hp1/g16,Bo@12<11/hp10/g8,Cy@16<10/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "attack": "scorchArmor"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatDefend/r2/m0|roll=1-4|rng=1597544991#63|shop=-|active=p0|Ava@25<20/hp1/g16,Bo@12<11/hp10/g8,Cy@16<10/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.guard",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "guard": "brace"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/awaitingRoll/r2/m0|roll=1-4|rng=433022393#65|shop=-|active=p1|Ava@0<-/hp10/g13,Bo@12<11/hp10/g8,Cy@16<10/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.roll",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {}
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r2/m4|roll=1-3|rng=1311605804#67|shop=-|active=p1|Ava@0<-/hp10/g13,Bo@12<-/hp10/g8,Cy@16<10/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 12
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r2/m4|roll=1-3|rng=1311605804#67|shop=-|active=p1|Ava@0<-/hp10/g13,Bo@12<-/hp10/g8,Cy@16<10/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=12:[]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 11
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r2/m4|roll=1-3|rng=1311605804#67|shop=-|active=p1|Ava@0<-/hp10/g13,Bo@12<-/hp10/g8,Cy@16<10/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=11:[11]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 4
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r2/m4|roll=1-3|rng=1311605804#67|shop=-|active=p1|Ava@0<-/hp10/g13,Bo@12<-/hp10/g8,Cy@16<10/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=4:[11-4]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 5
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r2/m4|roll=1-3|rng=1311605804#67|shop=-|active=p1|Ava@0<-/hp10/g13,Bo@12<-/hp10/g8,Cy@16<10/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=5:[11-4-5]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 6
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r2/m4|roll=1-3|rng=1311605804#67|shop=-|active=p1|Ava@0<-/hp10/g13,Bo@12<-/hp10/g8,Cy@16<10/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=6:[11-4-5-6]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.step",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 6
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/revealingEncounter/r2/m0|roll=1-3|rng=410884030#68|shop=-|active=p1|Ava@0<-/hp10/g13,Bo@6<5/hp10/g8,Cy@16<10/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "encounter.resolve",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1",
+                "encounterId": "$encounter"
+            },
+            "data": {}
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/awaitingRoll/r2/m0|roll=1-3|rng=410884030#68|shop=-|active=p2|Ava@0<-/hp10/g13,Bo@6<5/hp10/g8,Cy@16<10/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.roll",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {}
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r2/m8|roll=2-6|rng=826451495#70|shop=-|active=p2|Ava@0<-/hp10/g13,Bo@6<5/hp10/g8,Cy@16<-/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 16
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r2/m8|roll=2-6|rng=826451495#70|shop=-|active=p2|Ava@0<-/hp10/g13,Bo@6<5/hp10/g8,Cy@16<-/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=16:[]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 10
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r2/m8|roll=2-6|rng=826451495#70|shop=-|active=p2|Ava@0<-/hp10/g13,Bo@6<5/hp10/g8,Cy@16<-/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=10:[10]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 2
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r2/m8|roll=2-6|rng=826451495#70|shop=-|active=p2|Ava@0<-/hp10/g13,Bo@6<5/hp10/g8,Cy@16<-/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=2:[10-2]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 3
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r2/m8|roll=2-6|rng=826451495#70|shop=-|active=p2|Ava@0<-/hp10/g13,Bo@6<5/hp10/g8,Cy@16<-/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=3:[10-2-3]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 4
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r2/m8|roll=2-6|rng=826451495#70|shop=-|active=p2|Ava@0<-/hp10/g13,Bo@6<5/hp10/g8,Cy@16<-/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=4:[10-2-3-4]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 11
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r2/m8|roll=2-6|rng=826451495#70|shop=-|active=p2|Ava@0<-/hp10/g13,Bo@6<5/hp10/g8,Cy@16<-/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=11:[10-2-3-4-11]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 10
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r2/m8|roll=2-6|rng=826451495#70|shop=-|active=p2|Ava@0<-/hp10/g13,Bo@6<5/hp10/g8,Cy@16<-/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=10:[10-2-3-4-11-10]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 2
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r2/m8|roll=2-6|rng=826451495#70|shop=-|active=p2|Ava@0<-/hp10/g13,Bo@6<5/hp10/g8,Cy@16<-/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=2:[10-2-3-4-11-10-2]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 3
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r2/m8|roll=2-6|rng=826451495#70|shop=-|active=p2|Ava@0<-/hp10/g13,Bo@6<5/hp10/g8,Cy@16<-/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=3:[10-2-3-4-11-10-2-3]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.step",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 3
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/revealingEncounter/r2/m0|roll=2-6|rng=1983888473#71|shop=-|active=p2|Ava@0<-/hp10/g13,Bo@6<5/hp10/g8,Cy@3<2/hp7/g17|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "encounter.resolve",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2",
+                "encounterId": "$encounter"
+            },
+            "data": {}
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/awaitingRoll/r3/m0|roll=2-6|rng=1983888473#71|shop=-|active=p0|Ava@0<-/hp10/g13,Bo@6<5/hp10/g8,Cy@3<2/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.roll",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {}
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r3/m3|roll=1-2|rng=1474730497#73|shop=-|active=p0|Ava@0<-/hp10/g13,Bo@6<5/hp10/g8,Cy@3<2/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 0
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r3/m3|roll=1-2|rng=1474730497#73|shop=-|active=p0|Ava@0<-/hp10/g13,Bo@6<5/hp10/g8,Cy@3<2/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=0:[]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 1
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r3/m3|roll=1-2|rng=1474730497#73|shop=-|active=p0|Ava@0<-/hp10/g13,Bo@6<5/hp10/g8,Cy@3<2/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=1:[1]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 2
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r3/m3|roll=1-2|rng=1474730497#73|shop=-|active=p0|Ava@0<-/hp10/g13,Bo@6<5/hp10/g8,Cy@3<2/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=2:[1-2]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 10
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r3/m3|roll=1-2|rng=1474730497#73|shop=-|active=p0|Ava@0<-/hp10/g13,Bo@6<5/hp10/g8,Cy@3<2/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=10:[1-2-10]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.step",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 10
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r3/m0|roll=1-2|rng=1474730497#73|shop=-|active=p0|Ava@10<2/hp10/g13,Bo@6<5/hp10/g8,Cy@3<2/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "attack": "chargeHigh"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatDefend/r3/m0|roll=1-2|rng=2118500203#75|shop=-|active=p0|Ava@10<2/hp10/g13,Bo@6<5/hp10/g8,Cy@3<2/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.guard",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "guard": "high"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r3/m0|roll=1-2|rng=1658000962#77|shop=-|active=p0|Ava@10<2/hp6/g13,Bo@6<5/hp10/g8,Cy@3<2/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "attack": "leap"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatDefend/r3/m0|roll=1-2|rng=1033196174#79|shop=-|active=p0|Ava@10<2/hp6/g13,Bo@6<5/hp10/g8,Cy@3<2/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.guard",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "guard": "brace"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r3/m0|roll=1-2|rng=259634109#81|shop=-|active=p0|Ava@10<2/hp2/g13,Bo@6<5/hp10/g8,Cy@3<2/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "attack": "scorchArmor"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatDefend/r3/m0|roll=1-2|rng=83511647#82|shop=-|active=p0|Ava@10<2/hp2/g13,Bo@6<5/hp10/g8,Cy@3<2/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.guard",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "guard": "high"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r3/m0|roll=1-2|rng=1882089965#84|shop=-|active=p0|Ava@10<2/hp2/g13,Bo@6<5/hp10/g8,Cy@3<2/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "attack": "chargeHigh"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatDefend/r3/m0|roll=1-2|rng=498929017#86|shop=-|active=p0|Ava@10<2/hp2/g13,Bo@6<5/hp10/g8,Cy@3<2/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.guard",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "guard": "brace"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/awaitingRoll/r3/m0|roll=1-2|rng=567500566#88|shop=-|active=p1|Ava@0<-/hp10/g10,Bo@6<5/hp10/g8,Cy@3<2/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.roll",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {}
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r3/m7|roll=3-4|rng=37142343#90|shop=-|active=p1|Ava@0<-/hp10/g10,Bo@6<-/hp10/g8,Cy@3<2/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 6
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r3/m7|roll=3-4|rng=37142343#90|shop=-|active=p1|Ava@0<-/hp10/g10,Bo@6<-/hp10/g8,Cy@3<2/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=6:[]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 5
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r3/m7|roll=3-4|rng=37142343#90|shop=-|active=p1|Ava@0<-/hp10/g10,Bo@6<-/hp10/g8,Cy@3<2/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=5:[5]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 4
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r3/m7|roll=3-4|rng=37142343#90|shop=-|active=p1|Ava@0<-/hp10/g10,Bo@6<-/hp10/g8,Cy@3<2/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=4:[5-4]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 11
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r3/m7|roll=3-4|rng=37142343#90|shop=-|active=p1|Ava@0<-/hp10/g10,Bo@6<-/hp10/g8,Cy@3<2/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=11:[5-4-11]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 12
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r3/m7|roll=3-4|rng=37142343#90|shop=-|active=p1|Ava@0<-/hp10/g10,Bo@6<-/hp10/g8,Cy@3<2/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=12:[5-4-11-12]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 13
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r3/m7|roll=3-4|rng=37142343#90|shop=-|active=p1|Ava@0<-/hp10/g10,Bo@6<-/hp10/g8,Cy@3<2/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=13:[5-4-11-12-13]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 14
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r3/m7|roll=3-4|rng=37142343#90|shop=-|active=p1|Ava@0<-/hp10/g10,Bo@6<-/hp10/g8,Cy@3<2/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=14:[5-4-11-12-13-14]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 15
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r3/m7|roll=3-4|rng=37142343#90|shop=-|active=p1|Ava@0<-/hp10/g10,Bo@6<-/hp10/g8,Cy@3<2/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=15:[5-4-11-12-13-14-15]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.step",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 15
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/revealingEncounter/r3/m0|roll=3-4|rng=1896677355#91|shop=-|active=p1|Ava@0<-/hp10/g10,Bo@15<14/hp10/g8,Cy@3<2/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "encounter.resolve",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1",
+                "encounterId": "$encounter"
+            },
+            "data": {}
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/awaitingRoll/r3/m0|roll=3-4|rng=1896677355#91|shop=-|active=p2|Ava@0<-/hp10/g10,Bo@15<14/hp10/g6,Cy@3<2/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.roll",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {}
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r3/m8|roll=3-5|rng=1569044230#93|shop=-|active=p2|Ava@0<-/hp10/g10,Bo@15<14/hp10/g6,Cy@3<-/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 3
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r3/m8|roll=3-5|rng=1569044230#93|shop=-|active=p2|Ava@0<-/hp10/g10,Bo@15<14/hp10/g6,Cy@3<-/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=3:[]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 2
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r3/m8|roll=3-5|rng=1569044230#93|shop=-|active=p2|Ava@0<-/hp10/g10,Bo@15<14/hp10/g6,Cy@3<-/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=2:[2]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 10
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r3/m8|roll=3-5|rng=1569044230#93|shop=-|active=p2|Ava@0<-/hp10/g10,Bo@15<14/hp10/g6,Cy@3<-/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=10:[2-10]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 11
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r3/m8|roll=3-5|rng=1569044230#93|shop=-|active=p2|Ava@0<-/hp10/g10,Bo@15<14/hp10/g6,Cy@3<-/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=11:[2-10-11]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 12
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r3/m8|roll=3-5|rng=1569044230#93|shop=-|active=p2|Ava@0<-/hp10/g10,Bo@15<14/hp10/g6,Cy@3<-/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=12:[2-10-11-12]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 13
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r3/m8|roll=3-5|rng=1569044230#93|shop=-|active=p2|Ava@0<-/hp10/g10,Bo@15<14/hp10/g6,Cy@3<-/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=13:[2-10-11-12-13]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 14
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r3/m8|roll=3-5|rng=1569044230#93|shop=-|active=p2|Ava@0<-/hp10/g10,Bo@15<14/hp10/g6,Cy@3<-/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=14:[2-10-11-12-13-14]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 20
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r3/m8|roll=3-5|rng=1569044230#93|shop=-|active=p2|Ava@0<-/hp10/g10,Bo@15<14/hp10/g6,Cy@3<-/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=20:[2-10-11-12-13-14-20]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 19
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r3/m8|roll=3-5|rng=1569044230#93|shop=-|active=p2|Ava@0<-/hp10/g10,Bo@15<14/hp10/g6,Cy@3<-/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=19:[2-10-11-12-13-14-20-19]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.step",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 19
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/shopping/r3/m0|roll=3-5|rng=1569044230#93|shop=items|active=p2|Ava@0<-/hp10/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g25|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "shop.buy",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "itemId": "smoke_bomb"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/shopping/r3/m0|roll=3-5|rng=1569044230#93|shop=items|active=p2|Ava@0<-/hp10/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "inventory.equip",
+            "subjects": {
+                "playerId": "$p2",
+                "playerItemId": "$item1"
+            },
+            "data": {
+                "slot": "defensiveMagic"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/shopping/r3/m0|roll=3-5|rng=1569044230#93|shop=items|active=p2|Ava@0<-/hp10/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "shop.leave",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {}
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/awaitingRoll/r4/m0|roll=3-5|rng=1569044230#93|shop=-|active=p0|Ava@0<-/hp10/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.roll",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {}
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r4/m9|roll=3-6|rng=1484681189#95|shop=-|active=p0|Ava@0<-/hp10/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 0
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r4/m9|roll=3-6|rng=1484681189#95|shop=-|active=p0|Ava@0<-/hp10/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=0:[]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 1
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r4/m9|roll=3-6|rng=1484681189#95|shop=-|active=p0|Ava@0<-/hp10/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=1:[1]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 2
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r4/m9|roll=3-6|rng=1484681189#95|shop=-|active=p0|Ava@0<-/hp10/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=2:[1-2]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 10
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r4/m9|roll=3-6|rng=1484681189#95|shop=-|active=p0|Ava@0<-/hp10/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=10:[1-2-10]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 11
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r4/m9|roll=3-6|rng=1484681189#95|shop=-|active=p0|Ava@0<-/hp10/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=11:[1-2-10-11]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 12
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r4/m9|roll=3-6|rng=1484681189#95|shop=-|active=p0|Ava@0<-/hp10/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=12:[1-2-10-11-12]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 13
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r4/m9|roll=3-6|rng=1484681189#95|shop=-|active=p0|Ava@0<-/hp10/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=13:[1-2-10-11-12-13]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 14
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r4/m9|roll=3-6|rng=1484681189#95|shop=-|active=p0|Ava@0<-/hp10/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=14:[1-2-10-11-12-13-14]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 15
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r4/m9|roll=3-6|rng=1484681189#95|shop=-|active=p0|Ava@0<-/hp10/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=15:[1-2-10-11-12-13-14-15]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 21
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r4/m9|roll=3-6|rng=1484681189#95|shop=-|active=p0|Ava@0<-/hp10/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=21:[1-2-10-11-12-13-14-15-21]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.step",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 21
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r4/m0|roll=3-6|rng=1484681189#95|shop=-|active=p0|Ava@21<15/hp10/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "attack": "leap"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatDefend/r4/m0|roll=3-6|rng=1498806247#97|shop=-|active=p0|Ava@21<15/hp10/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.guard",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "guard": "high"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r4/m0|roll=3-6|rng=2091584363#99|shop=-|active=p0|Ava@21<15/hp9/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "attack": "scorchArmor"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatDefend/r4/m0|roll=3-6|rng=1072606315#100|shop=-|active=p0|Ava@21<15/hp9/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.guard",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "guard": "brace"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r4/m0|roll=3-6|rng=1999783483#102|shop=-|active=p0|Ava@21<15/hp8/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "attack": "chargeHigh"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatDefend/r4/m0|roll=3-6|rng=679002413#104|shop=-|active=p0|Ava@21<15/hp8/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.guard",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "guard": "high"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r4/m0|roll=3-6|rng=325833936#106|shop=-|active=p0|Ava@21<15/hp7/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "attack": "leap"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatDefend/r4/m0|roll=3-6|rng=1271616505#108|shop=-|active=p0|Ava@21<15/hp7/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.guard",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "guard": "brace"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r4/m0|roll=3-6|rng=1699588715#110|shop=-|active=p0|Ava@21<15/hp7/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "attack": "scorchArmor"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatDefend/r4/m0|roll=3-6|rng=529095424#111|shop=-|active=p0|Ava@21<15/hp7/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.guard",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "guard": "high"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r4/m0|roll=3-6|rng=1574819143#113|shop=-|active=p0|Ava@21<15/hp7/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "attack": "chargeHigh"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatDefend/r4/m0|roll=3-6|rng=1476049526#115|shop=-|active=p0|Ava@21<15/hp7/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.guard",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "guard": "brace"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r4/m0|roll=3-6|rng=543023062#117|shop=-|active=p0|Ava@21<15/hp5/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "attack": "leap"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatDefend/r4/m0|roll=3-6|rng=1939727968#119|shop=-|active=p0|Ava@21<15/hp5/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.guard",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "guard": "high"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r4/m0|roll=3-6|rng=174250481#120|shop=-|active=p0|Ava@21<15/hp5/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "attack": "scorchArmor"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatDefend/r4/m0|roll=3-6|rng=1699006699#121|shop=-|active=p0|Ava@21<15/hp5/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.guard",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "guard": "brace"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r4/m0|roll=3-6|rng=1561571106#123|shop=-|active=p0|Ava@21<15/hp3/g10,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "attack": "chargeHigh"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/awaitingRoll/r4/m0|roll=3-6|rng=1406356059#125|shop=-|active=p1|Ava@21<15/hp3/g16,Bo@15<14/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.roll",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {}
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r4/m6|roll=1-5|rng=138628546#127|shop=-|active=p1|Ava@21<15/hp3/g16,Bo@15<-/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 15
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r4/m6|roll=1-5|rng=138628546#127|shop=-|active=p1|Ava@21<15/hp3/g16,Bo@15<-/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=15:[]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 14
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r4/m6|roll=1-5|rng=138628546#127|shop=-|active=p1|Ava@21<15/hp3/g16,Bo@15<-/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=14:[14]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 20
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r4/m6|roll=1-5|rng=138628546#127|shop=-|active=p1|Ava@21<15/hp3/g16,Bo@15<-/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=20:[14-20]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 25
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r4/m6|roll=1-5|rng=138628546#127|shop=-|active=p1|Ava@21<15/hp3/g16,Bo@15<-/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=25:[14-20-25]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 24
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r4/m6|roll=1-5|rng=138628546#127|shop=-|active=p1|Ava@21<15/hp3/g16,Bo@15<-/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=24:[14-20-25-24]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 23
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r4/m6|roll=1-5|rng=138628546#127|shop=-|active=p1|Ava@21<15/hp3/g16,Bo@15<-/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=23:[14-20-25-24-23]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 22
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r4/m6|roll=1-5|rng=138628546#127|shop=-|active=p1|Ava@21<15/hp3/g16,Bo@15<-/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=22:[14-20-25-24-23-22]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.step",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 22
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/revealingEncounter/r4/m0|roll=1-5|rng=179499914#128|shop=-|active=p1|Ava@21<15/hp3/g16,Bo@22<23/hp10/g6,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "encounter.resolve",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1",
+                "encounterId": "$encounter"
+            },
+            "data": {}
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/awaitingRoll/r4/m0|roll=1-5|rng=179499914#128|shop=-|active=p2|Ava@21<15/hp3/g16,Bo@22<23/hp10/g11,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.roll",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {}
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r4/m7|roll=1-6|rng=662424617#130|shop=-|active=p2|Ava@21<15/hp3/g16,Bo@22<23/hp10/g11,Cy@19<-/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 19
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r4/m7|roll=1-6|rng=662424617#130|shop=-|active=p2|Ava@21<15/hp3/g16,Bo@22<23/hp10/g11,Cy@19<-/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=19:[]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 18
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r4/m7|roll=1-6|rng=662424617#130|shop=-|active=p2|Ava@21<15/hp3/g16,Bo@22<23/hp10/g11,Cy@19<-/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=18:[18]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 17
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r4/m7|roll=1-6|rng=662424617#130|shop=-|active=p2|Ava@21<15/hp3/g16,Bo@22<23/hp10/g11,Cy@19<-/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=17:[18-17]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 23
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r4/m7|roll=1-6|rng=662424617#130|shop=-|active=p2|Ava@21<15/hp3/g16,Bo@22<23/hp10/g11,Cy@19<-/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=23:[18-17-23]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 24
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r4/m7|roll=1-6|rng=662424617#130|shop=-|active=p2|Ava@21<15/hp3/g16,Bo@22<23/hp10/g11,Cy@19<-/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=24:[18-17-23-24]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 25
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r4/m7|roll=1-6|rng=662424617#130|shop=-|active=p2|Ava@21<15/hp3/g16,Bo@22<23/hp10/g11,Cy@19<-/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=25:[18-17-23-24-25]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 20
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r4/m7|roll=1-6|rng=662424617#130|shop=-|active=p2|Ava@21<15/hp3/g16,Bo@22<23/hp10/g11,Cy@19<-/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=20:[18-17-23-24-25-20]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 19
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r4/m7|roll=1-6|rng=662424617#130|shop=-|active=p2|Ava@21<15/hp3/g16,Bo@22<23/hp10/g11,Cy@19<-/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=19:[18-17-23-24-25-20-19]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.step",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 19
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/shopping/r4/m0|roll=1-6|rng=662424617#130|shop=items|active=p2|Ava@21<15/hp3/g16,Bo@22<23/hp10/g11,Cy@19<20/hp7/g20|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "shop.buy",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "itemId": "red_potion"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/shopping/r4/m0|roll=1-6|rng=662424617#130|shop=items|active=p2|Ava@21<15/hp3/g16,Bo@22<23/hp10/g11,Cy@19<20/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "inventory.equip",
+            "subjects": {
+                "playerId": "$p2",
+                "playerItemId": "$item1"
+            },
+            "data": {
+                "slot": "defensiveMagic"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/shopping/r4/m0|roll=1-6|rng=662424617#130|shop=items|active=p2|Ava@21<15/hp3/g16,Bo@22<23/hp10/g11,Cy@19<20/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "shop.leave",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {}
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/awaitingRoll/r5/m0|roll=1-6|rng=662424617#130|shop=-|active=p0|Ava@21<15/hp3/g16,Bo@22<23/hp10/g11,Cy@19<20/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.roll",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {}
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r5/m7|roll=1-6|rng=1194961109#132|shop=-|active=p0|Ava@21<-/hp3/g16,Bo@22<23/hp10/g11,Cy@19<20/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 21
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r5/m7|roll=1-6|rng=1194961109#132|shop=-|active=p0|Ava@21<-/hp3/g16,Bo@22<23/hp10/g11,Cy@19<20/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=21:[]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 20
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r5/m7|roll=1-6|rng=1194961109#132|shop=-|active=p0|Ava@21<-/hp3/g16,Bo@22<23/hp10/g11,Cy@19<20/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=20:[20]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 14
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r5/m7|roll=1-6|rng=1194961109#132|shop=-|active=p0|Ava@21<-/hp3/g16,Bo@22<23/hp10/g11,Cy@19<20/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=14:[20-14]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 15
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r5/m7|roll=1-6|rng=1194961109#132|shop=-|active=p0|Ava@21<-/hp3/g16,Bo@22<23/hp10/g11,Cy@19<20/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=15:[20-14-15]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 9
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r5/m7|roll=1-6|rng=1194961109#132|shop=-|active=p0|Ava@21<-/hp3/g16,Bo@22<23/hp10/g11,Cy@19<20/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=9:[20-14-15-9]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 8
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r5/m7|roll=1-6|rng=1194961109#132|shop=-|active=p0|Ava@21<-/hp3/g16,Bo@22<23/hp10/g11,Cy@19<20/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=8:[20-14-15-9-8]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 15
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r5/m7|roll=1-6|rng=1194961109#132|shop=-|active=p0|Ava@21<-/hp3/g16,Bo@22<23/hp10/g11,Cy@19<20/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=15:[20-14-15-9-8-15]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 21
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r5/m7|roll=1-6|rng=1194961109#132|shop=-|active=p0|Ava@21<-/hp3/g16,Bo@22<23/hp10/g11,Cy@19<20/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=21:[20-14-15-9-8-15-21]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.step",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "destination": 21
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r5/m0|roll=1-6|rng=1194961109#132|shop=-|active=p0|Ava@21<15/hp3/g16,Bo@22<23/hp10/g11,Cy@19<20/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "attack": "chargeSide"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatDefend/r5/m0|roll=1-6|rng=1566565103#134|shop=-|active=p0|Ava@21<15/hp3/g16,Bo@22<23/hp10/g11,Cy@19<20/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.guard",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "guard": "side"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r5/m0|roll=1-6|rng=968108833#136|shop=-|active=p0|Ava@21<15/hp3/g16,Bo@22<23/hp10/g11,Cy@19<20/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "attack": "emberBlast"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatDefend/r5/m0|roll=1-6|rng=230713147#138|shop=-|active=p0|Ava@21<15/hp3/g16,Bo@22<23/hp10/g11,Cy@19<20/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.guard",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "guard": "ward"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatAttack/r5/m0|roll=1-6|rng=2016512077#140|shop=-|active=p0|Ava@21<15/hp1/g16,Bo@22<23/hp10/g11,Cy@19<20/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.attack",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "attack": "stab"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/combatDefend/r5/m0|roll=1-6|rng=1363077018#142|shop=-|active=p0|Ava@21<15/hp1/g16,Bo@22<23/hp10/g11,Cy@19<20/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "combat.guard",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {
+                "guard": "side"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/awaitingRoll/r5/m0|roll=1-6|rng=454713573#144|shop=-|active=p1|Ava@0<-/hp10/g13,Bo@22<23/hp10/g11,Cy@19<20/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.roll",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {}
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r5/m4|roll=1-3|rng=1655658986#146|shop=-|active=p1|Ava@0<-/hp10/g13,Bo@22<-/hp10/g11,Cy@19<20/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 22
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r5/m4|roll=1-3|rng=1655658986#146|shop=-|active=p1|Ava@0<-/hp10/g13,Bo@22<-/hp10/g11,Cy@19<20/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=22:[]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 16
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r5/m4|roll=1-3|rng=1655658986#146|shop=-|active=p1|Ava@0<-/hp10/g13,Bo@22<-/hp10/g11,Cy@19<20/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=16:[16]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 17
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r5/m4|roll=1-3|rng=1655658986#146|shop=-|active=p1|Ava@0<-/hp10/g13,Bo@22<-/hp10/g11,Cy@19<20/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=17:[16-17]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 18
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r5/m4|roll=1-3|rng=1655658986#146|shop=-|active=p1|Ava@0<-/hp10/g13,Bo@22<-/hp10/g11,Cy@19<20/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=18:[16-17-18]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 19
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r5/m4|roll=1-3|rng=1655658986#146|shop=-|active=p1|Ava@0<-/hp10/g13,Bo@22<-/hp10/g11,Cy@19<20/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=19:[16-17-18-19]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "movement.step",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "destination": 19
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/shopping/r5/m0|roll=1-3|rng=1655658986#146|shop=items|active=p1|Ava@0<-/hp10/g13,Bo@19<18/hp10/g11,Cy@19<20/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "shop.buy",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {
+                "itemId": "red_potion"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/shopping/r5/m0|roll=1-3|rng=1655658986#146|shop=items|active=p1|Ava@0<-/hp10/g13,Bo@19<18/hp10/g7,Cy@19<20/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "inventory.equip",
+            "subjects": {
+                "playerId": "$p1",
+                "playerItemId": "$item1"
+            },
+            "data": {
+                "slot": "defensiveMagic"
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/shopping/r5/m0|roll=1-3|rng=1655658986#146|shop=items|active=p1|Ava@0<-/hp10/g13,Bo@19<18/hp10/g7,Cy@19<20/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Bo",
+        "event": {
+            "type": "shop.leave",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p1"
+            },
+            "data": {}
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/awaitingRoll/r5/m0|roll=1-3|rng=1655658986#146|shop=-|active=p2|Ava@0<-/hp10/g13,Bo@19<18/hp10/g7,Cy@19<20/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.roll",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {}
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r5/m3|roll=2-1|rng=1129585398#148|shop=-|active=p2|Ava@0<-/hp10/g13,Bo@19<18/hp10/g7,Cy@19<-/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 19
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r5/m3|roll=2-1|rng=1129585398#148|shop=-|active=p2|Ava@0<-/hp10/g13,Bo@19<18/hp10/g7,Cy@19<-/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=19:[]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 18
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r5/m3|roll=2-1|rng=1129585398#148|shop=-|active=p2|Ava@0<-/hp10/g13,Bo@19<18/hp10/g7,Cy@19<-/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=18:[18]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 17
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r5/m3|roll=2-1|rng=1129585398#148|shop=-|active=p2|Ava@0<-/hp10/g13,Bo@19<18/hp10/g7,Cy@19<-/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=17:[18-17]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.select",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 23
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r5/m3|roll=2-1|rng=1129585398#148|shop=-|active=p2|Ava@0<-/hp10/g13,Bo@19<18/hp10/g7,Cy@19<-/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=23:[18-17-23]|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "movement.step",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2"
+            },
+            "data": {
+                "destination": 23
+            }
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/revealingEncounter/r5/m0|roll=2-1|rng=1606949528#149|shop=-|active=p2|Ava@0<-/hp10/g13,Bo@19<18/hp10/g7,Cy@23<17/hp7/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Cy",
+        "event": {
+            "type": "encounter.resolve",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p2",
+                "encounterId": "$encounter"
+            },
+            "data": {}
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/awaitingRoll/r6/m0|roll=2-1|rng=1606949528#149|shop=-|active=p0|Ava@0<-/hp10/g13,Bo@19<18/hp10/g7,Cy@23<17/hp10/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    },
+    {
+        "actor": "Ava",
+        "event": {
+            "type": "movement.roll",
+            "subjects": {
+                "roomId": "$room",
+                "playerId": "$p0"
+            },
+            "data": {}
+        },
+        "resultKind": "accepted",
+        "stateDigest": "room=playing/moving/r6/m2|roll=1-1|rng=33956694#151|shop=-|active=p0|Ava@0<-/hp10/g13,Bo@19<18/hp10/g7,Cy@23<17/hp10/g16|combat=Fen Slime:0/resolved/r8/leap:ward:5|encounter=bridge_toll:resolved|selection=-|camera=free:-6.30:3.20:9"
+    }
+]
