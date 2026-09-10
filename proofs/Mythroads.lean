@@ -2,6 +2,9 @@ import Mythroads.Authz
 import Mythroads.Backend.Authorization
 import Mythroads.Backend.Authority
 import Mythroads.Backend.Camera
+import Mythroads.Backend.Combat.Attack
+import Mythroads.Backend.Combat.Guard
+import Mythroads.Backend.Combat.State
 import Mythroads.Backend.Encounter
 import Mythroads.Backend.Inventory
 import Mythroads.Backend.Landing
@@ -9,6 +12,9 @@ import Mythroads.Backend.Policy
 import Mythroads.Backend.Persistence
 import Mythroads.Backend.Player
 import Mythroads.Backend.Random
+import Mythroads.Backend.Room.Lobby
+import Mythroads.Backend.Room.Movement
+import Mythroads.Backend.Room.Queries
 import Mythroads.Backend.Router
 import Mythroads.Backend.Retention
 import Mythroads.Backend.Shop
@@ -18,8 +24,12 @@ import Mythroads.Convex.Emit.Schema
 import Mythroads.Convex.Schema
 import Mythroads.Convex.TypeScript
 import Mythroads.Game.Events
+import Mythroads.Game.Encounter
+import Mythroads.Game.Combat
 import Mythroads.Game.Inventory
+import Mythroads.Game.Magic
 import Mythroads.Game.Player
 import Mythroads.Game.Random
 import Mythroads.Game.Schema
 import Mythroads.Game.Turn
+import Mythroads.Game.World

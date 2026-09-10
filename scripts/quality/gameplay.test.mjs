@@ -24,6 +24,42 @@ test('game state has one public mutation entry point', () => {
     assert.deepEqual(registrations, ['game.ts'])
 })
 
+test('authoritative shared modules are only Lean-generated adapters', () => {
+    const systems = [
+        'board.system.ts',
+        'combat.system.ts',
+        'controller-input.system.ts',
+        'encounter.system.ts',
+        'item.system.ts',
+        'magic.system.ts',
+        'world.type.ts',
+    ]
+    for (const file of systems) {
+        const source = readFileSync(new URL(`../../shared/${file}`, import.meta.url), 'utf8')
+        assert.match(source, /^export (?:type )?\* from '\.\/generated\/.+\.generated\.ts'\n$/)
+    }
+})
+
+test('Convex compatibility modules contain no handwritten handlers', () => {
+    const adapters = [
+        '../../convex/camera.ts',
+        '../../convex/combat.ts',
+        '../../convex/encounters.ts',
+        '../../convex/game.ts',
+        '../../convex/gameHelpers.ts',
+        '../../convex/landings.ts',
+        '../../convex/players.ts',
+        '../../convex/rooms.ts',
+        '../../convex/rooms/queries.ts',
+        '../../convex/schema.ts',
+        '../../convex/shops.ts',
+    ]
+    for (const adapter of adapters) {
+        const source = readFileSync(new URL(adapter, import.meta.url), 'utf8')
+        assert.doesNotMatch(source, /\b(?:async\s+function|handler\s*:|ctx\.db\.)/)
+    }
+})
+
 test('camera controls are ephemeral rather than durable game events', () => {
     const subjects = { roomId: 'room', playerId: 'player' }
     assert.equal(

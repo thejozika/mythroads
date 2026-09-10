@@ -12,6 +12,7 @@ export const architectureConfig = {
 }
 
 export const frontendTiers = [
+    { suffix: '.generated.ts', rank: 0, purpose: 'Lean-emitted rules and endpoint definitions' },
     { suffix: '.type.ts', rank: 0, purpose: 'types and validators without runtime behavior' },
     { suffix: '.util.ts', rank: 0, purpose: 'pure framework-independent logic' },
     {

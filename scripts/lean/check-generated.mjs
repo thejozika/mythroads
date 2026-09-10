@@ -21,6 +21,30 @@ const generatedModules = [
     { executable: 'mythroads-encounter-codegen', file: 'encounter.generated.ts' },
     { executable: 'mythroads-landing-codegen', file: 'landing.generated.ts' },
     { executable: 'mythroads-camera-codegen', file: 'camera.generated.ts' },
+    { executable: 'mythroads-room-codegen', file: 'room.generated.ts' },
+    { executable: 'mythroads-room-queries-codegen', file: '../rooms/queries.generated.ts' },
+    { executable: 'mythroads-combat-state-codegen', file: 'combat/state.generated.ts' },
+    { executable: 'mythroads-combat-attack-codegen', file: 'combat/attack.generated.ts' },
+    { executable: 'mythroads-combat-guard-codegen', file: 'combat/guard.generated.ts' },
+    { executable: 'mythroads-magic-codegen', file: '../../shared/generated/magic.generated.ts' },
+    { executable: 'mythroads-item-codegen', file: '../../shared/generated/item.generated.ts' },
+    {
+        executable: 'mythroads-encounter-rules-codegen',
+        file: '../../shared/generated/encounter.generated.ts',
+    },
+    { executable: 'mythroads-world-codegen', file: '../../shared/generated/board.generated.ts' },
+    {
+        executable: 'mythroads-world-types-codegen',
+        file: '../../shared/generated/world.generated.ts',
+    },
+    {
+        executable: 'mythroads-controller-input-codegen',
+        file: '../../shared/generated/controller-input.generated.ts',
+    },
+    {
+        executable: 'mythroads-combat-rules-codegen',
+        file: '../../shared/generated/combat.generated.ts',
+    },
 ]
 
 for (const module of generatedModules) {

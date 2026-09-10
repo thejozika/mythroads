@@ -342,24 +342,25 @@ The boundary is intentionally visible:
 
 | Lean-authored today | Still handwritten TypeScript today |
 |---|---|
-| Endpoint argument descriptions | The complete `GameEvent` union |
-| Query versus mutation selection | Detailed movement, combat, shop, and room transitions |
-| Inventory query orchestration | Event routing implementations |
-| Dispatch orchestration order | Persistence helper implementations |
-| Pure inventory authorization model | Hanko and Convex platform behavior |
-| Inventory confidentiality theorems | The code generator's semantic-correctness proof |
+| All eight tables, indexes, and document validators | Tiny Convex registration/re-export modules |
+| The complete `GameEvent` union, policy, authorization, router, and persistence | Hanko provider configuration |
+| Room, movement, combat, encounter, shop, inventory, camera, and turn operations | React, browser input, and Three.js rendering |
+| Board graph, controller directions, items, magic, enemy, and encounter catalogs | Convex's own `_generated/` client/server bindings |
+| Seeded random transition and exact bucket-count theorem | A proof that the TypeScript emitter preserves Lean semantics |
+| Ownership, equipment, road direction, combat-table, catalog, and schema theorems | Convex, Hanko, V8, and Lean's kernel as trusted infrastructure |
 
-This means it would be too strong to say “the complete game is implemented and proved in Lean.”
-The accurate statement is:
+The accurate statement is now:
 
-> Lean currently authors the two public endpoint definition plans, generates their validators and
-> handler orchestration, and proves the pure inventory-confidentiality policy. Handwritten
-> TypeScript still implements the domain operations called by the generated dispatcher.
+> Lean is the source of truth for all current application-owned backend behavior and stable shared
+> game rules. Convex executes generated TypeScript, while small handwritten adapters preserve its
+> file-based API paths. The whole game is not “proved correct”: only the named invariants are proved,
+> and emitter/platform correctness remains in the trusted computing base.
 
-There is also one important gap inside the current DSL: `AuthRule` metadata and effect steps are
-declared together, but the type system does not yet force an `inventoryOwner` rule to be paired
-with `readOwnedInventory`. The concrete endpoint is proved to carry the guard and the generator
-emits the check, but a future typed plan should make an invalid pairing impossible.
+The remaining architectural gap is compiler assurance. The current restricted TypeScript AST is
+structural and exhaustive, but some identifiers and module imports are still strings, and its
+semantic preservation has not been proved. Convex integration tests, TypeScript compilation, and
+byte-for-byte drift checks currently guard that boundary. A future typed effect layer and reference
+interpreter can shrink it further without changing the generated public API.
 
 The broader design is documented in [`formal-rules.md`](formal-rules.md). The researched path from
 this initial slice to an almost entirely Lean-authored backend is in

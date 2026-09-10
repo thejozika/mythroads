@@ -86,16 +86,16 @@ Several semantic constraints must be represented rather than treated as incident
 - Runtime argument and return validators are security boundaries, not just TypeScript types.[^10]
 - Documents, calls, transactions, execution time, and deployed code have platform limits.[^11]
 
-## Current Mythroads backend surface
+## Implemented Mythroads backend surface
 
 The current repository is small enough to migrate incrementally:
 
 | Area | Current state |
 |---|---|
-| Convex tables | 8 tables in `convex/schema.ts` |
-| Durable event variants | 16 variants in `convex/events/validators.ts` |
-| Public write entry point | `game:dispatch` |
-| Public reads | three room/controller queries plus private inventory |
+| Convex tables | 8 Lean-declared tables emitted into `convex/generated/schema.generated.ts` |
+| Durable event variants | 16 Lean-declared variants with generated validators, policy, auth, and routing |
+| Public write entry point | `game:dispatch`, registered from a Lean-generated definition |
+| Public reads | Three room/controller queries plus private inventory, all Lean-generated |
 | Runtime capabilities used | authentication, indexed database reads, inserts, patches, replaces, deletes, time, randomness |
 | Capabilities not currently needed | actions, HTTP actions, storage, scheduler, search, vector search, crons |
 
@@ -104,14 +104,18 @@ model the full capability families but implement operations only when the game n
 to reproduce every current and future Convex method before migrating the game would increase
 maintenance cost and delay the proof benefits.
 
-The existing Lean slice already proves useful facts, but it has limitations that the new compiler
-must remove:
+The practical migration now generates every current application-owned Convex handler and every
+stable shared rule/catalog. The remaining compiler limitations are:
 
 - table names, index names, validators, and TypeScript types can still be raw strings;
 - `AuthRule` and endpoint effects are parallel metadata rather than one type-safe program;
 - the mutation emitter recognizes one hardcoded list of named steps;
-- most event validators, routing, and game rules remain TypeScript;
 - generator correctness is covered by drift checks and integration tests, not a formal semantics.
+
+The stable TypeScript files in `convex/` and `shared/` are compatibility adapters only. A blocking
+quality test rejects handwritten handler bodies, database access in adapters, or replacement shared
+rules. Hanko configuration, Convex's `_generated/` bindings, React, and Three.js remain TypeScript
+because they are platform and presentation boundaries rather than application-owned game logic.
 
 The new design should replace this slice rather than continuously expanding the string emitter.
 

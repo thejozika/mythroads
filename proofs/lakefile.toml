@@ -72,3 +72,51 @@ root = "LandingMain"
 [[lean_exe]]
 name = "mythroads-camera-codegen"
 root = "CameraMain"
+
+[[lean_exe]]
+name = "mythroads-room-codegen"
+root = "RoomMain"
+
+[[lean_exe]]
+name = "mythroads-room-queries-codegen"
+root = "RoomQueriesMain"
+
+[[lean_exe]]
+name = "mythroads-combat-state-codegen"
+root = "CombatStateMain"
+
+[[lean_exe]]
+name = "mythroads-combat-attack-codegen"
+root = "CombatAttackMain"
+
+[[lean_exe]]
+name = "mythroads-combat-guard-codegen"
+root = "CombatGuardMain"
+
+[[lean_exe]]
+name = "mythroads-magic-codegen"
+root = "MagicMain"
+
+[[lean_exe]]
+name = "mythroads-item-codegen"
+root = "ItemMain"
+
+[[lean_exe]]
+name = "mythroads-encounter-rules-codegen"
+root = "EncounterRulesMain"
+
+[[lean_exe]]
+name = "mythroads-world-codegen"
+root = "WorldMain"
+
+[[lean_exe]]
+name = "mythroads-world-types-codegen"
+root = "WorldTypesMain"
+
+[[lean_exe]]
+name = "mythroads-controller-input-codegen"
+root = "ControllerInputMain"
+
+[[lean_exe]]
+name = "mythroads-combat-rules-codegen"
+root = "CombatRulesMain"

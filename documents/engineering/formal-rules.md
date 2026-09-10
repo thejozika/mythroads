@@ -49,18 +49,17 @@ The pipeline must satisfy all of the following:
 
 ```text
 proofs/Mythroads/
-  Convex.lean       endpoint types, validators, auth policies, transaction plans
-  Authz.lean        authorization semantics and theorems
-  Movement.lean     eventual movement transition and graph proofs
-  Combat.lean       eventual combat transition and bounds
+  Convex/           schema, endpoint, TypeScript AST, and emitters
+  Backend/          complete Convex transaction/query programs
+  Game/             world, combat, magic, inventory, events, and proofs
         │
         │ lake builds and executes proofs/Main.lean
         ▼
-convex/generated/
-  game-api.generated.ts
+convex/generated/ and shared/generated/
+  complete application backend and shared deterministic rules
         │
-        ├── inventoryQueryDefinition ── query(...) in convex/shops.ts
-        └── dispatchMutationDefinition ─ mutation(...) in convex/game.ts
+        ├── query/mutation definitions ─ Convex registration adapters
+        └── shared rule artifacts ──── stable `*.system.ts` re-exports
 ```
 
 Convex discovers public functions through files under `convex/` and generates client function
@@ -86,8 +85,8 @@ definition—validators and handler orchestration—is generated from Lean.
 - `auth`: authorization rule evaluated before private data is returned;
 - `plan`: query or mutation effect program.
 
-The initial effect algebra contains an indexed, owner-checked inventory read and the four ordered
-steps of the single game mutation:
+The endpoint manifest contains an indexed, owner-checked inventory read and the four ordered steps
+of the single public game mutation:
 
 ```text
 authorize event
@@ -96,10 +95,10 @@ authorize event
 → persist the event and result
 ```
 
-This order is authored in `dispatchEndpoint`. Changing it changes generated production code. The
-effect vocabulary must remain narrow: every constructor has explicit Lean semantics, a generator
-case, and tests against the Convex adapter. Unsupported plans fail generation instead of silently
-falling back to handwritten behavior.
+This order is authored in `dispatchEndpoint`. The production backend has since expanded through a
+restricted structural TypeScript AST: room, movement, combat, encounter, shop, inventory, camera,
+turn, authorization, persistence, and public room queries are Lean values emitted as TypeScript.
+Unsupported syntax fails Lean compilation instead of falling back to handwritten handlers.
 
 ## Inventory confidentiality proof
 

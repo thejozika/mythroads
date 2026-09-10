@@ -9,6 +9,10 @@ open Mythroads.Game.Inventory
 private def id (name : String) : Expr := .identifier name
 private def prop (target : Expr) (name : String) : Expr := .property target name
 private def call (target : Expr) (arguments : List Expr) : Expr := .call target arguments
+private def method (target : Expr) (name : String) (arguments : List Expr := []) : Expr :=
+  call (prop target name) arguments
+private def vcall (name : String) (arguments : List Expr := []) : Expr :=
+  call (prop (id "v") name) arguments
 
 def equipmentSlotType : TsType :=
   .union (allEquipmentSlots.map fun slot => .literalString slot.label)
@@ -68,23 +72,35 @@ def equipItemFunction : Function where
       [.string "playerItems", id "playerItemId", .object [("equippedSlot", id "slot")]]))
   ]
 
+def inventoryQueryDefinition : EndpointDefinition where
+  name := "inventoryQueryDefinition"
+  arguments := [("playerId", vcall "id" [.string "players"])]
+  returns := vcall "array" [call (prop (id "schema") "doc") [.string "playerItems"]]
+  handler := {
+    parameters := [
+      { name := "ctx", type := .named "QueryCtx" },
+      { name := "{ playerId }", type := .object [("playerId", .id "players")] }
+    ]
+    body := [
+      .constDecl "identity" (.await (method (prop (id "ctx") "auth") "getUserIdentity")),
+      .ifThen (.prefix "!" (id "identity")) [
+        .throw (.new "ConvexError" [.string "Sign in to view an inventory."])
+      ],
+      .constDecl "player" (.await (method (prop (id "ctx") "db") "get" [id "playerId"])),
+      .ifThen (.prefix "!" (id "player")) [
+        .throw (.new "ConvexError" [.string "That hero does not exist."])
+      ],
+      .ifThen (.binary (.prefix "!" (prop (id "player") "authId")) "||"
+        (.binary (prop (id "identity") "tokenIdentifier") "!==" (prop (id "player") "authId"))) [
+        .throw (.new "ConvexError" [.string "That inventory belongs to another account."])
+      ],
+      .return (.await inventoryQuery)
+    ]
+  }
+
 def emitInventoryBackend : String :=
-  "export const inventoryQueryDefinition = {\n" ++
-  "    args: { playerId: v.id('players') },\n" ++
-  "    returns: v.array(schema.doc('playerItems')),\n" ++
-  "    handler: async (ctx: QueryCtx, { playerId }: { playerId: Id<'players'> }) => {\n" ++
-  "        const identity = await ctx.auth.getUserIdentity()\n" ++
-  "        if (!identity) throw new ConvexError('Sign in to view an inventory.')\n" ++
-  "        const player = await ctx.db.get(playerId)\n" ++
-  "        if (!player) throw new ConvexError('That hero does not exist.')\n" ++
-  "        if (!player.authId || identity.tokenIdentifier !== player.authId) {\n" ++
-  "            throw new ConvexError('That inventory belongs to another account.')\n" ++
-  "        }\n" ++
-  "        return await ctx.db.query('playerItems')\n" ++
-  "            .withIndex('by_playerId', (q) => q.eq('playerId', playerId))\n" ++
-  "            .take(40)\n" ++
-  "    },\n" ++
-  "}\n\n" ++ emitTypeAlias "EquipmentSlot" equipmentSlotType ++ "\n" ++
+  emitEndpointDefinition inventoryQueryDefinition ++ "\n" ++
+  emitTypeAlias "EquipmentSlot" equipmentSlotType ++ "\n" ++
   emitFunction equipItemFunction
 
 end Mythroads.Backend.Inventory
