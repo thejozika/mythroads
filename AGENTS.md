@@ -12,7 +12,10 @@ not specification.
 - `npm run format` / `npm run format:check` — deterministic formatting.
 - `npm run proofs:check` — compile Lean proofs and reject stale generated Convex code.
 - `npm run proofs:axioms` — reject any theorem that depends on `sorry` or on a `native_decide`
-  axiom instead of a kernel-checked proof.
+  axiom instead of a kernel-checked proof. The allowlist in `proofs/Axioms.lean` is empty and stays
+  empty; prove concrete facts with `decide` or `#guard`.
+- `npm run docs:lean:check` — reject a stale `lean-definitions.html`. The page is generated from the
+  Lean environment by `lake exe mythroads-docs`; run `npm run docs:lean` after changing `proofs/`.
 - `npm run check` — the complete blocking gate, including the production build.
 
 Do not weaken a check merely to land a change. Split or correct the code. Generated files under
@@ -27,11 +30,27 @@ Do not weaken a check merely to land a change. Split or correct the code. Genera
   role. Do not create global dumping grounds such as `helpers/` or `misc/`.
 - Use the filename taxonomy documented in `documents/engineering/code-architecture.md`. A suffix is
   a contract, not decoration.
-- Stable deterministic rules and endpoint manifests belong in `proofs/Mythroads/` and generate
-  checked TypeScript boundaries. Provisional deterministic rules remain in `*.system.ts` and must
-  run identically in the browser and Convex. Rendering never decides game outcomes.
-- Files matching `*.generated.ts` are build artifacts emitted from Lean and are never edited by
-  hand. Public Convex modules may only register their generated query or mutation definitions.
+- The game rules live once, in `proofs/Mythroads/Engine/**`: `State`, `Event`, `Effect`, `Error`
+  and the single transition `step`, with its invariant and gate theorems beside it. Endpoint
+  manifests and the Convex value/table universe live in `proofs/Mythroads/Convex/**`. Provisional
+  deterministic rules remain in `*.system.ts` and must run identically in the browser and Convex.
+  Rendering never decides game outcomes.
+- Every `*.generated.ts` file comes from Lean: the Convex boundary from the single emitter
+  `mythroads-emit` (`proofs/Emit.lean`), whose `outputs` table owns the repository paths, and the
+  shared engine from `mythroads-compile` (`proofs/Compile.lean`). Do not add a third generator and
+  do not restate the path table in JavaScript. Generated files are never edited by hand, and public
+  Convex modules may only register their generated query or mutation definitions.
+- `shared/generated/engine.generated.ts` is the compiled engine itself, several thousand lines of
+  machine-written TypeScript. It is the one file exempt from the 300-line limit, named explicitly
+  in `scripts/quality/architecture.config.mjs`: nobody maintains it, and cutting a compiled call
+  graph into modules would buy nothing. Every other check still applies to it, and
+  `tests/engine/engine-parity.test.ts` runs it against the Lean engine step for step.
+- `tests/engine/fixtures/` holds the parity oracle, which is machine-written data and is excluded
+  from Biome in `biome.json` because formatting a fixture nobody reads would only double its size.
+  `npm run proofs:oracle` regenerates it; `npm run proofs:check` fails when it is stale.
+- Every Lean file opens with a `/-! … -/` module doc explaining its design, and every declaration
+  carries a `/-- … -/`. That prose is what the generated reader renders, so it is documentation of
+  record rather than a comment.
 - Only `*.container.tsx` may query Convex, access storage, or orchestrate routes. Three.js scenes and
   objects receive serializable state through props.
 

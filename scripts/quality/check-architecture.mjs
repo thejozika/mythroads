@@ -31,6 +31,7 @@ function lineCount(source) {
 
 function checkFileSize(path, source, findings, root) {
     const relativePath = normalize(relative(root, path))
+    if (architectureConfig.lineLimitExceptions.has(relativePath)) return
     const isTest = /\.(test|spec)\.[jt]sx?$/.test(path)
     const limit =
         extname(path) === '.css'

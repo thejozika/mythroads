@@ -2,10 +2,14 @@
 
 ## Decision
 
-Mythroads authors its stable, deterministic game model and Convex endpoint manifest in Lean. A
-Lean executable compiles those declarations into TypeScript endpoint definitions under
-`convex/generated/`. Thin, stable files at Convex's public module paths register the generated
-query and mutation definitions.
+Mythroads authors its game model and Convex endpoint manifest in Lean. Lean executables compile
+those declarations into TypeScript under `convex/generated/` and `shared/generated/`. Thin, stable
+files at Convex's public module paths register the generated query and mutation definitions.
+
+The game itself is now a single Lean definition — `Mythroads.Engine.step`, one pure function from
+a room and an envelope to either a refusal or a new room plus the writes it owes — with its
+invariant and gate theorems beside it. `documents/engineering/lean-code-walkthrough.md` is the
+narrative account of that definition and of the path it takes to Convex.
 
 This is a source-generation architecture, not a second implementation of the rules. Endpoint
 arguments, validators, authorization policies, transaction steps, and pure transition functions
@@ -49,11 +53,14 @@ The pipeline must satisfy all of the following:
 
 ```text
 proofs/Mythroads/
-  Convex/           schema, endpoint, TypeScript AST, and emitters
-  Backend/          complete Convex transaction/query programs
+  Engine/           the one game definition: State, Event, Effect, Error, step, and its theorems
+  Convex/           value universe, tables and indexes, TypeScript AST, layout, module assembly
+  Backend/          complete Convex transaction/query programs, written in that embedding
+  Compile/          a Lean-to-TypeScript compiler over the compiler's monomorphised LCNF
   Game/             world, combat, magic, inventory, events, and proofs
         │
-        │ lake builds and executes proofs/Main.lean
+        │ lake exe mythroads-emit  (proofs/Emit.lean)
+        │ lake exe mythroads-compile (proofs/Compile.lean)
         ▼
 convex/generated/ and shared/generated/
   complete application backend and shared deterministic rules
@@ -75,7 +82,14 @@ These lines are runtime adapters, not alternate rules. They select the Convex fu
 preserve the existing API paths `shops:inventory` and `game:dispatch`. Everything inside each
 definition—validators and handler orchestration—is generated from Lean.
 
-## Lean endpoint DSL
+## The Lean Convex embedding
+
+`Mythroads.Convex.Ty` is the single value universe: `Ty.validator` folds a value to a runtime
+validator and `Ty.tsType` folds the *same* value to a TypeScript type, so the two cannot disagree.
+`Mythroads.Convex.Table` closes the table enumeration and indexes `Index` by its table, so an
+indexed read cannot name an index belonging to another table or put its keys in the wrong order.
+The earlier `ValueType.custom (validator typeName : String)` escape hatch, whose two halves were
+unrelated strings, is gone; `Ty.external` keeps the pair in one constructor.
 
 `Mythroads.Convex.Endpoint` declares:
 
@@ -96,9 +110,13 @@ authorize event
 ```
 
 This order is authored in `dispatchEndpoint`. The production backend has since expanded through a
-restricted structural TypeScript AST: room, movement, combat, encounter, shop, inventory, camera,
-turn, authorization, persistence, and public room queries are Lean values emitted as TypeScript.
+structural TypeScript AST: room, movement, combat, encounter, shop, inventory, camera, turn,
+authorization, persistence, and public room queries are Lean values emitted as TypeScript.
 Unsupported syntax fails Lean compilation instead of falling back to handwritten handlers.
+
+Every generated file is written by one executable, `mythroads-emit`, whose `outputs` table pairs
+each repository path with the `Convex.Module` that fills it. The twenty-nine per-file executables
+that preceded it are gone, along with the duplicate path table that used to live in JavaScript.
 
 ## Inventory confidentiality proof
 
@@ -193,7 +211,11 @@ bounds before constructing the Lean-modeled input.
 
 ## Migration sequence
 
-### Phase 1 — endpoint compiler vertical slice
+Phases 1 to 3 are done, and phase 4 has been overtaken: rather than a free effect language
+interpreted twice, the game became one Lean function returning a list of `Effect` requests, which
+is the same separation with a smaller surface. Phase 5 is in progress.
+
+### Phase 1 — endpoint compiler vertical slice (done)
 
 - Generate the private inventory query definition.
 - Generate the single dispatch mutation definition and its ordered orchestration.
@@ -201,7 +223,7 @@ bounds before constructing the Lean-modeled input.
 - Prove inventory owner-only access.
 - Test owner, stranger, and anonymous calls through `convex-test`.
 
-### Phase 2 — event and validator ownership
+### Phase 2 — event and validator ownership (done)
 
 - Move the `GameEvent` sum type into Lean.
 - Generate `gameEventValidator`, `DispatchResult`, and their TypeScript types.
@@ -209,7 +231,7 @@ bounds before constructing the Lean-modeled input.
 - Prove every state-changing event has an authenticated actor policy.
 - Delete the handwritten validator union and router switch after parity tests pass.
 
-### Phase 3 — pure transition kernels
+### Phase 3 — pure transition kernels (done)
 
 - Move movement legality and route preview into Lean.
 - Generate the shared browser/Convex transition functions.
@@ -217,27 +239,34 @@ bounds before constructing the Lean-modeled input.
 - Move equipment transitions and prove slot uniqueness and ownership preservation.
 - Move combat resolution and prove HP/damage bounds and turn-phase legality.
 
-### Phase 4 — abstract transaction interpreter
+### Phase 4 — one transition function and an effect list (done, in a different shape)
 
-- Replace named transaction steps with a typed effect program.
-- Define a pure Lean database interpreter and state invariants.
-- Generate Convex `ctx.db` programs from the same effect tree.
-- Prove preservation of ownership, room membership, nonnegative resources, and event ordering.
+- `Mythroads.Engine.step` is the whole transition: three gates, then a `(phase, event)` dispatch.
+- `Effect` is what it returns instead of performing; the room invariant `Ok` is preserved by every
+  accepted transition, and therefore by `replay`.
+- `replay_append` makes snapshots sound before a snapshot table exists.
+- Remaining: the Convex interpreter that loads a `State`, calls `step`, and performs the effects,
+  replacing the generated per-domain handlers.
 
-### Phase 5 — compiler assurance
+### Phase 5 — compiler assurance (in progress)
 
-- Add snapshot tests for every generated module.
-- Generate cross-language test vectors in Lean and execute them in TypeScript.
-- Prove the emitter preserves the semantics of the restricted expression/transaction IR where
-  practical.
-- Consider Wasm only for large pure computations after measuring bundle size and cold execution.
+- Done: byte-for-byte drift checking of the whole generated tree, an axiom audit that rejects
+  `sorry` and `native_decide`, and compile-time `#guard`s pinning the engine's event alphabet to
+  the wire manifest.
+- In progress: `Mythroads.Compile`, a compiler from Lean's monomorphised LCNF to TypeScript, so the
+  shared engine is the Lean definition rather than a transcription of it, checked against Lean by a
+  parity oracle.
+- Not started: proving the emitter preserves the semantics of the TypeScript AST.
+- Wasm remains out of scope until a measured, pure, computation-heavy function justifies it.
 
 ## Developer workflow
 
 ```bash
-# Edit proofs/Mythroads/*.lean
-npm run proofs:generate
-npm run proofs:check
+# Edit proofs/Mythroads/**/*.lean
+npm run proofs:generate   # rewrite the generated TypeScript from Lean
+npm run proofs:check      # rebuild it independently and reject drift
+npm run proofs:axioms     # reject sorry and native_decide in the proof graph
+npm run docs:lean         # rewrite documents/engineering/lean-definitions.html
 npm run test:convex
 npm run check
 ```

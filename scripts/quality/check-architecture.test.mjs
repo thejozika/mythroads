@@ -31,6 +31,17 @@ test('rejects an oversized source module', () => {
     assert.match(inspectRepository(root).join('\n'), /exceeds the 300-line limit/)
 })
 
+test('exempts only the compiled Lean engine from the line limit', () => {
+    const root = fixture()
+    mkdirSync(join(root, 'shared', 'generated'), { recursive: true })
+    const body = 'export const value = 1\n'.repeat(301)
+    writeFileSync(join(root, 'shared', 'generated', 'engine.generated.ts'), body)
+    writeFileSync(join(root, 'shared', 'generated', 'board.generated.ts'), body)
+    const findings = inspectRepository(root).join('\n')
+    assert.doesNotMatch(findings, /engine\.generated\.ts/)
+    assert.match(findings, /board\.generated\.ts: 302 lines exceeds the 300-line limit/)
+})
+
 test('rejects an overcrowded code directory', () => {
     const root = fixture()
     for (let index = 0; index < 13; index += 1) {

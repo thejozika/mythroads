@@ -8,6 +8,7 @@
         }
     },
     "files": {
+        "maxSize": 4194304,
         "includes": [
             "**",
             "!node_modules",
@@ -16,7 +17,8 @@
             "!.convex/local",
             "!proofs",
             "!.agents",
-            "!.claude"
+            "!.claude",
+            "!tests/engine/fixtures"
         ]
     },
     "formatter": {

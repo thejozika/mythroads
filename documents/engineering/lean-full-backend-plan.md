@@ -88,6 +88,10 @@ Several semantic constraints must be represented rather than treated as incident
 
 ## Implemented Mythroads backend surface
 
+Status, so this section is read as a record rather than a proposal: phases 0 to 4 below are done,
+phase 5 is partly done, and phase 6 is where the current work is. The game itself now exists once,
+as `Mythroads.Engine.step`; see `documents/engineering/lean-code-walkthrough.md`.
+
 The current repository is small enough to migrate incrementally:
 
 | Area | Current state |
@@ -104,20 +108,24 @@ model the full capability families but implement operations only when the game n
 to reproduce every current and future Convex method before migrating the game would increase
 maintenance cost and delay the proof benefits.
 
-The practical migration now generates every current application-owned Convex handler and every
-stable shared rule/catalog. The remaining compiler limitations are:
+The migration now generates every application-owned Convex handler and every stable shared
+rule/catalogue, from one executable (`mythroads-emit`) whose `outputs` table pairs each repository
+path with the module that fills it. Value shapes, table names and index keys are closed Lean types
+rather than strings: `Convex.Ty` folds one value to both a validator and a TypeScript type, and
+`Convex.Index` is indexed by its `Convex.Table`, so an indexed read cannot name a foreign index or
+reorder its keys.
 
-- table names, index names, validators, and TypeScript types can still be raw strings;
+The remaining compiler limitations are:
+
 - `AuthRule` and endpoint effects are parallel metadata rather than one type-safe program;
-- the mutation emitter recognizes one hardcoded list of named steps;
-- generator correctness is covered by drift checks and integration tests, not a formal semantics.
+- the mutation emitter recognises one fixed list of named steps;
+- emitter correctness is covered by drift checks, integration tests and — for the compiled engine —
+  a parity oracle, but not by a formal semantics.
 
 The stable TypeScript files in `convex/` and `shared/` are compatibility adapters only. A blocking
 quality test rejects handwritten handler bodies, database access in adapters, or replacement shared
 rules. Hanko configuration, Convex's `_generated/` bindings, React, and Three.js remain TypeScript
 because they are platform and presentation boundaries rather than application-owned game logic.
-
-The new design should replace this slice rather than continuously expanding the string emitter.
 
 ## Target architecture
 
@@ -146,56 +154,42 @@ The new design should replace this slice rather than continuously expanding the 
 
 ### Lean source taxonomy
 
-The proposed structure stays within the repository's folder-density rules:
+What was proposed here was a file-by-file plan. What exists is close to it in spirit and different
+in shape, because the game turned out to want one definition rather than a domain per file:
 
 ```text
-proofs/Mythroads/
-  Convex/
-    Capability.lean     query/mutation/action capability indices
-    Function.lean       visibility, arguments, returns, endpoints
-    Program.lean        typed effect programs and control flow
-    Schema.lean         tables, documents, indexes, schema invariants
-    Semantics.lean      pure abstract database interpreter
-    Value.lean          exact Convex value and validator universe
-    Emit/
-      Module.lean       import/export and module generation
-      Schema.lean       schema and validator emission
-      TypeScript.lean   target AST and deterministic printer
-  Game/
-    Authz.lean
-    Combat.lean
-    Encounter.lean
-    Event.lean
-    Inventory.lean
-    Movement.lean
-    Room.lean
-    Shop.lean
-    State.lean
-    World.lean
-  Proofs/
-    Authorization.lean
-    CapabilitySafety.lean
-    Replay.lean
-    StateMachine.lean
+proofs/
+  Emit.lean            the single code generator: path -> module
+  Compile.lean         the Lean-to-TypeScript compiler executable
+  DocExport.lean       the documentation exporter behind lean-definitions.html
+  Axioms.lean          the axiom audit
+  Mythroads/
+    Engine.lean        the root, with the reading order
+    Engine/            Core, Room, Combat, Event, Step, Step/*, Replay, Invariant,
+                       Preservation, Theorems, Examples
+    Convex/            Ty, Table, Query, Schema, Ast, TypeScript, Doc, Module
+    Backend/           one module per generated Convex file
+    Compile/           Names, State, Shims, Types, Expr, Code, Driver
+    Game/              board, combat, magic, inventory, events, random, turn order
+    Authz.lean, Identity.lean
 ```
 
-The names are responsibilities, not a requirement to create every file immediately. New files
-should appear only with the corresponding implementation phase.
+The proof modules are not a separate directory: each one sits beside the definitions it is about
+(`Engine/Theorems.lean`, `Engine/Preservation.lean`, `Authz.lean`), which is what keeps a statement
+and the value it quantifies over in the same file.
 
 ### Generated output taxonomy
 
+The layout that actually shipped keeps the paths the handwritten files already had, so no consumer
+had to move:
+
 ```text
-convex/generated/
-  model/
-    schema.generated.ts
-    validators.generated.ts
-    values.generated.ts
-  functions/
-    game.generated.ts
-    rooms.generated.ts
-    shops.generated.ts
-  runtime/
-    program.generated.ts
+convex/generated/     schema, game API, and one module per domain handler
+convex/events/        validators, router, policy, authority, persistence, retention
+convex/auth/          authorization
+convex/rooms/         public room queries
+shared/generated/     board, world, controller input, combat, magic, items, encounters,
+                      and engine.generated.ts — the compiled Lean engine
 ```
 
 Convex requires conventional module paths such as `convex/schema.ts` and uses file paths to name
@@ -455,7 +449,7 @@ limits and semantics, so it cannot be the final integration layer.[^17]
 
 ## Implementation plan
 
-### Phase 0 — compiler contract and vertical-slice choice
+### Phase 0 — compiler contract and vertical-slice choice (done)
 
 Estimated effort: 1–2 focused days.
 
@@ -469,7 +463,7 @@ Estimated effort: 1–2 focused days.
 Exit criterion: one written compiler contract and fixtures describing current equip behavior,
 including hostile callers.
 
-### Phase 1 — values, schema, and validators
+### Phase 1 — values, schema, and validators (done)
 
 Estimated effort: 3–5 focused days.
 
@@ -482,7 +476,7 @@ Estimated effort: 3–5 focused days.
 Exit criterion: generated schema and validators are byte-stable, `tsc` passes, and Convex validates
 the existing database shape.
 
-### Phase 2 — typed effect language
+### Phase 2 — typed effect language (done, as a structural TypeScript AST)
 
 Estimated effort: 4–7 focused days.
 
@@ -496,7 +490,7 @@ Estimated effort: 4–7 focused days.
 Exit criterion: the old handwritten `equipItem` is deleted; owner, stranger, invalid item, invalid
 slot, and occupied-slot cases pass against generated Convex code.
 
-### Phase 3 — event dispatcher and authorization
+### Phase 3 — event dispatcher and authorization (done)
 
 Estimated effort: 3–5 focused days.
 
@@ -510,7 +504,7 @@ Estimated effort: 3–5 focused days.
 Exit criterion: `convex/events/router.ts`, handwritten validators, and handwritten authorization
 branching contain no domain logic.
 
-### Phase 4 — migrate the game domains
+### Phase 4 — migrate the game domains (done)
 
 Estimated effort: 7–12 focused days.
 
@@ -531,7 +525,7 @@ not consume proof or persistence complexity intended for authoritative game stat
 Exit criterion: the handwritten files under `convex/` contain registration, configuration, or
 generic foreign adapters only—no game decisions.
 
-### Phase 5 — generated reads and information-flow boundaries
+### Phase 5 — generated reads and information-flow boundaries (done, except the noninterference proofs)
 
 Estimated effort: 2–4 focused days.
 
@@ -544,7 +538,7 @@ Estimated effort: 2–4 focused days.
 Exit criterion: all public and private read surfaces are generated and tested as anonymous, owner,
 other player, and host identities.
 
-### Phase 6 — hardening and compiler assurance
+### Phase 6 — hardening and compiler assurance (in progress)
 
 Estimated effort: 3–6 focused days.
 
@@ -558,7 +552,7 @@ Estimated effort: 3–6 focused days.
 Exit criterion: generated drift, missing validators, unsupported operations, unbounded reads, API
 version skew, and public-mutation proliferation all fail CI.
 
-### Phase 7 — advanced Convex capabilities on demand
+### Phase 7 — advanced Convex capabilities on demand (not started; nothing needs one yet)
 
 Estimated effort: feature-dependent.
 
@@ -566,36 +560,28 @@ Add scheduler, storage, actions, HTTP actions, search, or components only when M
 Each capability receives types, semantics, emission, and integration tests. External npm packages
 are exposed through narrow typed ports rather than arbitrary embedded TypeScript.
 
-## Delivery estimate and decision gates
+## Decision gates, as they were answered
 
-For the current backend, a credible first full migration is approximately 23–41 focused engineering
-days. The first useful proof-backed vertical slice should take 8–14 days across phases 0–2. The
-range reflects that building the compiler correctly is more work than translating the existing
-small functions.
-
-There are three explicit decision gates:
-
-1. **After the equip slice:** is Lean authoring pleasant enough to justify migration?
-2. **After generated schema/events:** do generated diffs and error messages remain understandable?
-3. **After movement:** does reference-interpreter parity hold for a stateful, random workflow?
-
-If any gate fails, retain Lean for pure game kernels and proofs while keeping the effect shell in
-TypeScript. This fallback still provides substantial value and avoids completing a bespoke compiler
-whose development experience is poor.
+1. **Is Lean authoring pleasant enough to justify migration?** Yes. The cost that mattered was not
+   proving things; it was string-typed emitters, and closing the value, table and index universes
+   removed it.
+2. **Do generated diffs and error messages remain understandable?** Yes, once Biome — not Lean —
+   became the arbiter of final style, so a Lean change shows up as a semantic diff.
+3. **Does parity hold for a stateful, random workflow?** Randomness became a field of the state and
+   a Park–Miller step, so replay is exact by construction rather than by agreement.
 
 ## Immediate next change
 
-Do not add another named `QueryStep` or hardcoded mutation sequence to the existing generator. The
-next implementation should be the phase-0/phase-1 foundation:
+The generators are done; the gap is that Convex still runs generated *handlers* rather than the
+engine itself. The next implementation is the load–step–save boundary:
 
-1. pin the target Convex version;
-2. introduce closed Lean table, value, validator, and index types;
-3. generate the existing schema without changing runtime behavior;
-4. add byte-for-byte schema drift checking;
-5. only then introduce the general effect language through `inventory.equip`.
-
-This path moves directly toward a full Lean-authored backend while keeping every commit deployable
-and giving the project an early opportunity to reject a bad compiler interface.
+1. finish `Mythroads.Compile` and its parity oracle so `shared/generated/engine.generated.ts` is
+   the Lean `step`, not a transcription of it;
+2. add the Convex interpreter that loads a room into a `State`, calls `step`, raises the matching
+   `ConvexError` on refusal, and performs the returned `Effect` list;
+3. retire the per-domain generated handlers once the interpreter passes the existing `convex-test`
+   suites unchanged;
+4. add a snapshot table, which `replay_append` already proves sound.
 
 ## Sources
 

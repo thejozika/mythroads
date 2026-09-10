@@ -9,6 +9,19 @@ export const architectureConfig = {
     },
     sourceExtensions: new Set(['.ts', '.tsx', '.js', '.jsx', '.css']),
     entryPointExceptions: new Set(['src/main.tsx']),
+    /**
+     * The one file exempt from the line limit, and why.
+     *
+     * `shared/generated/engine.generated.ts` is the whole Lean game engine compiled to
+     * TypeScript by `lake exe mythroads-compile`: several thousand lines, none of them written
+     * or maintained by a person. The limit exists so that a file stays readable to whoever has
+     * to change it, and nobody changes this one — the engine is changed in
+     * `proofs/Mythroads/Engine/**` and recompiled. Splitting it would mean cutting a strongly
+     * connected call graph across modules for no benefit. Every other check still applies to
+     * it: Biome's lint and format rules, `tsc --strict`, and the parity suite in
+     * `tests/engine/` that runs it against the Lean engine itself.
+     */
+    lineLimitExceptions: new Set(['shared/generated/engine.generated.ts']),
 }
 
 export const frontendTiers = [

@@ -2,9 +2,14 @@
  * Drift check for the Lean-authored TypeScript boundary.
  *
  * The Lean side owns the list of generated files (`proofs/Emit.lean`'s `outputs`), so this script
- * no longer restates it. It builds the single `mythroads-emit` executable, runs it into a staging
+ * no longer restates it. It builds the two generator executables, runs them into one staging
  * directory, lets Biome canonicalize that tree (import order first, then formatting), and compares
  * the result with the repository tree.
+ *
+ * `mythroads-emit` prints the Convex boundary from Lean values; `mythroads-compile` compiles the
+ * Lean engine itself, `Mythroads.Engine.step` and its whole reachable closure, into
+ * `shared/generated/engine.generated.ts`. Both write into the same staging tree, so one comparison
+ * covers everything Lean generates.
  *
  * Comparing whole trees rather than file-by-file also catches a case the previous per-executable
  * loop could not: a generated file left behind in the repository after its Lean source was
@@ -54,8 +59,9 @@ const treeFiles = (directory, prefix = '') => {
 
 const staging = mkdtempSync(join(tmpdir(), 'mythroads-emit-'))
 try {
-    run('lake', ['build', 'mythroads-emit'], { cwd: proofs })
+    run('lake', ['build', 'mythroads-emit', 'mythroads-compile'], { cwd: proofs })
     run('lake', ['exe', 'mythroads-emit', staging], { cwd: proofs })
+    run('lake', ['exe', 'mythroads-compile', staging], { cwd: proofs })
     run(biome, ['check', '--write', '--only=assist/source/organizeImports', staging], { cwd: root })
     run(biome, ['format', '--write', staging], { cwd: root })
 

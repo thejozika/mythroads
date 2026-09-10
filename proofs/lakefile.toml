@@ -9,3 +9,17 @@ globs = ["Mythroads", "Mythroads.+"]
 [[lean_exe]]
 name = "mythroads-emit"
 root = "Emit"
+
+[[lean_exe]]
+name = "mythroads-compile"
+root = "Compile"
+supportInterpreter = true
+
+[[lean_exe]]
+name = "mythroads-oracle"
+root = "Oracle"
+
+[[lean_exe]]
+name = "mythroads-docs"
+root = "DocExport"
+supportInterpreter = true
