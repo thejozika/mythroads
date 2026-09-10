@@ -15,8 +15,8 @@ import { MAGIC_LOADOUTS, MAGIC_TECHNIQUES, type DebuffStat } from '../shared/mag
 import type { Doc, Id } from './_generated/dataModel'
 import type { MutationCtx } from './_generated/server'
 import { advanceTurn, roomPhase } from './gameHelpers'
-
-const choose = <T>(options: readonly T[]) => options[Math.floor(Math.random() * options.length)]
+import { chanceHits } from './generated/random.generated'
+import { drawRoomRandom } from './random/state'
 
 const playerStats = (player: Doc<'players'>, combat?: Doc<'combats'>) => ({
     attack: player.attack,
@@ -124,7 +124,7 @@ export async function chooseAttack(
         subjects.playerId,
         'combatAttack',
     )
-    const guard = choose(GUARD_STANCES)
+    const guard = GUARD_STANCES[await drawRoomRandom(ctx, room._id, GUARD_STANCES.length)]
     const magic = isMagicTechnique(attack)
     const inventory = await ctx.db
         .query('playerItems')
@@ -164,7 +164,10 @@ export async function chooseAttack(
         enemyStats(combat),
         combat.enemyElement,
     )
-    const damage = Math.random() <= result.accuracy ? result.damage : 0
+    const hitRoll = await drawRoomRandom(ctx, room._id, 10_000)
+    const damage = chanceHits(Math.round(result.accuracy * 10_000), 10_000, hitRoll)
+        ? result.damage
+        : 0
     const enemyHp = Math.max(0, combat.enemyHp - damage)
     await ctx.db.patch(combat._id, {
         enemyHp,
@@ -204,7 +207,8 @@ export async function chooseGuard(
         subjects.playerId,
         'combatDefend',
     )
-    const attack = choose([...PHYSICAL_ATTACKS, ...MAGIC_LOADOUTS[combat.enemyElement]] as const)
+    const attacks = [...PHYSICAL_ATTACKS, ...MAGIC_LOADOUTS[combat.enemyElement]] as const
+    const attack = attacks[await drawRoomRandom(ctx, room._id, attacks.length)]
     const inventory = await ctx.db
         .query('playerItems')
         .withIndex('by_playerId', (query) => query.eq('playerId', player._id))
@@ -244,7 +248,10 @@ export async function chooseGuard(
         undefined,
         equippedMagic(inventory).wardPower,
     )
-    const damage = Math.random() <= result.accuracy ? result.damage : 0
+    const hitRoll = await drawRoomRandom(ctx, room._id, 10_000)
+    const damage = chanceHits(Math.round(result.accuracy * 10_000), 10_000, hitRoll)
+        ? result.damage
+        : 0
     const hp = Math.max(0, player.hp - damage)
     await ctx.db.patch(combat._id, {
         round: combat.round + 1,

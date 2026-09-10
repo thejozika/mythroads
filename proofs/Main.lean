@@ -63,15 +63,13 @@ def emitEndpoint (endpoint : Endpoint) : String :=
 
 def generatedHeader : String :=
   "/** Generated from proofs/Mythroads/*.lean. Do not edit by hand. */\n" ++
-  "import { ConvexError, v } from 'convex/values'\n" ++
-  "import type { Id } from '../_generated/dataModel'\n" ++
-  "import type { MutationCtx, QueryCtx } from '../_generated/server'\n" ++
+  "import { v } from 'convex/values'\n" ++
+  "import type { MutationCtx } from '../_generated/server'\n" ++
   "import { authorizeGameEvent } from '../auth/authorization'\n" ++
   "import { persistGameEvent, priorDispatchResult } from '../events/persistence'\n" ++
   "import { routeGameEvent } from '../events/router'\n" ++
   "import { dispatchResultValidator, gameEventValidator } from '../events/validators'\n" ++
-  "import type { GameEvent } from '../events/validators'\n" ++
-  "import schema from '../schema'\n\n"
+  "import type { GameEvent } from '../events/validators'\n\n"
 
 def main : IO Unit :=
   IO.print (generatedHeader ++ join "\n" (gameApi.map emitEndpoint))

@@ -3,26 +3,38 @@ import { canTraverse, getNode, previewRouteStep } from '../shared/board.system'
 import type { Id } from './_generated/dataModel'
 import type { MutationCtx } from './_generated/server'
 import { roomPhase } from './gameHelpers'
+import { drawBounded, normalizeSeed } from './generated/random.generated'
 import { resolveLanding } from './landings'
 import { createPlayer } from './players'
 
-const roomCode = () => {
+const roomCode = (state: number) => {
     const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-    return Array.from(
-        { length: 4 },
-        () => alphabet[Math.floor(Math.random() * alphabet.length)],
-    ).join('')
+    let rngState = state
+    const code = Array.from({ length: 4 }, () => {
+        const draw = drawBounded(rngState, alphabet.length)
+        rngState = draw.state
+        return alphabet.at(draw.value) ?? alphabet[0]
+    }).join('')
+    return { code, state: rngState }
 }
 
-export async function createRoom(ctx: MutationCtx, hostAuthId?: string) {
-    let code = roomCode()
+export async function createRoom(ctx: MutationCtx, hostAuthId?: string, seed = Date.now()) {
+    let rngState = normalizeSeed(seed)
+    let generated = roomCode(rngState)
+    let code = generated.code
+    rngState = generated.state
+    let rngCounter = 4
     while (
         await ctx.db
             .query('rooms')
             .withIndex('by_code', (q) => q.eq('code', code))
             .unique()
-    )
-        code = roomCode()
+    ) {
+        generated = roomCode(rngState)
+        code = generated.code
+        rngState = generated.state
+        rngCounter += 4
+    }
     await ctx.db.insert('rooms', {
         code,
         ...(hostAuthId ? { hostAuthId } : {}),
@@ -31,6 +43,8 @@ export async function createRoom(ctx: MutationCtx, hostAuthId?: string) {
         message: 'Scan the code to join the adventure.',
         round: 1,
         phase: 'awaitingRoll',
+        rngState,
+        rngCounter,
     })
     return code
 }
@@ -106,7 +120,12 @@ export async function rollMovement(
         roomPhase(room) !== 'awaitingRoll'
     )
         throw new ConvexError('You cannot roll now.')
-    const results = player.dice.map((sides) => 1 + Math.floor(Math.random() * sides))
+    let rngState = room.rngState ?? normalizeSeed(room._creationTime)
+    const results = player.dice.map((sides) => {
+        const draw = drawBounded(rngState, sides)
+        rngState = draw.state
+        return draw.value + 1
+    })
     const total = results.reduce((sum, value) => sum + value, 0)
     await clearSelection(ctx, roomId)
     await ctx.db.patch(playerId, { previousPosition: undefined })
@@ -114,6 +133,8 @@ export async function rollMovement(
         lastRoll: results,
         remainingMoves: total,
         phase: 'moving',
+        rngState,
+        rngCounter: (room.rngCounter ?? 0) + results.length,
         message: `${player.name} rolled ${total}. Press Y to choose a destination.`,
     })
 }

@@ -21,7 +21,10 @@ export async function routeGameEvent(
 ): Promise<DispatchResult> {
     switch (event.type) {
         case 'room.create':
-            return { kind: 'room.created', code: await createRoom(ctx, actorAuthId ?? undefined) }
+            return {
+                kind: 'room.created',
+                code: await createRoom(ctx, actorAuthId ?? undefined, event.data.seed),
+            }
         case 'player.join':
             return {
                 kind: 'player.joined',

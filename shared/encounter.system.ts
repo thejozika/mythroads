@@ -107,10 +107,13 @@ export function outcomesFor(kind: EncounterKind) {
     return ENCOUNTERS.filter((outcome) => outcome.kind === kind)
 }
 
-export function pickEncounter(kind: EncounterKind, randomValue: number) {
+export function encounterWeight(kind: EncounterKind) {
+    return outcomesFor(kind).reduce((sum, outcome) => sum + outcome.weight, 0)
+}
+
+export function pickEncounter(kind: EncounterKind, roll: number) {
     const outcomes = outcomesFor(kind)
-    const totalWeight = outcomes.reduce((sum, outcome) => sum + outcome.weight, 0)
-    let cursor = Math.min(Math.max(randomValue, 0), 0.999999) * totalWeight
+    let cursor = Math.min(Math.max(Math.trunc(roll), 0), encounterWeight(kind) - 1)
     for (const outcome of outcomes) {
         cursor -= outcome.weight
         if (cursor < 0) return outcome

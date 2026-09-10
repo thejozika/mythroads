@@ -1,9 +1,10 @@
 import { getNode, isShopKind } from '../shared/board.system'
-import { outcomesFor, pickEncounter } from '../shared/encounter.system'
+import { encounterWeight, outcomesFor, pickEncounter } from '../shared/encounter.system'
 import type { Doc, Id } from './_generated/dataModel'
 import type { MutationCtx } from './_generated/server'
 import { startCombat } from './combat'
 import { advanceTurn } from './gameHelpers'
+import { drawRoomRandom } from './random/state'
 
 export async function resolveLanding(
     ctx: MutationCtx,
@@ -48,7 +49,8 @@ async function startEvent(
     player: Doc<'players'>,
     destination: number,
 ) {
-    const outcome = pickEncounter('event', Math.random())
+    const roll = await drawRoomRandom(ctx, roomId, encounterWeight('event'))
+    const outcome = pickEncounter('event', roll)
     const wheelIndex = outcomesFor('event').findIndex((candidate) => candidate.id === outcome.id)
     const encounterId = await ctx.db.insert('encounters', {
         roomId,

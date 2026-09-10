@@ -58,6 +58,6 @@ def dispatchEndpoint : Endpoint where
   auth := .eventActor
   plan := .mutation [.authorizeEvent, .returnPriorCommand, .routeEvent, .persistEvent]
 
-def gameApi : List Endpoint := [inventoryEndpoint, dispatchEndpoint]
+def gameApi : List Endpoint := [dispatchEndpoint]
 
 end Mythroads.Convex

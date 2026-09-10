@@ -31,15 +31,18 @@ export async function persistGameEvent(
     actorAuthId: string | null = null,
 ) {
     if (!isPersistentGameEvent(event)) return
+    const createdAt = Date.now()
     const roomId = eventRoomId(event)
     const authority = resolveEventAuthority(event, result, actorAuthId)
     const record: Omit<VersionedGameEvent, '_id' | '_creationTime'> = {
-        eventId: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`,
+        eventId:
+            commandId ??
+            `${createdAt.toString(36)}:${event.type}:${JSON.stringify(event.subjects)}`,
         schemaVersion: GAME_EVENT_SCHEMA_VERSION,
         event,
         result,
         authority,
-        createdAt: Date.now(),
+        createdAt,
         ...(commandId ? { commandId } : {}),
         ...(roomId ? { roomId } : {}),
         ...(authority.actorPlayerId ? { actorPlayerId: authority.actorPlayerId } : {}),

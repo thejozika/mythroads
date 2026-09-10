@@ -49,7 +49,35 @@ async function seedRoom() {
             itemId: 'ember_grimoire',
             purchasedAt: 1,
         })
-        return { roomId, playerId, itemId }
+        const occupiedItemId = await ctx.db.insert('playerItems', {
+            playerId,
+            itemId: 'tide_grimoire',
+            equippedSlot: 'offensiveMagic',
+            purchasedAt: 2,
+        })
+        const otherPlayerId = await ctx.db.insert('players', {
+            roomId,
+            authId: stranger.tokenIdentifier,
+            name: 'Stranger',
+            color: '#ef6b73',
+            position: 0,
+            gold: 10,
+            hp: 10,
+            maxHp: 10,
+            attack: 2,
+            defense: 2,
+            magic: 2,
+            athletics: 2,
+            agility: 2,
+            dice: [4, 6],
+            joinedAt: 2,
+        })
+        const otherItemId = await ctx.db.insert('playerItems', {
+            playerId: otherPlayerId,
+            itemId: 'stone_grimoire',
+            purchasedAt: 3,
+        })
+        return { roomId, playerId, itemId, occupiedItemId, otherPlayerId, otherItemId }
     })
     return { t, ...ids }
 }
@@ -63,9 +91,9 @@ describe('Hanko-backed game authorization', () => {
             playerId,
         })
         expect(state?.players.map((player) => player._id)).toEqual([playerId])
-        expect(await session.query(api.shops.inventory, { playerId })).toEqual([
-            expect.objectContaining({ _id: itemId }),
-        ])
+        expect(await session.query(api.shops.inventory, { playerId })).toEqual(
+            expect.arrayContaining([expect.objectContaining({ _id: itemId })]),
+        )
     })
 
     test('another account and an anonymous caller cannot use a hero', async () => {
@@ -98,6 +126,8 @@ describe('Hanko-backed game authorization', () => {
         const state = await t.query(api.rooms.queries.displayByCode, { code: 'AUTH' })
         expect(state?.canStart).toBe(false)
         expect(state?.room).not.toHaveProperty('hostAuthId')
+        expect(state?.room).not.toHaveProperty('rngState')
+        expect(state?.room).not.toHaveProperty('rngCounter')
         expect(state?.players[0]).not.toHaveProperty('authId')
         expect(state?.players[0]).not.toHaveProperty('gold')
         expect(state?.players[0]).not.toHaveProperty('hp')
@@ -116,5 +146,44 @@ describe('Hanko-backed game authorization', () => {
         await expect(t.withIdentity(stranger).mutation(api.game.dispatch, command)).rejects.toThrow(
             /another account/,
         )
+    })
+
+    test('generated equipment logic replaces the occupied slot for its owner', async () => {
+        const { t, playerId, itemId, occupiedItemId } = await seedRoom()
+        const session = t.withIdentity(owner)
+        await expect(
+            session.mutation(api.game.dispatch, {
+                event: {
+                    type: 'inventory.equip',
+                    subjects: { playerId, playerItemId: itemId },
+                    data: { slot: 'offensiveMagic' },
+                },
+            }),
+        ).resolves.toEqual({ kind: 'accepted' })
+        const inventory = await session.query(api.shops.inventory, { playerId })
+        expect(inventory.find((item) => item._id === itemId)?.equippedSlot).toBe('offensiveMagic')
+        expect(inventory.find((item) => item._id === occupiedItemId)?.equippedSlot).toBeUndefined()
+    })
+
+    test('generated equipment logic rejects another account and another inventory', async () => {
+        const { t, playerId, itemId, otherItemId } = await seedRoom()
+        const ownerEvent = {
+            type: 'inventory.equip' as const,
+            subjects: { playerId, playerItemId: itemId },
+            data: { slot: 'offensiveMagic' as const },
+        }
+        await expect(
+            t.withIdentity(stranger).mutation(api.game.dispatch, { event: ownerEvent }),
+        ).rejects.toThrow(/another account/)
+        await expect(
+            t.withIdentity(owner).mutation(api.game.dispatch, {
+                event: {
+                    ...ownerEvent,
+                    subjects: { playerId, playerItemId: otherItemId },
+                },
+            }),
+        ).rejects.toThrow(/cannot be equipped/)
+        const inventory = await t.withIdentity(owner).query(api.shops.inventory, { playerId })
+        expect(inventory.find((item) => item._id === itemId)?.equippedSlot).toBeUndefined()
     })
 })

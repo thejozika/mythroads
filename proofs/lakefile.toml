@@ -8,3 +8,19 @@ name = "Mythroads"
 [[lean_exe]]
 name = "mythroads-codegen"
 root = "Main"
+
+[[lean_exe]]
+name = "mythroads-inventory-codegen"
+root = "InventoryMain"
+
+[[lean_exe]]
+name = "mythroads-schema-codegen"
+root = "SchemaMain"
+
+[[lean_exe]]
+name = "mythroads-random-codegen"
+root = "RandomMain"
+
+[[lean_exe]]
+name = "mythroads-events-codegen"
+root = "EventsMain"

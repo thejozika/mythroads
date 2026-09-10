@@ -4,7 +4,7 @@ import { query, type QueryCtx } from '../_generated/server'
 import { developmentAuthBypass, requireAuthId, requirePlayerOwner } from '../auth/authorization'
 import schema from '../schema'
 
-const roomViewValidator = schema.doc('rooms').omit('hostAuthId')
+const roomViewValidator = schema.doc('rooms').omit('hostAuthId', 'rngState', 'rngCounter')
 const playerViewValidator = schema.doc('players').omit('authId')
 const publicPlayerValidator = v.object({
     _id: v.id('players'),
@@ -16,8 +16,10 @@ const publicPlayerValidator = v.object({
 })
 
 function roomView(room: Doc<'rooms'>) {
-    const { hostAuthId, ...view } = room
+    const { hostAuthId, rngCounter, rngState, ...view } = room
     void hostAuthId
+    void rngCounter
+    void rngState
     return view
 }
 

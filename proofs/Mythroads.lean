@@ -1,2 +1,11 @@
 import Mythroads.Authz
+import Mythroads.Backend.Inventory
+import Mythroads.Backend.Random
 import Mythroads.Convex
+import Mythroads.Convex.Emit.Schema
+import Mythroads.Convex.Schema
+import Mythroads.Convex.TypeScript
+import Mythroads.Game.Events
+import Mythroads.Game.Inventory
+import Mythroads.Game.Random
+import Mythroads.Game.Schema
