@@ -42,17 +42,17 @@ def startCombat (s : State) (p : PlayerState) (spaceId : NodeId) : Outcome :=
       message := "Choose how to attack the " ++ enemy.name ++ "." }
   .ok (s.withPhase (.combat battle .attackerChoice)
         (p.name ++ " faces a " ++ enemy.name ++ "!"),
-       [.persistCombat, .persistRoom, .appendLog "landing.combat"])
+       [.persistCombat battle .attackerChoice, .persistRoom, .appendLog "landing.combat"])
 
 /-- Spin the event wheel, storing the drawn outcome for `encounter.resolve` to apply. -/
 def startEvent (s : State) (p : PlayerState) (spaceId : NodeId) : Outcome :=
   let drawn := s.draw (Encounter.totalWeight .event)
   let outcome := pickEncounter .event drawn.1
-  .ok (drawn.2.withPhase
-        (.encounter { playerId := p.id, spaceId, kind := .event, outcome,
-                      wheelIndex := wheelIndexOf .event outcome })
-        (p.name ++ " spins the event wheel!"),
-       [.persistEncounter, .persistRoom, .appendLog "landing.event"])
+  let revealed : EncounterState :=
+    { playerId := p.id, spaceId, kind := .event, outcome,
+      wheelIndex := wheelIndexOf .event outcome }
+  .ok (drawn.2.withPhase (.encounter revealed) (p.name ++ " spins the event wheel!"),
+       [.persistEncounter revealed, .persistRoom, .appendLog "landing.event"])
 
 /--
 Resolve the space a hero has just stopped on, given that space's node.

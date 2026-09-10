@@ -40,12 +40,14 @@ def survivedHp (p : PlayerState) (delta : Int) : Nat :=
 
 /-- `encounter.resolve`: apply the drawn deltas, mark the wheel spent, and pass the turn. -/
 def resolve (s : State) (p : PlayerState) (drawn : EncounterState) : Outcome :=
+  let spent : EncounterState := { drawn with resolved := true }
   .ok ((s.mapPlayer p.id fun q =>
           { q with gold := applyDelta q.gold drawn.outcome.goldDelta,
                    hp := survivedHp q drawn.outcome.hpDelta }).withPhase
-          (.encounter { drawn with resolved := true }) s.message
+          (.encounter spent) s.message
         |>.advanceTurn
           (p.name ++ ": " ++ drawn.outcome.title ++ summary drawn.outcome),
-       [.persistPlayer p.id, .persistEncounter, .persistRoom, .appendLog "encounter.resolve"])
+       [.persistPlayer p.id, .persistEncounter spent, .persistRoom,
+        .appendLog "encounter.resolve"])
 
 end Mythroads.Engine.Encounters

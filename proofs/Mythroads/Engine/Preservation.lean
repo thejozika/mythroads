@@ -64,15 +64,19 @@ theorem ok_join {s s' : State} {actor : Mythroads.AuthId} {name color : String} 
   · exact absurd h (by simp)
   · exact ok_joinAs ok h
 
-/-- Starting the adventure only moves the cursor to the first hero. -/
+/-- Starting the adventure only moves the cursor to the first hero, or does nothing at all. -/
 theorem ok_start {s s' : State} {fx : List Effect} (ok : Ok s)
     (h : Lobby.start s = .ok (s', fx)) : Ok s' := by
   simp only [Lobby.start] at h
   split at h
-  · exact absurd h (by simp)
   · simp only [Except.ok.injEq, Prod.mk.injEq] at h
     obtain ⟨rfl, -⟩ := h
-    exact ⟨ok.heroes, Nat.lt_of_lt_of_le Nat.zero_lt_one (Nat.le_max_left 1 _)⟩
+    exact ok
+  · split at h
+    · exact absurd h (by simp)
+    · simp only [Except.ok.injEq, Prod.mk.injEq] at h
+      obtain ⟨rfl, -⟩ := h
+      exact ⟨ok.heroes, Nat.lt_of_lt_of_le Nat.zero_lt_one (Nat.le_max_left 1 _)⟩
 
 /-! ## Movement -/
 
@@ -166,11 +170,13 @@ theorem ok_stepMove {s s' : State} {p : PlayerState} {moves : Nat} {sel : Option
     · exact absurd h (by simp)
     · split at h
       · exact absurd h (by simp)
-      · rename_i landing
-        simp only [Except.ok.injEq, Prod.mk.injEq] at h
-        obtain ⟨rfl, -⟩ := h
-        refine ok_resolveLanding (ok_mapPlayer ok ?_) landing
-        exact fun _ hq => hq
+      · split at h
+        · exact absurd h (by simp)
+        · rename_i landing
+          simp only [Except.ok.injEq, Prod.mk.injEq] at h
+          obtain ⟨rfl, -⟩ := h
+          refine ok_resolveLanding (ok_mapPlayer ok ?_) landing
+          exact fun _ hq => hq
 
 /-! ## Battle -/
 /-- Striking either logs an exchange, or fells the enemy and passes the turn. -/
@@ -195,8 +201,8 @@ theorem ok_attack {s s' : State} {p : PlayerState} {b : CombatState} {c : Strike
         exact ok_congr ok rfl rfl
 
 /-- Defeat restores the hero to full health before passing the turn. -/
-theorem ok_defeat {s s' : State} {p : PlayerState} {b : CombatState} {fx : List Effect}
-    (ok : Ok s) (h : Battle.defeat s p b = .ok (s', fx)) : Ok s' := by
+theorem ok_defeat {s s' : State} {p : PlayerState} {b logged : CombatState} {fx : List Effect}
+    (ok : Ok s) (h : Battle.defeat s p b logged = .ok (s', fx)) : Ok s' := by
   simp only [Battle.defeat, Except.ok.injEq, Prod.mk.injEq] at h
   obtain ⟨rfl, -⟩ := h
   refine ok_advanceTurn (ok_mapPlayer ok ?_) _

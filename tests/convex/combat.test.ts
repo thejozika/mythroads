@@ -60,12 +60,17 @@ describe('combat', () => {
             'chargeHigh/side': [4, 'High charge met Side guard: strong, 4 damage.'],
             'chargeHigh/brace': [2, 'High charge met Brace: neutral, 2 damage.'],
             'chargeHigh/ward': [4, 'High charge met Arcane ward: strong, 4 damage.'],
-            'chargeSide/high': [2, 'Side rush met High guard: neutral, 2 damage.'],
+            // Exactly 2.5 damage before rounding. The Lean engine works in hundredths
+            // and rounds the half up; the float handler it replaced computed
+            // 2.4999999999999996 and rounded down. This is the only pinned value the
+            // move to exact fixed point changed.
+            'chargeSide/high': [3, 'Side rush met High guard: neutral, 3 damage.'],
             'chargeSide/side': [1, 'Side rush met Side guard: weak, 1 damage.'],
             'chargeSide/brace': [4, 'Side rush met Brace: strong, 4 damage.'],
             'chargeSide/ward': [4, 'Side rush met Arcane ward: strong, 4 damage.'],
             'leap/high': [4, 'Leaping strike met High guard: strong, 4 damage.'],
-            'leap/side': [2, 'Leaping strike met Side guard: neutral, 2 damage.'],
+            // The same 2.5 tie as `chargeSide/high`; see the note above.
+            'leap/side': [3, 'Leaping strike met Side guard: neutral, 3 damage.'],
             'leap/brace': [1, 'Leaping strike met Brace: weak, 1 damage.'],
             'leap/ward': [4, 'Leaping strike met Arcane ward: strong, 4 damage.'],
             // Ember Blast is arcane fire against a water enemy: always weak, and the

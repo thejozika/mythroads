@@ -60,6 +60,10 @@ inductive ShopKind where
   | armoury | jeweller | weapons | items | magic
   deriving Repr, DecidableEq
 
+/-- Every shop kind, in catalogue order. The boundary walks this to read the `rooms.shopKind`
+column back into the engine's `ShopKind`. -/
+def allShopKinds : List ShopKind := [.armoury, .jeweller, .weapons, .items, .magic]
+
 def ShopKind.label : ShopKind → String
   | .armoury => "armoury" | .jeweller => "jeweller" | .weapons => "weapons"
   | .items => "items" | .magic => "magic"

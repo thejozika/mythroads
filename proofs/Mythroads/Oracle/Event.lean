@@ -60,11 +60,12 @@ def envelope (e : Envelope) : Json :=
 def effect : Effect → Json
   | .persistPlayer id => tag "persistPlayer" [("id", Json.str id)]
   | .persistRoom => tag "persistRoom"
-  | .persistCombat => tag "persistCombat"
-  | .persistEncounter => tag "persistEncounter"
-  | .persistSelection => tag "persistSelection"
+  | .persistCombat battle st =>
+      tag "persistCombat" [("battle", combat battle), ("stage", stage st)]
+  | .persistEncounter drawn => tag "persistEncounter" [("drawn", encounter drawn)]
+  | .persistSelection sel => tag "persistSelection" [("selection", selection sel)]
   | .clearSelection => tag "clearSelection"
-  | .persistCamera => tag "persistCamera"
+  | .persistCamera c => tag "persistCamera" [("camera", camera c)]
   | .appendLog name => tag "appendLog" [("name", Json.str name)]
   | .notify message => tag "notify" [("message", Json.str message)]
 
@@ -72,7 +73,9 @@ def effect : Effect → Json
 def error : Error → Json
   | .unauthorized => tag "unauthorized" | .notYourTurn => tag "notYourTurn"
   | .wrongPhase => tag "wrongPhase" | .unknownPlayer => tag "unknownPlayer"
-  | .illegalMove => tag "illegalMove" | .insufficientGold => tag "insufficientGold"
+  | .routeNotStarted => tag "routeNotStarted" | .roadUnavailable => tag "roadUnavailable"
+  | .routeUnavailable => tag "routeUnavailable" | .noMovementLeft => tag "noMovementLeft"
+  | .insufficientGold => tag "insufficientGold"
   | .roomFull => tag "roomFull" | .roomEmpty => tag "roomEmpty"
   | .nameRequired => tag "nameRequired" | .nameTaken => tag "nameTaken"
   | .colorMismatch => tag "colorMismatch" | .roomNotInLobby => tag "roomNotInLobby"

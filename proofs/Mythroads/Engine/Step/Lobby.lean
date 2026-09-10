@@ -114,13 +114,19 @@ def join (s : State) (actor : Mythroads.AuthId) (name color : String) : Outcome 
   if normalizeName name = "" then .error .nameRequired
   else joinAs s actor (normalizeName name) color
 
-/-- `game.start`: at least one hero must be seated; the first to join acts first. -/
+/--
+`game.start`: at least one hero must be seated; the first to join acts first.
+
+Starting a room that has already left the lobby is an accepted no-op rather than a
+refusal, because the host's phone may resend the command; the event is still logged.
+-/
 def start (s : State) : Outcome :=
-  match s.players[0]? with
-  | none => .error .roomEmpty
-  | some first =>
-      .ok ({ s with turn := 0, phase := .awaitingRoll,
-                    message := first.name ++ ", roll your movement dice." },
-           [.persistRoom, .appendLog "game.start"])
+  if s.phase ≠ Phase.lobby then .ok (s, [.appendLog "game.start"])
+  else match s.players[0]? with
+    | none => .error .roomEmpty
+    | some first =>
+        .ok ({ s with turn := 0, phase := .awaitingRoll,
+                      message := first.name ++ ", roll your movement dice." },
+             [.persistRoom, .appendLog "game.start"])
 
 end Mythroads.Engine.Lobby

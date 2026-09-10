@@ -27,6 +27,9 @@ proofs/Mythroads/Engine/**    THE GAME: State, Event, Effect, Error, step — an
           │ lake exe mythroads-compile          │ lake exe mythroads-emit
           ▼                                     ▼
 shared/generated/engine.generated.ts    convex/generated/**, convex/events/**, shared/generated/**
+          │                                     │
+          │                             convex/generated/aggregate/** — load, step, save
+          └─────────────────────────────────────┤
                                                 │
                                         thin adapters in convex/*.ts register the definitions
                                                 ▼
@@ -126,8 +129,15 @@ boundary and stored in the log.
 
 **`Effect`** is what the pure function asks the outside world to do afterwards: `persistPlayer`,
 `persistRoom`, `persistCombat`, `persistEncounter`, `persistSelection`, `clearSelection`,
-`persistCamera`, `appendLog name`, `notify message`. **`Error`** enumerates every refusal, from
-`unauthorized` to `cameraNotFree`, and each maps to one `ConvexError` at the boundary.
+`persistCamera`, `appendLog name`, `notify message`. The row-writing ones carry the row they
+describe rather than pointing back at the new state, because a single step can open a battle and
+close it, leaving the state past the row the interpreter still has to write.
+
+**`Error`** enumerates every refusal, from `unauthorized` to `cameraNotFree`. Each maps to one
+`ConvexError` at the boundary through `Error.message` in
+[`Engine/Message.lean`](../../proofs/Mythroads/Engine/Message.lean), a table keyed on both the
+error and the event — because the same refusal reads differently depending on what was asked, and
+those sentences are pinned verbatim by the golden-master suite.
 
 The two together give the result type of the whole game:
 
@@ -295,14 +305,45 @@ That splits the backend cleanly in two. The pure half decides; the impure half i
 interpreter that (1) loads the room and its rows into a `State`, (2) calls `step`, (3) on `.error`
 raises the matching `ConvexError` and writes nothing, and on `.ok` performs each `Effect` in order
 and appends the envelope to `gameEvents` when `Event.durable` says so. Nothing in that interpreter
-is game-specific: it is a `match` on nine constructors.
+is game-specific: it is a `switch` on nine constructors.
 
-Today the deployed backend is still the *generated handler* form described in section 8 — the
-engine's `Effect` list reproduces its behaviour but is not yet the thing Convex interprets. The
-engine's own module documentation is explicit about the four behaviours it deliberately does not
-model, because they are not rules: room-code collision retries and Convex row identifiers need
-database reads, the 2200 ms cooling-off before an encounter may be acknowledged is a wall clock,
-and message text is display state.
+**That interpreter is what Convex runs.** `api.game.dispatch` authorizes the caller, deduplicates
+the `commandId`, and hands the event to `applyGameEvent`, which is the whole write side:
+
+```ts
+const roomId = await roomIdForEvent(ctx, event)
+const before = await loadState(ctx, roomId)
+const envelope = envelopeFrom(event, actorFor(event, actorAuthId, before), 0)
+const outcome = step(before, envelope)
+if (outcome._ === 'error') throw new ConvexError(Error_message(outcome.a, envelope.event))
+const saved = await saveState(ctx, roomId, before, outcome.a.fst, outcome.a.snd)
+```
+
+There is no per-event branch below that line. `loadState` reads eight rows into a `State`,
+`saveState` interprets the `Effect` list, and the refusal text comes from `Engine.Error.message`,
+a Lean table compiled into the engine beside `step` so the sentence a player reads and the reason
+the rules gave are the same value. The six modules that emit this live in
+[`proofs/Mythroads/Backend/Aggregate/`](../../proofs/Mythroads/Backend/Aggregate) and write
+`convex/generated/aggregate/**`; they replaced fourteen per-event handler modules and contain no
+rule at all.
+
+Two effects carry more than a name. `persistCombat` carries the battle row and its stage, and
+`persistEncounter` carries the drawn encounter, because a transition may open a battle and close it
+in the same step — `combat.attack` that empties the enemy writes the final battle row *and* passes
+the turn — so by the time the interpreter runs, `State.phase` has moved on and the row it must
+write is no longer reachable from the state.
+
+Two behaviours are still **not** rules, and the boundary carries them as declared policies rather
+than smuggling them into the engine:
+
+* the **2200 ms encounter reveal delay**, which reads a wall clock and a stored `createdAt`; a rule
+  that consulted either would make the same log replay into different rooms;
+* the **room-code collision retry**, which needs a database read. The boundary redraws using the
+  engine's own `Lobby.roomCode`, four characters and four generator ticks at a time, so the room's
+  generator ends where the rules would have left it.
+
+Convex row identifiers are the boundary's for the same reason: a hero the rules have just seated
+carries a placeholder id until `saveState` inserts the row and reports the real one back.
 
 ## 7. The typed Convex embedding
 
@@ -348,8 +389,9 @@ def outputs : List (System.FilePath × Convex.Module) :=
     ("shared/generated/encounter.generated.ts", Game.Encounter.module) ]
 ```
 
-`lake exe mythroads-emit <root>` writes all of them. Twenty-nine files, one process, one place where
-a path is stated.
+`lake exe mythroads-emit <root>` writes all of them. Twenty-four files today — the fourteen
+per-event handler modules came out when the engine went in, and the six aggregate modules went in
+— one process, one place where a path is stated.
 
 The files under `convex/` and `shared/` that are *not* generated are adapters, and they are two
 lines each:
@@ -365,7 +407,7 @@ reimplement anything.
 
 ## 9. The compiled engine
 
-Generating handlers from Lean *values* still leaves a gap: the emitted TypeScript is a
+Generating code from Lean *values* still leaves a gap: the emitted TypeScript is a
 transcription of the rules rather than the rules themselves. `proofs/Mythroads/Compile/**` closes
 it by compiling Lean *functions*.
 
@@ -390,16 +432,18 @@ The design, as its own module documentation states it:
   as that oracle agrees.
 
 The executable is [`proofs/Compile.lean`](../../proofs/Compile.lean); its roots are
-`Mythroads.Engine.step` plus the four classifiers the boundary needs (`Event.name`,
-`Event.authority`, `Event.durable`, `Phase.name`), and it writes
+`Mythroads.Engine.step` plus the six declarations the boundary needs — the four classifiers
+(`Event.name`, `Event.authority`, `Event.durable`, `Phase.name`), the refusal table
+`Error.message`, and `Lobby.roomCode` for the collision policy — and it writes
 `shared/generated/engine.generated.ts` — about seven thousand lines. Nobody maintains that file and
 splitting it would cut a strongly connected call graph for no benefit, so it is named in
 `scripts/quality/architecture.config.mjs` as the one path exempt from the 300-line limit; Biome's
 lint and format rules and `tsc --strict` still apply to it in full.
 
-This part is the newest and is not finished: the compiler, its executable and the emitted file
-exist; the Convex adapter that would call `step` instead of the generated handlers does not yet.
-Section 6 describes the boundary that closes that gap.
+`convex/generated/aggregate/boundary.generated.ts` calls `step` from this file inside the
+`game.dispatch` transaction, so the function a theorem quantifies over and the function Convex
+executes are the same definition, translated once and checked against the Lean original by
+`tests/engine/engine-parity.test.ts`. Section 6 describes that boundary.
 
 ## 10. The checks that keep this honest
 
@@ -461,7 +505,10 @@ Read in this order. It is the import order, so nothing refers forward.
    to see what an arm of the dispatch actually does.
 7. **[`Engine/Theorems.lean`](../../proofs/Mythroads/Engine/Theorems.lean)** — read the module doc
    and then the statements; the proofs are one to three lines each and the statements are the point.
-8. **[`Convex/Ty.lean`](../../proofs/Mythroads/Convex/Ty.lean)** and
+8. **[`Backend/Aggregate/Boundary.lean`](../../proofs/Mythroads/Backend/Aggregate/Boundary.lean)** —
+   the transaction that runs all of the above, and the two boundary policies the rules omit. Its
+   module documentation is the contract between the engine and Convex.
+9. **[`Convex/Ty.lean`](../../proofs/Mythroads/Convex/Ty.lean)** and
    [`Convex/Module.lean`](../../proofs/Mythroads/Convex/Module.lean) if you want to know how a
    generated file is built, and [`Emit.lean`](../../proofs/Emit.lean) for where each one lands.
 
@@ -472,12 +519,14 @@ moves with the code it describes instead of drifting in a separate file.
 ## 12. Extending it safely
 
 1. Add the constructor to `Event`, and let the compiler tell you which of `name`, `authority`,
-   `durable`, `permitted`, `onTurn` and `alphabet` you have not classified.
+   `durable`, `permitted`, `onTurn`, `alphabet` and `Error.message` you have not classified.
 2. Add the arm to `transition` and the transition itself to the matching `Engine/Step/` module.
 3. Add its preservation lemma in `Engine/Preservation.lean`; `ok_transition` will not compile until
    you do.
-4. Add a `#guard` in `Engine/Examples.lean` walking the new behaviour concretely.
-5. Regenerate (`npm run proofs:generate`), review the TypeScript diff, and run `npm run check`.
+4. Add its wire shape to `Game/Events.lean` and its translation to
+   `Backend/Aggregate/Envelope.lean`; the `#guard`s in both files fail until the two agree.
+5. Add a `#guard` in `Engine/Examples.lean` walking the new behaviour concretely.
+6. Regenerate (`npm run proofs:generate`), review the TypeScript diff, and run `npm run check`.
 
 The payoff is the same in every case: the Lean value a theorem talks about is the value the
 generator consumes, so a proof cannot describe one policy while production runs another.

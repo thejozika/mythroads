@@ -78,7 +78,10 @@ export type Error =
     | { _: 'notYourTurn' }
     | { _: 'wrongPhase' }
     | { _: 'unknownPlayer' }
-    | { _: 'illegalMove' }
+    | { _: 'routeNotStarted' }
+    | { _: 'roadUnavailable' }
+    | { _: 'routeUnavailable' }
+    | { _: 'noMovementLeft' }
     | { _: 'insufficientGold' }
     | { _: 'roomFull' }
     | { _: 'roomEmpty' }
@@ -99,11 +102,11 @@ export type Prod<A, B> = { fst: A; snd: B }
 export type Effect =
     | { _: 'persistPlayer'; id: string }
     | { _: 'persistRoom' }
-    | { _: 'persistCombat' }
-    | { _: 'persistEncounter' }
-    | { _: 'persistSelection' }
+    | { _: 'persistCombat'; battle: CombatState; stage: CombatStage }
+    | { _: 'persistEncounter'; drawn: EncounterState }
+    | { _: 'persistSelection'; selection: Selection }
     | { _: 'clearSelection' }
-    | { _: 'persistCamera' }
+    | { _: 'persistCamera'; camera: Camera }
     | { _: 'appendLog'; name: string }
     | { _: 'notify'; message: string }
 
@@ -245,6 +248,9 @@ export type Owned = {
     equippedSlot: Option<Game_Inventory_EquipmentSlot>
 }
 
+/** Lean `Mythroads.Game.Random.Draw`. */
+export type Game_Random_Draw = { value: number; state: number }
+
 /** Lean `Mythroads.Game.World.Node`. */
 export type Game_World_Node = {
     id: number
@@ -360,9 +366,6 @@ export type Game_Inventory_EquipError =
     | { _: 'notOwner' }
     | { _: 'missingItem' }
     | { _: 'incompatibleSlot' }
-
-/** Lean `Mythroads.Game.Random.Draw`. */
-export type Game_Random_Draw = { value: number; state: number }
 
 /** Lean `Mythroads.Game.Player.StartingStats`. */
 export type Game_Player_StartingStats = {
@@ -621,6 +624,113 @@ export function Phase_name(x_1: Phase): string {
     throw new Error('non-exhaustive match on Mythroads.Engine.Phase')
 }
 
+/** Lean `Mythroads.Engine.Error.message`. */
+export function Error_message(x_1: Error, x_2: Event): string {
+    const x_1_1 = x_1
+    switch (x_1_1._) {
+        case 'cameraNotFree': {
+            return 'Free camera is not active.'
+        }
+        case 'techniqueNotEquipped': {
+            return 'Equip the grimoire containing that technique first.'
+        }
+        case 'insufficientGold': {
+            return 'You need more gold.'
+        }
+        case 'unknownItem': {
+            return 'That item is not available here.'
+        }
+        case 'itemNotHere': {
+            return 'That item is not available here.'
+        }
+        case 'cannotEquip': {
+            return 'That item cannot be equipped there.'
+        }
+        case 'roomFull': {
+            return 'That room is full.'
+        }
+        case 'roomEmpty': {
+            return 'At least one hero must join.'
+        }
+        case 'nameRequired': {
+            return 'Choose a hero name.'
+        }
+        case 'nameTaken': {
+            return 'That hero name belongs to another account.'
+        }
+        case 'colorMismatch': {
+            return 'That hero exists. Select their original color to rejoin.'
+        }
+        case 'roomNotInLobby': {
+            return 'That adventure has started. Rejoin with your existing name and color.'
+        }
+        case 'routeNotStarted': {
+            return 'Start route planning from the hero.'
+        }
+        case 'roadUnavailable': {
+            return 'That road cannot be used from here.'
+        }
+        case 'routeUnavailable': {
+            return 'That route is not available.'
+        }
+        case 'noMovementLeft': {
+            return 'You cannot move now.'
+        }
+        case 'unauthorized': {
+            return 'You are not allowed to do that.'
+        }
+        default: {
+            const Event_isCamera_1 = Event_isCamera(x_2)
+            if (Event_isCamera_1) {
+                return 'Only the active player can control the camera.'
+            } else {
+                const x_2_1 = x_2
+                switch (x_2_1._) {
+                    case 'movementRoll': {
+                        return 'You cannot roll now.'
+                    }
+                    case 'movementSelect': {
+                        return 'That destination cannot be selected.'
+                    }
+                    case 'movementCancel': {
+                        return 'There is no movement selection to cancel.'
+                    }
+                    case 'movementStep': {
+                        return 'You cannot move now.'
+                    }
+                    case 'combatAttack': {
+                        return 'That combat choice is not available.'
+                    }
+                    case 'combatGuard': {
+                        return 'That combat choice is not available.'
+                    }
+                    case 'encounterResolve': {
+                        return 'This encounter cannot be resolved now.'
+                    }
+                    case 'shopBuy': {
+                        return 'That item is not available here.'
+                    }
+                    case 'shopLeave': {
+                        return 'You are not shopping now.'
+                    }
+                    case 'inventoryEquip': {
+                        return 'That item cannot be equipped there.'
+                    }
+                    default: {
+                        return 'This action is not available right now.'
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Lean `Mythroads.Engine.Lobby.roomCode`. */
+export function Lobby_roomCode(state: number): Prod<string, number> {
+    const Lobby_codeChars_1 = Lobby_codeChars(state, 4)
+    return { fst: leanString(Lobby_codeChars_1.fst as number[]), snd: Lobby_codeChars_1.snd }
+}
+
 /** Lean `Mythroads.Engine.authorized`. */
 export function authorized(s: State, env: Envelope): boolean {
     const env_1 = env
@@ -720,20 +830,9 @@ export function permitted(phase: Phase, e: Event): boolean {
                 }
             }
         }
-        case 'gameStart': {
+        case 'movementRoll': {
             const phase_2 = phase
             switch (phase_2._) {
-                case 'lobby': {
-                    return true
-                }
-                default: {
-                    return false
-                }
-            }
-        }
-        case 'movementRoll': {
-            const phase_3 = phase
-            switch (phase_3._) {
                 case 'awaitingRoll': {
                     return true
                 }
@@ -743,6 +842,17 @@ export function permitted(phase: Phase, e: Event): boolean {
             }
         }
         case 'movementSelect': {
+            const phase_3 = phase
+            switch (phase_3._) {
+                case 'moving': {
+                    return true
+                }
+                default: {
+                    return false
+                }
+            }
+        }
+        case 'movementCancel': {
             const phase_4 = phase
             switch (phase_4._) {
                 case 'moving': {
@@ -753,7 +863,7 @@ export function permitted(phase: Phase, e: Event): boolean {
                 }
             }
         }
-        case 'movementCancel': {
+        case 'movementStep': {
             const phase_5 = phase
             switch (phase_5._) {
                 case 'moving': {
@@ -764,22 +874,11 @@ export function permitted(phase: Phase, e: Event): boolean {
                 }
             }
         }
-        case 'movementStep': {
+        case 'combatAttack': {
             const phase_6 = phase
             switch (phase_6._) {
-                case 'moving': {
-                    return true
-                }
-                default: {
-                    return false
-                }
-            }
-        }
-        case 'combatAttack': {
-            const phase_7 = phase
-            switch (phase_7._) {
                 case 'combat': {
-                    const stage = phase_7.stage
+                    const stage = phase_6.stage
                     switch (stage._) {
                         case 'attackerChoice': {
                             return true
@@ -795,10 +894,10 @@ export function permitted(phase: Phase, e: Event): boolean {
             }
         }
         case 'combatGuard': {
-            const phase_8 = phase
-            switch (phase_8._) {
+            const phase_7 = phase
+            switch (phase_7._) {
                 case 'combat': {
-                    const stage_1 = phase_8.stage
+                    const stage_1 = phase_7.stage
                     switch (stage_1._) {
                         case 'defenderChoice': {
                             return true
@@ -814,8 +913,8 @@ export function permitted(phase: Phase, e: Event): boolean {
             }
         }
         case 'encounterResolve': {
-            const phase_9 = phase
-            switch (phase_9._) {
+            const phase_8 = phase
+            switch (phase_8._) {
                 case 'encounter': {
                     return true
                 }
@@ -825,8 +924,8 @@ export function permitted(phase: Phase, e: Event): boolean {
             }
         }
         case 'shopBuy': {
-            const phase_10 = phase
-            switch (phase_10._) {
+            const phase_9 = phase
+            switch (phase_9._) {
                 case 'shop': {
                     return true
                 }
@@ -836,8 +935,8 @@ export function permitted(phase: Phase, e: Event): boolean {
             }
         }
         case 'shopLeave': {
-            const phase_11 = phase
-            switch (phase_11._) {
+            const phase_10 = phase
+            switch (phase_10._) {
                 case 'shop': {
                     return true
                 }
@@ -878,23 +977,14 @@ export function transition(s: State, env: Envelope): Except<Error, Prod<State, E
             return Lobby_join(s, actor, event.name, event.color)
         }
         case 'gameStart': {
+            return Lobby_start(s)
+        }
+        case 'movementRoll': {
             const s_2 = s
             const phase_1 = s_2.phase
             switch (phase_1._) {
-                case 'lobby': {
-                    return Lobby_start(s_2)
-                }
-                default: {
-                    return _jp_1()
-                }
-            }
-        }
-        case 'movementRoll': {
-            const s_3 = s
-            const phase_2 = s_3.phase
-            switch (phase_2._) {
                 case 'awaitingRoll': {
-                    return withActive(s_3, (a0) => Movement_roll(s_3, a0))
+                    return withActive(s_2, (a0) => Movement_roll(s_2, a0))
                 }
                 default: {
                     return _jp_1()
@@ -902,15 +992,15 @@ export function transition(s: State, env: Envelope): Except<Error, Prod<State, E
             }
         }
         case 'movementSelect': {
-            const s_4 = s
-            const phase_3 = s_4.phase
-            switch (phase_3._) {
+            const s_3 = s
+            const phase_2 = s_3.phase
+            switch (phase_2._) {
                 case 'moving': {
-                    return withActive(s_4, (a0) =>
+                    return withActive(s_3, (a0) =>
                         transition__lam_0(
-                            s_4,
-                            phase_3.moves,
-                            phase_3.selection,
+                            s_3,
+                            phase_2.moves,
+                            phase_2.selection,
                             event.destination,
                             a0,
                         ),
@@ -922,11 +1012,11 @@ export function transition(s: State, env: Envelope): Except<Error, Prod<State, E
             }
         }
         case 'movementCancel': {
-            const s_5 = s
-            const phase_4 = s_5.phase
-            switch (phase_4._) {
+            const s_4 = s
+            const phase_3 = s_4.phase
+            switch (phase_3._) {
                 case 'moving': {
-                    return Movement_cancel(s_5, phase_4.moves)
+                    return Movement_cancel(s_4, phase_3.moves)
                 }
                 default: {
                     return _jp_1()
@@ -934,15 +1024,15 @@ export function transition(s: State, env: Envelope): Except<Error, Prod<State, E
             }
         }
         case 'movementStep': {
-            const s_6 = s
-            const phase_5 = s_6.phase
-            switch (phase_5._) {
+            const s_5 = s
+            const phase_4 = s_5.phase
+            switch (phase_4._) {
                 case 'moving': {
-                    return withActive(s_6, (a0) =>
+                    return withActive(s_5, (a0) =>
                         transition__lam_1(
-                            s_6,
-                            phase_5.moves,
-                            phase_5.selection,
+                            s_5,
+                            phase_4.moves,
+                            phase_4.selection,
                             event.destination,
                             a0,
                         ),
@@ -954,15 +1044,15 @@ export function transition(s: State, env: Envelope): Except<Error, Prod<State, E
             }
         }
         case 'combatAttack': {
-            const s_7 = s
-            const phase_6 = s_7.phase
-            switch (phase_6._) {
+            const s_6 = s
+            const phase_5 = s_6.phase
+            switch (phase_5._) {
                 case 'combat': {
-                    const stage = phase_6.stage
+                    const stage = phase_5.stage
                     switch (stage._) {
                         case 'attackerChoice': {
-                            return withActive(s_7, (a0) =>
-                                transition__lam_2(s_7, phase_6.battle, event.strike, a0),
+                            return withActive(s_6, (a0) =>
+                                transition__lam_2(s_6, phase_5.battle, event.strike, a0),
                             )
                         }
                         default: {
@@ -976,15 +1066,15 @@ export function transition(s: State, env: Envelope): Except<Error, Prod<State, E
             }
         }
         case 'combatGuard': {
-            const s_8 = s
-            const phase_7 = s_8.phase
-            switch (phase_7._) {
+            const s_7 = s
+            const phase_6 = s_7.phase
+            switch (phase_6._) {
                 case 'combat': {
-                    const stage_1 = phase_7.stage
+                    const stage_1 = phase_6.stage
                     switch (stage_1._) {
                         case 'defenderChoice': {
-                            return withActive(s_8, (a0) =>
-                                transition__lam_3(s_8, phase_7.battle, event.guard, a0),
+                            return withActive(s_7, (a0) =>
+                                transition__lam_3(s_7, phase_6.battle, event.guard, a0),
                             )
                         }
                         default: {
@@ -998,11 +1088,11 @@ export function transition(s: State, env: Envelope): Except<Error, Prod<State, E
             }
         }
         case 'encounterResolve': {
-            const s_9 = s
-            const phase_8 = s_9.phase
-            switch (phase_8._) {
+            const s_8 = s
+            const phase_7 = s_8.phase
+            switch (phase_7._) {
                 case 'encounter': {
-                    return withActive(s_9, (a0) => transition__lam_4(s_9, phase_8.drawn, a0))
+                    return withActive(s_8, (a0) => transition__lam_4(s_8, phase_7.drawn, a0))
                 }
                 default: {
                     return _jp_1()
@@ -1010,12 +1100,12 @@ export function transition(s: State, env: Envelope): Except<Error, Prod<State, E
             }
         }
         case 'shopBuy': {
-            const s_10 = s
-            const phase_9 = s_10.phase
-            switch (phase_9._) {
+            const s_9 = s
+            const phase_8 = s_9.phase
+            switch (phase_8._) {
                 case 'shop': {
-                    return withActive(s_10, (a0) =>
-                        transition__lam_5(s_10, phase_9.kind, event.itemId, a0),
+                    return withActive(s_9, (a0) =>
+                        transition__lam_5(s_9, phase_8.kind, event.itemId, a0),
                     )
                 }
                 default: {
@@ -1029,11 +1119,11 @@ export function transition(s: State, env: Envelope): Except<Error, Prod<State, E
             )
         }
         case 'shopLeave': {
-            const s_11 = s
-            const phase_10 = s_11.phase
-            switch (phase_10._) {
+            const s_10 = s
+            const phase_9 = s_10.phase
+            switch (phase_9._) {
                 case 'shop': {
-                    return withActive(s_11, (a0) => Shop_leave(s_11, a0))
+                    return withActive(s_10, (a0) => Shop_leave(s_10, a0))
                 }
                 default: {
                     return _jp_1()
@@ -1051,6 +1141,57 @@ export function transition(s: State, env: Envelope): Except<Error, Prod<State, E
         }
     }
     throw new Error('non-exhaustive match on Mythroads.Engine.Event')
+}
+
+/** Lean `Mythroads.Engine.Event.isCamera`. */
+export function Event_isCamera(x_1: Event): boolean {
+    const x_1_1 = x_1
+    switch (x_1_1._) {
+        case 'cameraToggle': {
+            return true
+        }
+        case 'cameraMove': {
+            return true
+        }
+        case 'cameraZoom': {
+            return true
+        }
+        default: {
+            return false
+        }
+    }
+}
+
+/** Lean `Mythroads.Engine.Lobby.codeChars`. */
+export function Lobby_codeChars(state: number, count: number): Prod<number[], number> {
+    const scrutinee = count === 0
+    if (scrutinee) {
+        return { fst: [], snd: state }
+    } else {
+        const _x_3: number[] = Lobby_codeAlphabet()
+        const Game_Random_drawBounded_1 = Game_Random_drawBounded(state, _x_3.length)
+        // join point
+        const _jp_6 = (_y_7: number): Prod<number[], number> => {
+            const Lobby_codeChars_1 = Lobby_codeChars(
+                Game_Random_drawBounded_1.state,
+                natSub(count, 1),
+            )
+            return { fst: [_y_7, ...Lobby_codeChars_1.fst], snd: Lobby_codeChars_1.snd }
+        }
+        const scrutinee_1 = List_get_qInternal__redArg(
+            _x_3,
+            Game_Random_drawBounded_1.value,
+        ) as Option<number>
+        switch (scrutinee_1._) {
+            case 'none': {
+                return _jp_6(65)
+            }
+            case 'some': {
+                return _jp_6(scrutinee_1.val)
+            }
+        }
+        throw new Error('non-exhaustive match on Option')
+    }
 }
 
 /** Lean `Mythroads.Engine.State.player?`. */
@@ -1116,37 +1257,42 @@ export function Lobby_join(
 export function Lobby_start(s: State): Except<Error, Prod<State, Effect[]>> {
     const s_1 = s
     const players = s_1.players
-    const _x_1: number = 0
-    const scrutinee = List_get_qInternal__redArg(players, _x_1) as Option<PlayerState>
-    switch (scrutinee._) {
-        case 'none': {
-            return { _: 'error', a: { _: 'roomEmpty' } }
-        }
-        case 'some': {
-            const val = scrutinee.val
-            return {
-                _: 'ok',
-                a: {
-                    fst: {
-                        code: s_1.code,
-                        host: s_1.host,
-                        players: players,
-                        turn: _x_1,
-                        round: s_1.round,
-                        phase: { _: 'awaitingRoll' },
-                        message: `${val.name}, roll your movement dice.`,
-                        lastRoll: s_1.lastRoll,
-                        rng: s_1.rng,
-                        rngCounter: s_1.rngCounter,
-                        camera: s_1.camera,
-                        version: s_1.version,
+    const instDecidableEqPhase_decEq_1 = instDecidableEqPhase_decEq(s_1.phase, { _: 'lobby' })
+    if (instDecidableEqPhase_decEq_1) {
+        const _x_9: number = 0
+        const scrutinee = List_get_qInternal__redArg(players, _x_9) as Option<PlayerState>
+        switch (scrutinee._) {
+            case 'none': {
+                return { _: 'error', a: { _: 'roomEmpty' } }
+            }
+            case 'some': {
+                const val = scrutinee.val
+                return {
+                    _: 'ok',
+                    a: {
+                        fst: {
+                            code: s_1.code,
+                            host: s_1.host,
+                            players: players,
+                            turn: _x_9,
+                            round: s_1.round,
+                            phase: { _: 'awaitingRoll' },
+                            message: `${val.name}, roll your movement dice.`,
+                            lastRoll: s_1.lastRoll,
+                            rng: s_1.rng,
+                            rngCounter: s_1.rngCounter,
+                            camera: s_1.camera,
+                            version: s_1.version,
+                        },
+                        snd: [{ _: 'persistRoom' }, { _: 'appendLog', name: 'game.start' }],
                     },
-                    snd: [{ _: 'persistRoom' }, { _: 'appendLog', name: 'game.start' }],
-                },
+                }
             }
         }
+        throw new Error('non-exhaustive match on Option')
+    } else {
+        return { _: 'ok', a: { fst: s_1, snd: [{ _: 'appendLog', name: 'game.start' }] } }
     }
-    throw new Error('non-exhaustive match on Option')
 }
 
 /** Lean `Mythroads.Engine.Movement.roll`. */
@@ -1362,7 +1508,10 @@ export function CameraStep_toggle(s: State, p: PlayerState): Except<Error, Prod<
                     camera: { _: 'some', val: _y_2 },
                     version: s_1.version,
                 },
-                snd: [{ _: 'persistCamera' }, { _: 'notify', message: 'camera.toggle' }],
+                snd: [
+                    { _: 'persistCamera', camera: _y_2 },
+                    { _: 'notify', message: 'camera.toggle' },
+                ],
             },
         }
     }
@@ -1414,6 +1563,12 @@ export function CameraStep_move(
             const _jp_4 = (_y_5: number, _y_6: number): Except<Error, Prod<State, Effect[]>> => {
                 const _x_8: number = 700
                 const _x_13: number = 550
+                const panned: Camera = {
+                    free: free,
+                    targetX: CameraStep_clamp(-_x_8, _x_8, val.targetX + _y_5),
+                    targetZ: CameraStep_clamp(-_x_13, _x_13, val.targetZ + _y_6),
+                    distance: val.distance,
+                }
                 return {
                     _: 'ok',
                     a: {
@@ -1428,48 +1583,43 @@ export function CameraStep_move(
                             lastRoll: s_1.lastRoll,
                             rng: s_1.rng,
                             rngCounter: s_1.rngCounter,
-                            camera: {
-                                _: 'some',
-                                val: {
-                                    free: free,
-                                    targetX: CameraStep_clamp(-_x_8, _x_8, val.targetX + _y_5),
-                                    targetZ: CameraStep_clamp(-_x_13, _x_13, val.targetZ + _y_6),
-                                    distance: val.distance,
-                                },
-                            },
+                            camera: { _: 'some', val: panned },
                             version: s_1.version,
                         },
-                        snd: [{ _: 'persistCamera' }, { _: 'notify', message: 'camera.move' }],
+                        snd: [
+                            { _: 'persistCamera', camera: panned },
+                            { _: 'notify', message: 'camera.move' },
+                        ],
                     },
                 }
             }
             const free_1 = free
             if (free_1) {
                 // join point
-                const _jp_30 = (_y_31: number): Except<Error, Prod<State, Effect[]>> => {
+                const _jp_29 = (_y_30: number): Except<Error, Prod<State, Effect[]>> => {
                     const direction_1 = direction
                     switch (direction_1._) {
                         case 'up': {
-                            return _jp_4(_y_31, CameraStep_move__lam_1({}))
+                            return _jp_4(_y_30, CameraStep_move__lam_1({}))
                         }
                         case 'down': {
-                            return _jp_4(_y_31, CameraStep_panStep())
+                            return _jp_4(_y_30, CameraStep_panStep())
                         }
                         default: {
-                            return _jp_4(_y_31, CameraStep_move__lam_0(direction_1))
+                            return _jp_4(_y_30, CameraStep_move__lam_0(direction_1))
                         }
                     }
                 }
                 const direction_2 = direction
                 switch (direction_2._) {
                     case 'left': {
-                        return _jp_30(CameraStep_move__lam_1({}))
+                        return _jp_29(CameraStep_move__lam_1({}))
                     }
                     case 'right': {
-                        return _jp_30(CameraStep_panStep())
+                        return _jp_29(CameraStep_panStep())
                     }
                     default: {
-                        return _jp_30(CameraStep_move__lam_0(direction_2))
+                        return _jp_29(CameraStep_move__lam_0(direction_2))
                     }
                 }
             } else {
@@ -1493,6 +1643,15 @@ export function CameraStep_zoom(s: State, delta: Zoom): Except<Error, Prod<State
             const free = val.free
             const free_1 = free
             if (free_1) {
+                const zoomed: Camera = {
+                    free: free_1,
+                    targetX: val.targetX,
+                    targetZ: val.targetZ,
+                    distance: Math.max(
+                        0,
+                        CameraStep_clamp(5, 15, val.distance + Zoom_delta(delta)),
+                    ),
+                }
                 return {
                     _: 'ok',
                     a: {
@@ -1507,21 +1666,13 @@ export function CameraStep_zoom(s: State, delta: Zoom): Except<Error, Prod<State
                             lastRoll: s_1.lastRoll,
                             rng: s_1.rng,
                             rngCounter: s_1.rngCounter,
-                            camera: {
-                                _: 'some',
-                                val: {
-                                    free: free_1,
-                                    targetX: val.targetX,
-                                    targetZ: val.targetZ,
-                                    distance: Math.max(
-                                        0,
-                                        CameraStep_clamp(5, 15, val.distance + Zoom_delta(delta)),
-                                    ),
-                                },
-                            },
+                            camera: { _: 'some', val: zoomed },
                             version: s_1.version,
                         },
-                        snd: [{ _: 'persistCamera' }, { _: 'notify', message: 'camera.zoom' }],
+                        snd: [
+                            { _: 'persistCamera', camera: zoomed },
+                            { _: 'notify', message: 'camera.zoom' },
+                        ],
                     },
                 }
             } else {
@@ -1530,6 +1681,32 @@ export function CameraStep_zoom(s: State, delta: Zoom): Except<Error, Prod<State
         }
     }
     throw new Error('non-exhaustive match on Option')
+}
+
+/** Lean `Mythroads.Engine.Lobby.codeAlphabet`. */
+export function Lobby_codeAlphabet(): number[] {
+    return leanChars('ABCDEFGHJKLMNPQRSTUVWXYZ23456789')
+}
+
+/** Lean `Mythroads.Game.Random.drawBounded`. */
+export function Game_Random_drawBounded(state: number, bound: number): Game_Random_Draw {
+    const next: number = Game_Random_nextState(state)
+    return { value: natMod(next, bound), state: next }
+}
+
+/** Lean `List.get?Internal._redArg`. */
+export function List_get_qInternal__redArg(x_1: unknown[], x_2: number): Option<unknown> {
+    const x_1_1 = x_1
+    if (x_1_1.length === 0) {
+        return { _: 'none' }
+    } else {
+        const scrutinee = x_2 === 0
+        if (scrutinee) {
+            return { _: 'some', val: x_1_1[0] }
+        } else {
+            return List_get_qInternal__redArg(x_1_1.slice(1), natSub(x_2, 1))
+        }
+    }
 }
 
 /** Lean `List.find?._at_.Mythroads.Engine.State.player?.spec_0`. */
@@ -1552,30 +1729,9 @@ export function List_find_q__at__Mythroads_Engine_State_player_q_spec_0(
     }
 }
 
-/** Lean `List.get?Internal._redArg`. */
-export function List_get_qInternal__redArg(x_1: unknown[], x_2: number): Option<unknown> {
-    const x_1_1 = x_1
-    if (x_1_1.length === 0) {
-        return { _: 'none' }
-    } else {
-        const scrutinee = x_2 === 0
-        if (scrutinee) {
-            return { _: 'some', val: x_1_1[0] }
-        } else {
-            return List_get_qInternal__redArg(x_1_1.slice(1), natSub(x_2, 1))
-        }
-    }
-}
-
 /** Lean `Mythroads.Game.Random.normalizeSeed`. */
 export function Game_Random_normalizeSeed(seed: number): number {
     return natMod(seed, 2147483646) + 1
-}
-
-/** Lean `Mythroads.Engine.Lobby.roomCode`. */
-export function Lobby_roomCode(state: number): Prod<string, number> {
-    const Lobby_codeChars_1 = Lobby_codeChars(state, 4)
-    return { fst: leanString(Lobby_codeChars_1.fst as number[]), snd: Lobby_codeChars_1.snd }
 }
 
 /** Lean `Mythroads.Engine.Lobby.normalizeName`. */
@@ -1701,1004 +1857,6 @@ export function Lobby_joinAs(
         }
     }
     throw new Error('non-exhaustive match on Option')
-}
-
-/** Lean `Mythroads.Engine.Movement.rollDice`. */
-export function Movement_rollDice(s: State, x_1: number[]): Prod<number[], State> {
-    const x_1_1 = x_1
-    if (x_1_1.length === 0) {
-        return { fst: x_1_1, snd: s }
-    } else {
-        const State_draw_1 = State_draw(s, x_1_1[0])
-        const Movement_rollDice_1 = Movement_rollDice(State_draw_1.snd as State, x_1_1.slice(1))
-        return {
-            fst: [State_draw_1.fst + 1, ...Movement_rollDice_1.fst],
-            snd: Movement_rollDice_1.snd,
-        }
-    }
-}
-
-/** Lean `Mythroads.Engine.Movement.roll._lam_0`. */
-export function Movement_roll__lam_0(q: PlayerState): PlayerState {
-    const q_1 = q
-    return {
-        id: q_1.id,
-        owner: q_1.owner,
-        name: q_1.name,
-        color: q_1.color,
-        position: q_1.position,
-        previousPosition: { _: 'none' },
-        gold: q_1.gold,
-        hp: q_1.hp,
-        maxHp: q_1.maxHp,
-        attack: q_1.attack,
-        defense: q_1.defense,
-        magic: q_1.magic,
-        athletics: q_1.athletics,
-        agility: q_1.agility,
-        dice: q_1.dice,
-        items: q_1.items,
-    }
-}
-
-/** Lean `Mythroads.Engine.State.mapPlayer`. */
-export function State_mapPlayer(s: State, pid: string, f: (a0: PlayerState) => PlayerState): State {
-    const s_1 = s
-    return {
-        code: s_1.code,
-        host: s_1.host,
-        players: List_mapTR_loop__at__Mythroads_Engine_State_mapPlayer_spec_0(
-            pid,
-            f,
-            s_1.players,
-            [],
-        ),
-        turn: s_1.turn,
-        round: s_1.round,
-        phase: s_1.phase,
-        message: s_1.message,
-        lastRoll: s_1.lastRoll,
-        rng: s_1.rng,
-        rngCounter: s_1.rngCounter,
-        camera: s_1.camera,
-        version: s_1.version,
-    }
-}
-
-/** Lean `List.foldl._at_.Mythroads.Engine.Movement.roll.spec_0`. */
-export function List_foldl__at__Mythroads_Engine_Movement_roll_spec_0(
-    x_1: number,
-    x_2: number[],
-): number {
-    const x_2_1 = x_2
-    if (x_2_1.length === 0) {
-        return x_1
-    } else {
-        return List_foldl__at__Mythroads_Engine_Movement_roll_spec_0(x_1 + x_2_1[0], x_2_1.slice(1))
-    }
-}
-
-/** Lean `Mythroads.Engine.Movement.select`. */
-export function Movement_select(
-    s: State,
-    p: PlayerState,
-    moves: number,
-    selection: Option<Selection>,
-    destination: number,
-): Except<Error, Prod<State, Effect[]>> {
-    const selection_1 = selection
-    switch (selection_1._) {
-        case 'none': {
-            const p_1 = p
-            const position = p_1.position
-            const scrutinee = destination === position
-            if (scrutinee) {
-                const _x_4: never[] = []
-                return {
-                    _: 'ok',
-                    a: {
-                        fst: State_withPhase(
-                            s,
-                            {
-                                _: 'moving',
-                                moves: moves,
-                                selection: {
-                                    _: 'some',
-                                    val: { playerId: p_1.id, destination: position, path: _x_4 },
-                                },
-                            },
-                            Movement_planningMessage(position, moves),
-                        ),
-                        snd: [
-                            { _: 'persistSelection' },
-                            { _: 'persistRoom' },
-                            { _: 'appendLog', name: 'movement.select' },
-                            ..._x_4,
-                        ],
-                    },
-                }
-            } else {
-                return { _: 'error', a: { _: 'illegalMove' } }
-            }
-        }
-        case 'some': {
-            const p_2 = p
-            const position_1 = p_2.position
-            const val = selection_1.val
-            const Movement_previewRouteStep_1 = Movement_previewRouteStep(
-                position_1,
-                val.path,
-                destination,
-                moves,
-            )
-            switch (Movement_previewRouteStep_1._) {
-                case 'none': {
-                    return { _: 'error', a: { _: 'illegalMove' } }
-                }
-                case 'some': {
-                    const val_23 = Movement_previewRouteStep_1.val
-                    const previewed: number = Movement_routeHead(position_1, val_23)
-                    return {
-                        _: 'ok',
-                        a: {
-                            fst: State_withPhase(
-                                s,
-                                {
-                                    _: 'moving',
-                                    moves: moves,
-                                    selection: {
-                                        _: 'some',
-                                        val: {
-                                            playerId: p_2.id,
-                                            destination: previewed,
-                                            path: val_23,
-                                        },
-                                    },
-                                },
-                                Movement_planningMessage(previewed, natSub(moves, val_23.length)),
-                            ),
-                            snd: [
-                                { _: 'persistSelection' },
-                                { _: 'persistRoom' },
-                                { _: 'appendLog', name: 'movement.select' },
-                            ],
-                        },
-                    }
-                }
-            }
-            throw new Error('non-exhaustive match on Option')
-        }
-    }
-    throw new Error('non-exhaustive match on Option')
-}
-
-/** Lean `Mythroads.Engine.State.withPhase`. */
-export function State_withPhase(s: State, phase: Phase, message: string): State {
-    const s_1 = s
-    return {
-        code: s_1.code,
-        host: s_1.host,
-        players: s_1.players,
-        turn: s_1.turn,
-        round: s_1.round,
-        phase: phase,
-        message: message,
-        lastRoll: s_1.lastRoll,
-        rng: s_1.rng,
-        rngCounter: s_1.rngCounter,
-        camera: s_1.camera,
-        version: s_1.version,
-    }
-}
-
-/** Lean `Mythroads.Engine.Movement.stepMove`. */
-export function Movement_stepMove(
-    s: State,
-    p: PlayerState,
-    moves: number,
-    selection: Option<Selection>,
-    destination: number,
-): Except<Error, Prod<State, Effect[]>> {
-    // join point
-    const _jp_1 = (): Except<Error, Prod<State, Effect[]>> => {
-        return { _: 'error', a: { _: 'illegalMove' } }
-    }
-    const selection_1 = selection
-    switch (selection_1._) {
-        case 'none': {
-            return { _: 'error', a: { _: 'illegalMove' } }
-        }
-        case 'some': {
-            const _x_8: boolean = moves === 0
-            if (_x_8) {
-                return _jp_1()
-            } else {
-                const val = selection_1.val
-                const path = val.path
-                const scrutinee = val.destination === destination
-                if (scrutinee) {
-                    if (_x_8) {
-                        return _jp_1()
-                    } else {
-                        const scrutinee_1 = path.length === moves
-                        if (scrutinee_1) {
-                            const p_1 = p
-                            const id = p_1.id
-                            const position = p_1.position
-                            const Movement_routeValid_1 = Movement_routeValid(position, path)
-                            if (Movement_routeValid_1) {
-                                const Landing_resolveLanding_1 = Landing_resolveLanding(
-                                    State_mapPlayer(s, id, (a0) =>
-                                        Movement_stepMove__lam_0(destination, path, position, a0),
-                                    ),
-                                    p_1,
-                                    destination,
-                                )
-                                switch (Landing_resolveLanding_1._) {
-                                    case 'error': {
-                                        throw new Error('unreachable state in the compiled engine')
-                                    }
-                                    case 'ok': {
-                                        const a = Landing_resolveLanding_1.a
-                                        return {
-                                            _: 'ok',
-                                            a: {
-                                                fst: a.fst,
-                                                snd: List_appendTR__redArg(
-                                                    [
-                                                        { _: 'clearSelection' },
-                                                        { _: 'persistPlayer', id: id },
-                                                        { _: 'appendLog', name: 'movement.step' },
-                                                    ],
-                                                    a.snd,
-                                                ) as Effect[],
-                                            },
-                                        }
-                                    }
-                                }
-                                throw new Error('non-exhaustive match on Except')
-                            } else {
-                                return _jp_1()
-                            }
-                        } else {
-                            return _jp_1()
-                        }
-                    }
-                } else {
-                    return _jp_1()
-                }
-            }
-        }
-    }
-    throw new Error('non-exhaustive match on Option')
-}
-
-/** Lean `Mythroads.Engine.Battle.attack`. */
-export function Battle_attack(
-    s: State,
-    p: PlayerState,
-    battle: CombatState,
-    choice: Strike,
-): Except<Error, Prod<State, Effect[]>> {
-    const canCast_1 = canCast(p, choice)
-    if (canCast_1) {
-        const Battle_drawGuard_1 = Battle_drawGuard(s)
-        const fst = Battle_drawGuard_1.fst
-        const snd = Battle_drawGuard_1.snd
-        // join point
-        const _jp_4 = (
-            _y_5: CombatState,
-            _y_6: number,
-            _y_7: string,
-        ): Except<Error, Prod<State, Effect[]>> => {
-            const battle_1 = battle
-            const enemy = battle_1.enemy
-            return {
-                _: 'ok',
-                a: {
-                    fst: State_withPhase(
-                        snd as State,
-                        {
-                            _: 'combat',
-                            battle: Battle_echo(_y_5, choice, fst as Game_Combat_Guard, _y_6, _y_7),
-                            stage: { _: 'defenderChoice' },
-                        },
-                        `${enemy.name} prepares a counterattack. Choose a guard.`,
-                    ),
-                    snd: [
-                        { _: 'persistCombat' },
-                        { _: 'persistRoom' },
-                        { _: 'appendLog', name: 'combat.attack' },
-                    ],
-                },
-            }
-        }
-        const Battle_debuffOf_1 = Battle_debuffOf(choice)
-        switch (Battle_debuffOf_1._) {
-            case 'none': {
-                const battle_2 = battle
-                const enemy_1 = battle_2.enemy
-                const enemy_1_1 = enemy_1
-                const name = enemy_1_1.name
-                const reward = enemy_1_1.reward
-                const result: StrikeResult = strikeDamage(
-                    choice,
-                    fst as Game_Combat_Guard,
-                    playerStats(p, battle_2),
-                    enemyStats(battle_2),
-                    { _: 'some', val: enemy_1_1.element },
-                    35,
-                )
-                const Battle_drawHit_1 = Battle_drawHit(snd as State, result)
-                const fst_1 = Battle_drawHit_1.fst
-                const snd_1 = Battle_drawHit_1.snd
-                const enemyHp: number = natSub(battle_2.enemyHp, fst_1)
-                const _x_29: string = ''
-                const logged: CombatState = Battle_echo(
-                    {
-                        playerId: battle_2.playerId,
-                        spaceId: battle_2.spaceId,
-                        enemy: enemy_1_1,
-                        enemyHp: enemyHp,
-                        enemyDefensePenalty: battle_2.enemyDefensePenalty,
-                        enemyMagicPenalty: battle_2.enemyMagicPenalty,
-                        enemyAthleticsPenalty: battle_2.enemyAthleticsPenalty,
-                        enemyAgilityPenalty: battle_2.enemyAgilityPenalty,
-                        playerDefensePenalty: battle_2.playerDefensePenalty,
-                        playerMagicPenalty: battle_2.playerMagicPenalty,
-                        playerAthleticsPenalty: battle_2.playerAthleticsPenalty,
-                        playerAgilityPenalty: battle_2.playerAgilityPenalty,
-                        round: battle_2.round,
-                        lastAttack: battle_2.lastAttack,
-                        lastGuard: battle_2.lastGuard,
-                        lastDamage: battle_2.lastDamage,
-                        message: battle_2.message,
-                    },
-                    choice,
-                    fst as Game_Combat_Guard,
-                    fst_1 as number,
-                    Battle_blowMessage(
-                        _x_29,
-                        choice,
-                        fst as Game_Combat_Guard,
-                        result,
-                        fst_1 as number,
-                    ),
-                )
-                const scrutinee = enemyHp === 0
-                if (scrutinee) {
-                    const p_1 = p
-                    const id = p_1.id
-                    return {
-                        _: 'ok',
-                        a: {
-                            fst: State_advanceTurn(
-                                State_withPhase(
-                                    State_mapPlayer(snd_1 as State, id, (a0) =>
-                                        Battle_attack__lam_0(reward, a0),
-                                    ),
-                                    { _: 'combat', battle: logged, stage: { _: 'resolved' } },
-                                    _x_29,
-                                ),
-                                `${p_1.name} defeated ${name} and won ${String(reward)} gold.`,
-                            ),
-                            snd: [
-                                { _: 'persistCombat' },
-                                { _: 'persistPlayer', id: id },
-                                { _: 'persistRoom' },
-                                { _: 'appendLog', name: 'combat.attack' },
-                            ],
-                        },
-                    }
-                } else {
-                    return {
-                        _: 'ok',
-                        a: {
-                            fst: State_withPhase(
-                                snd_1 as State,
-                                { _: 'combat', battle: logged, stage: { _: 'defenderChoice' } },
-                                `${name} prepares a counterattack. Choose a guard.`,
-                            ),
-                            snd: [
-                                { _: 'persistCombat' },
-                                { _: 'persistRoom' },
-                                { _: 'appendLog', name: 'combat.attack' },
-                            ],
-                        },
-                    }
-                }
-            }
-            case 'some': {
-                const val_75 = Battle_debuffOf_1.val
-                const _x_77: boolean = Game_Combat_instDecidableEqGuard(fst as Game_Combat_Guard, {
-                    _: 'ward',
-                })
-                // join point
-                const _jp_78 = (_y_79: CombatState): Except<Error, Prod<State, Effect[]>> => {
-                    const _x_80: number = 0
-                    if (_x_77) {
-                        return _jp_4(
-                            _y_79,
-                            _x_80,
-                            `${Game_Combat_Guard_title(fst as Game_Combat_Guard)} nullified ${Strike_title(choice)}.`,
-                        )
-                    } else {
-                        const val_75_1 = val_75
-                        return _jp_4(
-                            _y_79,
-                            _x_80,
-                            `${Strike_title(choice)} lowered the enemy's ${Game_Magic_DebuffStat_label(val_75_1.stat)}.`,
-                        )
-                    }
-                }
-                if (_x_77) {
-                    return _jp_78(battle)
-                } else {
-                    const val_75_2 = val_75
-                    return _jp_78(Battle_debuffEnemy(battle, val_75_2.stat, val_75_2.amount))
-                }
-            }
-        }
-        throw new Error('non-exhaustive match on Option')
-    } else {
-        return { _: 'error', a: { _: 'techniqueNotEquipped' } }
-    }
-}
-
-/** Lean `Mythroads.Engine.Battle.guard`. */
-export function Battle_guard(
-    s: State,
-    p: PlayerState,
-    battle: CombatState,
-    stance: Game_Combat_Guard,
-): Except<Error, Prod<State, Effect[]>> {
-    const battle_1 = battle
-    const playerId = battle_1.playerId
-    const spaceId = battle_1.spaceId
-    const enemy = battle_1.enemy
-    const enemyHp = battle_1.enemyHp
-    const enemyDefensePenalty = battle_1.enemyDefensePenalty
-    const enemyMagicPenalty = battle_1.enemyMagicPenalty
-    const enemyAthleticsPenalty = battle_1.enemyAthleticsPenalty
-    const enemyAgilityPenalty = battle_1.enemyAgilityPenalty
-    const playerDefensePenalty = battle_1.playerDefensePenalty
-    const playerMagicPenalty = battle_1.playerMagicPenalty
-    const playerAthleticsPenalty = battle_1.playerAthleticsPenalty
-    const playerAgilityPenalty = battle_1.playerAgilityPenalty
-    const round = battle_1.round
-    const lastAttack = battle_1.lastAttack
-    const lastGuard = battle_1.lastGuard
-    const lastDamage = battle_1.lastDamage
-    const message = battle_1.message
-    const enemy_1 = enemy
-    const name = enemy_1.name
-    const Battle_drawStrike_1 = Battle_drawStrike(s, enemy_1.element)
-    const fst = Battle_drawStrike_1.fst
-    const snd = Battle_drawStrike_1.snd
-    // join point
-    const _jp_1 = (_y_2: Phase, _y_3: string): Except<Error, Prod<State, Effect[]>> => {
-        return {
-            _: 'ok',
-            a: {
-                fst: State_withPhase(snd as State, _y_2, _y_3),
-                snd: [
-                    { _: 'persistCombat' },
-                    { _: 'persistRoom' },
-                    { _: 'appendLog', name: 'combat.guard' },
-                ],
-            },
-        }
-    }
-    const Battle_debuffOf_1 = Battle_debuffOf(fst as Strike)
-    switch (Battle_debuffOf_1._) {
-        case 'none': {
-            const result: StrikeResult = strikeDamage(
-                fst as Strike,
-                stance,
-                enemyStats(battle_1),
-                playerStats(p, battle_1),
-                { _: 'none' },
-                equippedWardPower(p),
-            )
-            const Battle_drawHit_1 = Battle_drawHit(snd as State, result)
-            const fst_1 = Battle_drawHit_1.fst
-            const snd_1 = Battle_drawHit_1.snd
-            const p_1 = p
-            const id = p_1.id
-            const logged: CombatState = Battle_echo(
-                {
-                    playerId: playerId,
-                    spaceId: spaceId,
-                    enemy: enemy_1,
-                    enemyHp: enemyHp,
-                    enemyDefensePenalty: enemyDefensePenalty,
-                    enemyMagicPenalty: enemyMagicPenalty,
-                    enemyAthleticsPenalty: enemyAthleticsPenalty,
-                    enemyAgilityPenalty: enemyAgilityPenalty,
-                    playerDefensePenalty: playerDefensePenalty,
-                    playerMagicPenalty: playerMagicPenalty,
-                    playerAthleticsPenalty: playerAthleticsPenalty,
-                    playerAgilityPenalty: playerAgilityPenalty,
-                    round: round + 1,
-                    lastAttack: lastAttack,
-                    lastGuard: lastGuard,
-                    lastDamage: lastDamage,
-                    message: message,
-                },
-                fst as Strike,
-                stance,
-                fst_1 as number,
-                Battle_blowMessage(`${name}'s `, fst as Strike, stance, result, fst_1 as number),
-            )
-            const scrutinee = natSub(p_1.hp, fst_1) === 0
-            if (scrutinee) {
-                return Battle_defeat(
-                    State_withPhase(
-                        snd_1 as State,
-                        { _: 'combat', battle: logged, stage: { _: 'resolved' } },
-                        '',
-                    ),
-                    p_1,
-                    battle_1,
-                )
-            } else {
-                return {
-                    _: 'ok',
-                    a: {
-                        fst: State_withPhase(
-                            State_mapPlayer(snd_1 as State, id, (a0) =>
-                                Battle_guard__lam_0(fst_1, a0),
-                            ),
-                            { _: 'combat', battle: logged, stage: { _: 'attackerChoice' } },
-                            `${p_1.name} weathered the counterattack. Choose another attack.`,
-                        ),
-                        snd: [
-                            { _: 'persistCombat' },
-                            { _: 'persistPlayer', id: id },
-                            { _: 'persistRoom' },
-                            { _: 'appendLog', name: 'combat.guard' },
-                        ],
-                    },
-                }
-            }
-        }
-        case 'some': {
-            const val_52 = Battle_debuffOf_1.val
-            const _x_54: boolean = Game_Combat_instDecidableEqGuard(stance, { _: 'ward' })
-            // join point
-            const _jp_55 = (
-                _y_56: number,
-                _y_57: CombatState,
-                _y_58: string,
-            ): Except<Error, Prod<State, Effect[]>> => {
-                const _x_60: Phase = {
-                    _: 'combat',
-                    battle: Battle_echo(_y_57, fst as Strike, stance, _y_56, _y_58),
-                    stage: { _: 'attackerChoice' },
-                }
-                if (_x_54) {
-                    const p_2 = p
-                    return _jp_1(_x_60, `${p_2.name} resisted the hex. Choose another attack.`)
-                } else {
-                    const p_3 = p
-                    return _jp_1(_x_60, `${p_3.name} was weakened. Choose another attack.`)
-                }
-            }
-            // join point
-            const _jp_65 = (
-                playerId_1: string,
-                spaceId_1: number,
-                enemy_2: Game_Combat_Enemy,
-                enemyHp_1: number,
-                enemyDefensePenalty_1: number,
-                enemyMagicPenalty_1: number,
-                enemyAthleticsPenalty_1: number,
-                enemyAgilityPenalty_1: number,
-                playerDefensePenalty_1: number,
-                playerMagicPenalty_1: number,
-                playerAthleticsPenalty_1: number,
-                playerAgilityPenalty_1: number,
-                lastAttack_1: Option<string>,
-                lastGuard_1: Option<Game_Combat_Guard>,
-                lastDamage_1: Option<number>,
-                message_1: string,
-            ): Except<Error, Prod<State, Effect[]>> => {
-                const _x_68: CombatState = {
-                    playerId: playerId_1,
-                    spaceId: spaceId_1,
-                    enemy: enemy_2,
-                    enemyHp: enemyHp_1,
-                    enemyDefensePenalty: enemyDefensePenalty_1,
-                    enemyMagicPenalty: enemyMagicPenalty_1,
-                    enemyAthleticsPenalty: enemyAthleticsPenalty_1,
-                    enemyAgilityPenalty: enemyAgilityPenalty_1,
-                    playerDefensePenalty: playerDefensePenalty_1,
-                    playerMagicPenalty: playerMagicPenalty_1,
-                    playerAthleticsPenalty: playerAthleticsPenalty_1,
-                    playerAgilityPenalty: playerAgilityPenalty_1,
-                    round: round + 1,
-                    lastAttack: lastAttack_1,
-                    lastGuard: lastGuard_1,
-                    lastDamage: lastDamage_1,
-                    message: message_1,
-                }
-                const _x_69: number = 0
-                if (_x_54) {
-                    const p_4 = p
-                    return _jp_55(
-                        _x_69,
-                        _x_68,
-                        `${p_4.name}'s ${Game_Combat_Guard_title(stance)} nullified ${Strike_title(fst as Strike)}.`,
-                    )
-                } else {
-                    const p_5 = p
-                    const val_52_1 = val_52
-                    const _x_70: string = "'s "
-                    return _jp_55(
-                        _x_69,
-                        _x_68,
-                        `${name}${_x_70}${Strike_title(fst as Strike)} lowered ${p_5.name}${_x_70}${Game_Magic_DebuffStat_label(val_52_1.stat)}.`,
-                    )
-                }
-            }
-            if (_x_54) {
-                return _jp_65(
-                    playerId,
-                    spaceId,
-                    enemy_1,
-                    enemyHp,
-                    enemyDefensePenalty,
-                    enemyMagicPenalty,
-                    enemyAthleticsPenalty,
-                    enemyAgilityPenalty,
-                    playerDefensePenalty,
-                    playerMagicPenalty,
-                    playerAthleticsPenalty,
-                    playerAgilityPenalty,
-                    lastAttack,
-                    lastGuard,
-                    lastDamage,
-                    message,
-                )
-            } else {
-                const val_52_2 = val_52
-                const Battle_debuffPlayer_1 = Battle_debuffPlayer(
-                    battle_1,
-                    val_52_2.stat,
-                    val_52_2.amount,
-                )
-                return _jp_65(
-                    Battle_debuffPlayer_1.playerId,
-                    Battle_debuffPlayer_1.spaceId,
-                    Battle_debuffPlayer_1.enemy,
-                    Battle_debuffPlayer_1.enemyHp,
-                    Battle_debuffPlayer_1.enemyDefensePenalty,
-                    Battle_debuffPlayer_1.enemyMagicPenalty,
-                    Battle_debuffPlayer_1.enemyAthleticsPenalty,
-                    Battle_debuffPlayer_1.enemyAgilityPenalty,
-                    Battle_debuffPlayer_1.playerDefensePenalty,
-                    Battle_debuffPlayer_1.playerMagicPenalty,
-                    Battle_debuffPlayer_1.playerAthleticsPenalty,
-                    Battle_debuffPlayer_1.playerAgilityPenalty,
-                    Battle_debuffPlayer_1.lastAttack,
-                    Battle_debuffPlayer_1.lastGuard,
-                    Battle_debuffPlayer_1.lastDamage,
-                    Battle_debuffPlayer_1.message,
-                )
-            }
-        }
-    }
-    throw new Error('non-exhaustive match on Option')
-}
-
-/** Lean `Mythroads.Engine.Encounters.resolve`. */
-export function Encounters_resolve(
-    s: State,
-    p: PlayerState,
-    drawn: EncounterState,
-): Except<Error, Prod<State, Effect[]>> {
-    const p_1 = p
-    const id = p_1.id
-    const drawn_1 = drawn
-    const outcome = drawn_1.outcome
-    const s_1 = s
-    const outcome_1 = outcome
-    return {
-        _: 'ok',
-        a: {
-            fst: State_advanceTurn(
-                State_withPhase(
-                    State_mapPlayer(s_1, id, (a0) =>
-                        Encounters_resolve__lam_0(outcome_1.goldDelta, outcome_1.hpDelta, a0),
-                    ),
-                    {
-                        _: 'encounter',
-                        drawn: {
-                            playerId: drawn_1.playerId,
-                            spaceId: drawn_1.spaceId,
-                            kind: drawn_1.kind,
-                            outcome: outcome_1,
-                            wheelIndex: drawn_1.wheelIndex,
-                            resolved: true,
-                        },
-                    },
-                    s_1.message,
-                ),
-                `${p_1.name}: ${outcome_1.title}${Encounters_summary(outcome_1)}`,
-            ),
-            snd: [
-                { _: 'persistPlayer', id: id },
-                { _: 'persistEncounter' },
-                { _: 'persistRoom' },
-                { _: 'appendLog', name: 'encounter.resolve' },
-            ],
-        },
-    }
-}
-
-/** Lean `Mythroads.Engine.Shop.buy`. */
-export function Shop_buy(
-    s: State,
-    p: PlayerState,
-    kind: Game_Inventory_ShopKind,
-    itemId: string,
-): Except<Error, Prod<State, Effect[]>> {
-    const itemById_1 = itemById(itemId)
-    switch (itemById_1._) {
-        case 'none': {
-            return { _: 'error', a: { _: 'unknownItem' } }
-        }
-        case 'some': {
-            const val = itemById_1.val
-            const price = val.price
-            const Game_Inventory_instDecidableEqShopKind_1 = Game_Inventory_instDecidableEqShopKind(
-                val.shop,
-                kind,
-            )
-            if (Game_Inventory_instDecidableEqShopKind_1) {
-                const p_1 = p
-                const id = p_1.id
-                const scrutinee = p_1.gold < price
-                if (scrutinee) {
-                    return { _: 'error', a: { _: 'insufficientGold' } }
-                } else {
-                    return {
-                        _: 'ok',
-                        a: {
-                            fst: State_mapPlayer(s, id, (a0) => Shop_buy__lam_0(price, itemId, a0)),
-                            snd: [
-                                { _: 'persistPlayer', id: id },
-                                { _: 'appendLog', name: 'shop.buy' },
-                            ],
-                        },
-                    }
-                }
-            } else {
-                return { _: 'error', a: { _: 'itemNotHere' } }
-            }
-        }
-    }
-    throw new Error('non-exhaustive match on Option')
-}
-
-/** Lean `Mythroads.Engine.Shop.equip`. */
-export function Shop_equip(
-    s: State,
-    actor: string,
-    p: PlayerState,
-    rowId: string,
-    slot: Game_Inventory_EquipmentSlot,
-): Except<Error, Prod<State, Effect[]>> {
-    const p_1 = p
-    const id = p_1.id
-    const _x_1: never[] = []
-    const Game_Inventory_equipInventory_1 = Game_Inventory_equipInventory(
-        actor,
-        p_1.owner,
-        id,
-        rowId,
-        slot,
-        List_mapTR_loop__at__Mythroads_Engine_Shop_equip_spec_0(id, p_1.items, _x_1),
-    )
-    switch (Game_Inventory_equipInventory_1._) {
-        case 'error': {
-            const a = Game_Inventory_equipInventory_1.a
-            switch (a._) {
-                case 'notOwner': {
-                    return { _: 'error', a: { _: 'unauthorized' } }
-                }
-                default: {
-                    return { _: 'error', a: { _: 'cannotEquip' } }
-                }
-            }
-        }
-        case 'ok': {
-            return {
-                _: 'ok',
-                a: {
-                    fst: State_mapPlayer(s, id, (a0) =>
-                        Shop_equip__lam_0(Game_Inventory_equipInventory_1.a, a0),
-                    ),
-                    snd: [
-                        { _: 'persistPlayer', id: id },
-                        { _: 'appendLog', name: 'inventory.equip' },
-                        ..._x_1,
-                    ],
-                },
-            }
-        }
-    }
-    throw new Error('non-exhaustive match on Except')
-}
-
-/** Lean `Mythroads.Engine.State.advanceTurn`. */
-export function State_advanceTurn(s: State, message: string): State {
-    const s_1 = s
-    const players = s_1.players
-    const turn = s_1.turn
-    const _x_2: number = players.length
-    const scrutinee = 0 < _x_2
-    if (scrutinee) {
-        return {
-            code: s_1.code,
-            host: s_1.host,
-            players: players,
-            turn: Game_Turn_nextIndex(turn, _x_2),
-            round: Game_Turn_nextRound(s_1.round, turn, _x_2),
-            phase: { _: 'awaitingRoll' },
-            message: message,
-            lastRoll: [],
-            rng: s_1.rng,
-            rngCounter: s_1.rngCounter,
-            camera: s_1.camera,
-            version: s_1.version,
-        }
-    } else {
-        return s_1
-    }
-}
-
-/** Lean `Mythroads.Engine.node`. */
-export function node(id: number): Game_World_Node {
-    const List_find_q__at__Mythroads_Engine_node_spec_0_1 =
-        List_find_q__at__Mythroads_Engine_node_spec_0(id, Game_World_nodes())
-    switch (List_find_q__at__Mythroads_Engine_node_spec_0_1._) {
-        case 'none': {
-            return {
-                id: 0,
-                label: 'Hearthkeep',
-                kind: { _: 'castle' },
-                point: { x: -540, z: 320 },
-                landmark: { _: 'none' },
-            }
-        }
-        case 'some': {
-            return List_find_q__at__Mythroads_Engine_node_spec_0_1.val
-        }
-    }
-    throw new Error('non-exhaustive match on Option')
-}
-
-/** Lean `Mythroads.Engine.CameraStep.clamp`. */
-export function CameraStep_clamp(low: number, high: number, value: number): number {
-    // join point
-    const _jp_1 = (_y_2: number): number => {
-        const scrutinee = low <= _y_2
-        if (scrutinee) {
-            return _y_2
-        } else {
-            return low
-        }
-    }
-    const scrutinee_1 = high <= value
-    if (scrutinee_1) {
-        return _jp_1(high)
-    } else {
-        return _jp_1(value)
-    }
-}
-
-/** Lean `Mythroads.Engine.CameraStep.move._lam_1`. */
-export function CameraStep_move__lam_1(_: PUnit): number {
-    return -CameraStep_panStep()
-}
-
-/** Lean `Mythroads.Engine.CameraStep.panStep`. */
-export function CameraStep_panStep(): number {
-    return 90
-}
-
-/** Lean `Mythroads.Engine.CameraStep.move._lam_0`. */
-export function CameraStep_move__lam_0(_x_1: Direction): number {
-    return 0
-}
-
-/** Lean `Mythroads.Engine.Zoom.delta`. */
-export function Zoom_delta(x_1: Zoom): number {
-    const x_1_1 = x_1
-    switch (x_1_1._) {
-        case 'nearer': {
-            return -1
-        }
-        case 'farther': {
-            return 1
-        }
-    }
-    throw new Error('non-exhaustive match on Mythroads.Engine.Zoom')
-}
-
-/** Lean `Mythroads.Engine.Lobby.codeChars`. */
-export function Lobby_codeChars(state: number, count: number): Prod<number[], number> {
-    const scrutinee = count === 0
-    if (scrutinee) {
-        return { fst: [], snd: state }
-    } else {
-        const _x_3: number[] = Lobby_codeAlphabet()
-        const Game_Random_drawBounded_1 = Game_Random_drawBounded(state, _x_3.length)
-        // join point
-        const _jp_6 = (_y_7: number): Prod<number[], number> => {
-            const Lobby_codeChars_1 = Lobby_codeChars(
-                Game_Random_drawBounded_1.state,
-                natSub(count, 1),
-            )
-            return { fst: [_y_7, ...Lobby_codeChars_1.fst], snd: Lobby_codeChars_1.snd }
-        }
-        const scrutinee_1 = List_get_qInternal__redArg(
-            _x_3,
-            Game_Random_drawBounded_1.value,
-        ) as Option<number>
-        switch (scrutinee_1._) {
-            case 'none': {
-                return _jp_6(65)
-            }
-            case 'some': {
-                return _jp_6(scrutinee_1.val)
-            }
-        }
-        throw new Error('non-exhaustive match on Option')
-    }
-}
-
-/** Lean `_private.Init.Data.List.Impl.0.List.takeTR.go._redArg`. */
-export function _private_Init_Data_List_Impl_0_List_takeTR_go__redArg(
-    l: unknown[],
-    a_1: unknown[],
-    a_2: number,
-    a_3: unknown[],
-): unknown[] {
-    const a_1_1 = a_1
-    if (a_1_1.length === 0) {
-        return l
-    } else {
-        const scrutinee = a_2 === 0
-        if (scrutinee) {
-            return a_3
-        } else {
-            return _private_Init_Data_List_Impl_0_List_takeTR_go__redArg(
-                l,
-                a_1_1.slice(1),
-                natSub(a_2, 1),
-                [...a_3, a_1_1[0]],
-            )
-        }
-    }
-}
-
-/** Lean `Mythroads.Engine.Lobby.ownedBy`. */
-export function Lobby_ownedBy(s: State, actor: string): Option<PlayerState> {
-    const scrutinee = actor === ''
-    if (scrutinee) {
-        return { _: 'none' }
-    } else {
-        const s_1 = s
-        return List_find_q__at__Mythroads_Engine_Lobby_ownedBy_spec_0(actor, s_1.players)
-    }
-}
-
-/** Lean `Mythroads.Engine.Lobby.namedBy`. */
-export function Lobby_namedBy(s: State, name: string): Option<PlayerState> {
-    const s_1 = s
-    return List_find_q__at__Mythroads_Engine_Lobby_namedBy_spec_0(name, s_1.players)
 }
 
 /** Lean `Mythroads.Engine.instDecidableEqPhase.decEq`. */
@@ -2875,6 +2033,994 @@ export function instDecidableEqPhase_decEq(x_1: Phase, x_2: Phase): boolean {
     throw new Error('non-exhaustive match on Mythroads.Engine.Phase')
 }
 
+/** Lean `Mythroads.Engine.Movement.rollDice`. */
+export function Movement_rollDice(s: State, x_1: number[]): Prod<number[], State> {
+    const x_1_1 = x_1
+    if (x_1_1.length === 0) {
+        return { fst: x_1_1, snd: s }
+    } else {
+        const State_draw_1 = State_draw(s, x_1_1[0])
+        const Movement_rollDice_1 = Movement_rollDice(State_draw_1.snd as State, x_1_1.slice(1))
+        return {
+            fst: [State_draw_1.fst + 1, ...Movement_rollDice_1.fst],
+            snd: Movement_rollDice_1.snd,
+        }
+    }
+}
+
+/** Lean `Mythroads.Engine.Movement.roll._lam_0`. */
+export function Movement_roll__lam_0(q: PlayerState): PlayerState {
+    const q_1 = q
+    return {
+        id: q_1.id,
+        owner: q_1.owner,
+        name: q_1.name,
+        color: q_1.color,
+        position: q_1.position,
+        previousPosition: { _: 'none' },
+        gold: q_1.gold,
+        hp: q_1.hp,
+        maxHp: q_1.maxHp,
+        attack: q_1.attack,
+        defense: q_1.defense,
+        magic: q_1.magic,
+        athletics: q_1.athletics,
+        agility: q_1.agility,
+        dice: q_1.dice,
+        items: q_1.items,
+    }
+}
+
+/** Lean `Mythroads.Engine.State.mapPlayer`. */
+export function State_mapPlayer(s: State, pid: string, f: (a0: PlayerState) => PlayerState): State {
+    const s_1 = s
+    return {
+        code: s_1.code,
+        host: s_1.host,
+        players: List_mapTR_loop__at__Mythroads_Engine_State_mapPlayer_spec_0(
+            pid,
+            f,
+            s_1.players,
+            [],
+        ),
+        turn: s_1.turn,
+        round: s_1.round,
+        phase: s_1.phase,
+        message: s_1.message,
+        lastRoll: s_1.lastRoll,
+        rng: s_1.rng,
+        rngCounter: s_1.rngCounter,
+        camera: s_1.camera,
+        version: s_1.version,
+    }
+}
+
+/** Lean `List.foldl._at_.Mythroads.Engine.Movement.roll.spec_0`. */
+export function List_foldl__at__Mythroads_Engine_Movement_roll_spec_0(
+    x_1: number,
+    x_2: number[],
+): number {
+    const x_2_1 = x_2
+    if (x_2_1.length === 0) {
+        return x_1
+    } else {
+        return List_foldl__at__Mythroads_Engine_Movement_roll_spec_0(x_1 + x_2_1[0], x_2_1.slice(1))
+    }
+}
+
+/** Lean `Mythroads.Engine.Movement.select`. */
+export function Movement_select(
+    s: State,
+    p: PlayerState,
+    moves: number,
+    selection: Option<Selection>,
+    destination: number,
+): Except<Error, Prod<State, Effect[]>> {
+    const selection_1 = selection
+    switch (selection_1._) {
+        case 'none': {
+            const p_1 = p
+            const position = p_1.position
+            const scrutinee = destination === position
+            if (scrutinee) {
+                const _x_4: never[] = []
+                const opened: Selection = { playerId: p_1.id, destination: position, path: _x_4 }
+                return {
+                    _: 'ok',
+                    a: {
+                        fst: State_withPhase(
+                            s,
+                            { _: 'moving', moves: moves, selection: { _: 'some', val: opened } },
+                            Movement_planningMessage(position, moves),
+                        ),
+                        snd: [
+                            { _: 'persistSelection', selection: opened },
+                            { _: 'persistRoom' },
+                            { _: 'appendLog', name: 'movement.select' },
+                            ..._x_4,
+                        ],
+                    },
+                }
+            } else {
+                return { _: 'error', a: { _: 'routeNotStarted' } }
+            }
+        }
+        case 'some': {
+            const p_2 = p
+            const position_1 = p_2.position
+            const val = selection_1.val
+            const Movement_previewRouteStep_1 = Movement_previewRouteStep(
+                position_1,
+                val.path,
+                destination,
+                moves,
+            )
+            switch (Movement_previewRouteStep_1._) {
+                case 'none': {
+                    return { _: 'error', a: { _: 'roadUnavailable' } }
+                }
+                case 'some': {
+                    const val_22 = Movement_previewRouteStep_1.val
+                    const previewed: number = Movement_routeHead(position_1, val_22)
+                    const planned: Selection = {
+                        playerId: p_2.id,
+                        destination: previewed,
+                        path: val_22,
+                    }
+                    return {
+                        _: 'ok',
+                        a: {
+                            fst: State_withPhase(
+                                s,
+                                {
+                                    _: 'moving',
+                                    moves: moves,
+                                    selection: { _: 'some', val: planned },
+                                },
+                                Movement_planningMessage(previewed, natSub(moves, val_22.length)),
+                            ),
+                            snd: [
+                                { _: 'persistSelection', selection: planned },
+                                { _: 'persistRoom' },
+                                { _: 'appendLog', name: 'movement.select' },
+                            ],
+                        },
+                    }
+                }
+            }
+            throw new Error('non-exhaustive match on Option')
+        }
+    }
+    throw new Error('non-exhaustive match on Option')
+}
+
+/** Lean `Mythroads.Engine.State.withPhase`. */
+export function State_withPhase(s: State, phase: Phase, message: string): State {
+    const s_1 = s
+    return {
+        code: s_1.code,
+        host: s_1.host,
+        players: s_1.players,
+        turn: s_1.turn,
+        round: s_1.round,
+        phase: phase,
+        message: message,
+        lastRoll: s_1.lastRoll,
+        rng: s_1.rng,
+        rngCounter: s_1.rngCounter,
+        camera: s_1.camera,
+        version: s_1.version,
+    }
+}
+
+/** Lean `Mythroads.Engine.Movement.stepMove`. */
+export function Movement_stepMove(
+    s: State,
+    p: PlayerState,
+    moves: number,
+    selection: Option<Selection>,
+    destination: number,
+): Except<Error, Prod<State, Effect[]>> {
+    // join point
+    const _jp_1 = (): Except<Error, Prod<State, Effect[]>> => {
+        return { _: 'error', a: { _: 'routeUnavailable' } }
+    }
+    const _x_5: boolean = moves === 0
+    if (_x_5) {
+        return { _: 'error', a: { _: 'noMovementLeft' } }
+    } else {
+        const selection_1 = selection
+        switch (selection_1._) {
+            case 'none': {
+                return { _: 'error', a: { _: 'routeUnavailable' } }
+            }
+            case 'some': {
+                const val = selection_1.val
+                const path = val.path
+                const scrutinee = val.destination === destination
+                if (scrutinee) {
+                    if (_x_5) {
+                        return _jp_1()
+                    } else {
+                        const scrutinee_1 = path.length === moves
+                        if (scrutinee_1) {
+                            const p_1 = p
+                            const id = p_1.id
+                            const position = p_1.position
+                            const Movement_routeValid_1 = Movement_routeValid(position, path)
+                            if (Movement_routeValid_1) {
+                                const Landing_resolveLanding_1 = Landing_resolveLanding(
+                                    State_mapPlayer(s, id, (a0) =>
+                                        Movement_stepMove__lam_0(destination, path, position, a0),
+                                    ),
+                                    p_1,
+                                    destination,
+                                )
+                                switch (Landing_resolveLanding_1._) {
+                                    case 'error': {
+                                        throw new Error('unreachable state in the compiled engine')
+                                    }
+                                    case 'ok': {
+                                        const a = Landing_resolveLanding_1.a
+                                        return {
+                                            _: 'ok',
+                                            a: {
+                                                fst: a.fst,
+                                                snd: List_appendTR__redArg(
+                                                    [
+                                                        { _: 'clearSelection' },
+                                                        { _: 'persistPlayer', id: id },
+                                                        { _: 'appendLog', name: 'movement.step' },
+                                                    ],
+                                                    a.snd,
+                                                ) as Effect[],
+                                            },
+                                        }
+                                    }
+                                }
+                                throw new Error('non-exhaustive match on Except')
+                            } else {
+                                return _jp_1()
+                            }
+                        } else {
+                            return _jp_1()
+                        }
+                    }
+                } else {
+                    return _jp_1()
+                }
+            }
+        }
+        throw new Error('non-exhaustive match on Option')
+    }
+}
+
+/** Lean `Mythroads.Engine.Battle.attack`. */
+export function Battle_attack(
+    s: State,
+    p: PlayerState,
+    battle: CombatState,
+    choice: Strike,
+): Except<Error, Prod<State, Effect[]>> {
+    const canCast_1 = canCast(p, choice)
+    if (canCast_1) {
+        const Battle_drawGuard_1 = Battle_drawGuard(s)
+        const fst = Battle_drawGuard_1.fst
+        const snd = Battle_drawGuard_1.snd
+        // join point
+        const _jp_4 = (
+            _y_5: number,
+            _y_6: CombatState,
+            _y_7: string,
+        ): Except<Error, Prod<State, Effect[]>> => {
+            const battle_1 = battle
+            const enemy = battle_1.enemy
+            const logged: CombatState = Battle_echo(
+                _y_6,
+                choice,
+                fst as Game_Combat_Guard,
+                _y_5,
+                _y_7,
+            )
+            const _x_8: CombatStage = { _: 'defenderChoice' }
+            return {
+                _: 'ok',
+                a: {
+                    fst: State_withPhase(
+                        snd as State,
+                        { _: 'combat', battle: logged, stage: _x_8 },
+                        `${enemy.name} prepares a counterattack. Choose a guard.`,
+                    ),
+                    snd: [
+                        { _: 'persistCombat', battle: logged, stage: _x_8 },
+                        { _: 'persistRoom' },
+                        { _: 'appendLog', name: 'combat.attack' },
+                    ],
+                },
+            }
+        }
+        const Battle_debuffOf_1 = Battle_debuffOf(choice)
+        switch (Battle_debuffOf_1._) {
+            case 'none': {
+                const battle_2 = battle
+                const enemy_1 = battle_2.enemy
+                const enemy_1_1 = enemy_1
+                const name = enemy_1_1.name
+                const reward = enemy_1_1.reward
+                const result: StrikeResult = strikeDamage(
+                    choice,
+                    fst as Game_Combat_Guard,
+                    playerStats(p, battle_2),
+                    enemyStats(battle_2),
+                    { _: 'some', val: enemy_1_1.element },
+                    35,
+                )
+                const Battle_drawHit_1 = Battle_drawHit(snd as State, result)
+                const fst_1 = Battle_drawHit_1.fst
+                const snd_1 = Battle_drawHit_1.snd
+                const enemyHp: number = natSub(battle_2.enemyHp, fst_1)
+                const _x_29: string = ''
+                const logged_1: CombatState = Battle_echo(
+                    {
+                        playerId: battle_2.playerId,
+                        spaceId: battle_2.spaceId,
+                        enemy: enemy_1_1,
+                        enemyHp: enemyHp,
+                        enemyDefensePenalty: battle_2.enemyDefensePenalty,
+                        enemyMagicPenalty: battle_2.enemyMagicPenalty,
+                        enemyAthleticsPenalty: battle_2.enemyAthleticsPenalty,
+                        enemyAgilityPenalty: battle_2.enemyAgilityPenalty,
+                        playerDefensePenalty: battle_2.playerDefensePenalty,
+                        playerMagicPenalty: battle_2.playerMagicPenalty,
+                        playerAthleticsPenalty: battle_2.playerAthleticsPenalty,
+                        playerAgilityPenalty: battle_2.playerAgilityPenalty,
+                        round: battle_2.round,
+                        lastAttack: battle_2.lastAttack,
+                        lastGuard: battle_2.lastGuard,
+                        lastDamage: battle_2.lastDamage,
+                        message: battle_2.message,
+                    },
+                    choice,
+                    fst as Game_Combat_Guard,
+                    fst_1 as number,
+                    Battle_blowMessage(
+                        _x_29,
+                        choice,
+                        fst as Game_Combat_Guard,
+                        result,
+                        fst_1 as number,
+                    ),
+                )
+                const scrutinee = enemyHp === 0
+                if (scrutinee) {
+                    const p_1 = p
+                    const id = p_1.id
+                    const _x_50: CombatStage = { _: 'resolved' }
+                    return {
+                        _: 'ok',
+                        a: {
+                            fst: State_advanceTurn(
+                                State_withPhase(
+                                    State_mapPlayer(snd_1 as State, id, (a0) =>
+                                        Battle_attack__lam_0(reward, a0),
+                                    ),
+                                    { _: 'combat', battle: logged_1, stage: _x_50 },
+                                    _x_29,
+                                ),
+                                `${p_1.name} defeated ${name} and won ${String(reward)} gold.`,
+                            ),
+                            snd: [
+                                { _: 'persistCombat', battle: logged_1, stage: _x_50 },
+                                { _: 'persistPlayer', id: id },
+                                { _: 'persistRoom' },
+                                { _: 'appendLog', name: 'combat.attack' },
+                            ],
+                        },
+                    }
+                } else {
+                    const _x_33: CombatStage = { _: 'defenderChoice' }
+                    return {
+                        _: 'ok',
+                        a: {
+                            fst: State_withPhase(
+                                snd_1 as State,
+                                { _: 'combat', battle: logged_1, stage: _x_33 },
+                                `${name} prepares a counterattack. Choose a guard.`,
+                            ),
+                            snd: [
+                                { _: 'persistCombat', battle: logged_1, stage: _x_33 },
+                                { _: 'persistRoom' },
+                                { _: 'appendLog', name: 'combat.attack' },
+                            ],
+                        },
+                    }
+                }
+            }
+            case 'some': {
+                const val_75 = Battle_debuffOf_1.val
+                const _x_77: boolean = Game_Combat_instDecidableEqGuard(fst as Game_Combat_Guard, {
+                    _: 'ward',
+                })
+                // join point
+                const _jp_78 = (_y_79: CombatState): Except<Error, Prod<State, Effect[]>> => {
+                    const _x_80: number = 0
+                    if (_x_77) {
+                        return _jp_4(
+                            _x_80,
+                            _y_79,
+                            `${Game_Combat_Guard_title(fst as Game_Combat_Guard)} nullified ${Strike_title(choice)}.`,
+                        )
+                    } else {
+                        const val_75_1 = val_75
+                        return _jp_4(
+                            _x_80,
+                            _y_79,
+                            `${Strike_title(choice)} lowered the enemy's ${Game_Magic_DebuffStat_label(val_75_1.stat)}.`,
+                        )
+                    }
+                }
+                if (_x_77) {
+                    return _jp_78(battle)
+                } else {
+                    const val_75_2 = val_75
+                    return _jp_78(Battle_debuffEnemy(battle, val_75_2.stat, val_75_2.amount))
+                }
+            }
+        }
+        throw new Error('non-exhaustive match on Option')
+    } else {
+        return { _: 'error', a: { _: 'techniqueNotEquipped' } }
+    }
+}
+
+/** Lean `Mythroads.Engine.Battle.guard`. */
+export function Battle_guard(
+    s: State,
+    p: PlayerState,
+    battle: CombatState,
+    stance: Game_Combat_Guard,
+): Except<Error, Prod<State, Effect[]>> {
+    const battle_1 = battle
+    const playerId = battle_1.playerId
+    const spaceId = battle_1.spaceId
+    const enemy = battle_1.enemy
+    const enemyHp = battle_1.enemyHp
+    const enemyDefensePenalty = battle_1.enemyDefensePenalty
+    const enemyMagicPenalty = battle_1.enemyMagicPenalty
+    const enemyAthleticsPenalty = battle_1.enemyAthleticsPenalty
+    const enemyAgilityPenalty = battle_1.enemyAgilityPenalty
+    const playerDefensePenalty = battle_1.playerDefensePenalty
+    const playerMagicPenalty = battle_1.playerMagicPenalty
+    const playerAthleticsPenalty = battle_1.playerAthleticsPenalty
+    const playerAgilityPenalty = battle_1.playerAgilityPenalty
+    const round = battle_1.round
+    const lastAttack = battle_1.lastAttack
+    const lastGuard = battle_1.lastGuard
+    const lastDamage = battle_1.lastDamage
+    const message = battle_1.message
+    const enemy_1 = enemy
+    const name = enemy_1.name
+    const Battle_drawStrike_1 = Battle_drawStrike(s, enemy_1.element)
+    const fst = Battle_drawStrike_1.fst
+    const snd = Battle_drawStrike_1.snd
+    // join point
+    const _jp_1 = (
+        _y_2: CombatState,
+        _y_3: CombatStage,
+        _y_4: Phase,
+        _y_5: string,
+    ): Except<Error, Prod<State, Effect[]>> => {
+        return {
+            _: 'ok',
+            a: {
+                fst: State_withPhase(snd as State, _y_4, _y_5),
+                snd: [
+                    { _: 'persistCombat', battle: _y_2, stage: _y_3 },
+                    { _: 'persistRoom' },
+                    { _: 'appendLog', name: 'combat.guard' },
+                ],
+            },
+        }
+    }
+    const Battle_debuffOf_1 = Battle_debuffOf(fst as Strike)
+    switch (Battle_debuffOf_1._) {
+        case 'none': {
+            const result: StrikeResult = strikeDamage(
+                fst as Strike,
+                stance,
+                enemyStats(battle_1),
+                playerStats(p, battle_1),
+                { _: 'none' },
+                equippedWardPower(p),
+            )
+            const Battle_drawHit_1 = Battle_drawHit(snd as State, result)
+            const fst_1 = Battle_drawHit_1.fst
+            const snd_1 = Battle_drawHit_1.snd
+            const p_1 = p
+            const id = p_1.id
+            const logged: CombatState = Battle_echo(
+                {
+                    playerId: playerId,
+                    spaceId: spaceId,
+                    enemy: enemy_1,
+                    enemyHp: enemyHp,
+                    enemyDefensePenalty: enemyDefensePenalty,
+                    enemyMagicPenalty: enemyMagicPenalty,
+                    enemyAthleticsPenalty: enemyAthleticsPenalty,
+                    enemyAgilityPenalty: enemyAgilityPenalty,
+                    playerDefensePenalty: playerDefensePenalty,
+                    playerMagicPenalty: playerMagicPenalty,
+                    playerAthleticsPenalty: playerAthleticsPenalty,
+                    playerAgilityPenalty: playerAgilityPenalty,
+                    round: round + 1,
+                    lastAttack: lastAttack,
+                    lastGuard: lastGuard,
+                    lastDamage: lastDamage,
+                    message: message,
+                },
+                fst as Strike,
+                stance,
+                fst_1 as number,
+                Battle_blowMessage(`${name}'s `, fst as Strike, stance, result, fst_1 as number),
+            )
+            const scrutinee = natSub(p_1.hp, fst_1) === 0
+            if (scrutinee) {
+                return Battle_defeat(
+                    State_withPhase(
+                        snd_1 as State,
+                        { _: 'combat', battle: logged, stage: { _: 'resolved' } },
+                        '',
+                    ),
+                    p_1,
+                    battle_1,
+                    logged,
+                )
+            } else {
+                const _x_32: CombatStage = { _: 'attackerChoice' }
+                return {
+                    _: 'ok',
+                    a: {
+                        fst: State_withPhase(
+                            State_mapPlayer(snd_1 as State, id, (a0) =>
+                                Battle_guard__lam_0(fst_1, a0),
+                            ),
+                            { _: 'combat', battle: logged, stage: _x_32 },
+                            `${p_1.name} weathered the counterattack. Choose another attack.`,
+                        ),
+                        snd: [
+                            { _: 'persistCombat', battle: logged, stage: _x_32 },
+                            { _: 'persistPlayer', id: id },
+                            { _: 'persistRoom' },
+                            { _: 'appendLog', name: 'combat.guard' },
+                        ],
+                    },
+                }
+            }
+        }
+        case 'some': {
+            const val_54 = Battle_debuffOf_1.val
+            const _x_56: boolean = Game_Combat_instDecidableEqGuard(stance, { _: 'ward' })
+            // join point
+            const _jp_57 = (
+                _y_58: number,
+                _y_59: CombatState,
+                _y_60: string,
+            ): Except<Error, Prod<State, Effect[]>> => {
+                const logged_1: CombatState = Battle_echo(
+                    _y_59,
+                    fst as Strike,
+                    stance,
+                    _y_58,
+                    _y_60,
+                )
+                const _x_61: CombatStage = { _: 'attackerChoice' }
+                const _x_62: Phase = { _: 'combat', battle: logged_1, stage: _x_61 }
+                if (_x_56) {
+                    const p_2 = p
+                    return _jp_1(
+                        logged_1,
+                        _x_61,
+                        _x_62,
+                        `${p_2.name} resisted the hex. Choose another attack.`,
+                    )
+                } else {
+                    const p_3 = p
+                    return _jp_1(
+                        logged_1,
+                        _x_61,
+                        _x_62,
+                        `${p_3.name} was weakened. Choose another attack.`,
+                    )
+                }
+            }
+            // join point
+            const _jp_67 = (
+                playerId_1: string,
+                spaceId_1: number,
+                enemy_2: Game_Combat_Enemy,
+                enemyHp_1: number,
+                enemyDefensePenalty_1: number,
+                enemyMagicPenalty_1: number,
+                enemyAthleticsPenalty_1: number,
+                enemyAgilityPenalty_1: number,
+                playerDefensePenalty_1: number,
+                playerMagicPenalty_1: number,
+                playerAthleticsPenalty_1: number,
+                playerAgilityPenalty_1: number,
+                lastAttack_1: Option<string>,
+                lastGuard_1: Option<Game_Combat_Guard>,
+                lastDamage_1: Option<number>,
+                message_1: string,
+            ): Except<Error, Prod<State, Effect[]>> => {
+                const _x_70: CombatState = {
+                    playerId: playerId_1,
+                    spaceId: spaceId_1,
+                    enemy: enemy_2,
+                    enemyHp: enemyHp_1,
+                    enemyDefensePenalty: enemyDefensePenalty_1,
+                    enemyMagicPenalty: enemyMagicPenalty_1,
+                    enemyAthleticsPenalty: enemyAthleticsPenalty_1,
+                    enemyAgilityPenalty: enemyAgilityPenalty_1,
+                    playerDefensePenalty: playerDefensePenalty_1,
+                    playerMagicPenalty: playerMagicPenalty_1,
+                    playerAthleticsPenalty: playerAthleticsPenalty_1,
+                    playerAgilityPenalty: playerAgilityPenalty_1,
+                    round: round + 1,
+                    lastAttack: lastAttack_1,
+                    lastGuard: lastGuard_1,
+                    lastDamage: lastDamage_1,
+                    message: message_1,
+                }
+                const _x_71: number = 0
+                if (_x_56) {
+                    const p_4 = p
+                    return _jp_57(
+                        _x_71,
+                        _x_70,
+                        `${p_4.name}'s ${Game_Combat_Guard_title(stance)} nullified ${Strike_title(fst as Strike)}.`,
+                    )
+                } else {
+                    const p_5 = p
+                    const val_54_1 = val_54
+                    const _x_72: string = "'s "
+                    return _jp_57(
+                        _x_71,
+                        _x_70,
+                        `${name}${_x_72}${Strike_title(fst as Strike)} lowered ${p_5.name}${_x_72}${Game_Magic_DebuffStat_label(val_54_1.stat)}.`,
+                    )
+                }
+            }
+            if (_x_56) {
+                return _jp_67(
+                    playerId,
+                    spaceId,
+                    enemy_1,
+                    enemyHp,
+                    enemyDefensePenalty,
+                    enemyMagicPenalty,
+                    enemyAthleticsPenalty,
+                    enemyAgilityPenalty,
+                    playerDefensePenalty,
+                    playerMagicPenalty,
+                    playerAthleticsPenalty,
+                    playerAgilityPenalty,
+                    lastAttack,
+                    lastGuard,
+                    lastDamage,
+                    message,
+                )
+            } else {
+                const val_54_2 = val_54
+                const Battle_debuffPlayer_1 = Battle_debuffPlayer(
+                    battle_1,
+                    val_54_2.stat,
+                    val_54_2.amount,
+                )
+                return _jp_67(
+                    Battle_debuffPlayer_1.playerId,
+                    Battle_debuffPlayer_1.spaceId,
+                    Battle_debuffPlayer_1.enemy,
+                    Battle_debuffPlayer_1.enemyHp,
+                    Battle_debuffPlayer_1.enemyDefensePenalty,
+                    Battle_debuffPlayer_1.enemyMagicPenalty,
+                    Battle_debuffPlayer_1.enemyAthleticsPenalty,
+                    Battle_debuffPlayer_1.enemyAgilityPenalty,
+                    Battle_debuffPlayer_1.playerDefensePenalty,
+                    Battle_debuffPlayer_1.playerMagicPenalty,
+                    Battle_debuffPlayer_1.playerAthleticsPenalty,
+                    Battle_debuffPlayer_1.playerAgilityPenalty,
+                    Battle_debuffPlayer_1.lastAttack,
+                    Battle_debuffPlayer_1.lastGuard,
+                    Battle_debuffPlayer_1.lastDamage,
+                    Battle_debuffPlayer_1.message,
+                )
+            }
+        }
+    }
+    throw new Error('non-exhaustive match on Option')
+}
+
+/** Lean `Mythroads.Engine.Encounters.resolve`. */
+export function Encounters_resolve(
+    s: State,
+    p: PlayerState,
+    drawn: EncounterState,
+): Except<Error, Prod<State, Effect[]>> {
+    const drawn_1 = drawn
+    const outcome = drawn_1.outcome
+    const p_1 = p
+    const id = p_1.id
+    const s_1 = s
+    const outcome_1 = outcome
+    const spent: EncounterState = {
+        playerId: drawn_1.playerId,
+        spaceId: drawn_1.spaceId,
+        kind: drawn_1.kind,
+        outcome: outcome_1,
+        wheelIndex: drawn_1.wheelIndex,
+        resolved: true,
+    }
+    return {
+        _: 'ok',
+        a: {
+            fst: State_advanceTurn(
+                State_withPhase(
+                    State_mapPlayer(s_1, id, (a0) =>
+                        Encounters_resolve__lam_0(outcome_1.goldDelta, outcome_1.hpDelta, a0),
+                    ),
+                    { _: 'encounter', drawn: spent },
+                    s_1.message,
+                ),
+                `${p_1.name}: ${outcome_1.title}${Encounters_summary(outcome_1)}`,
+            ),
+            snd: [
+                { _: 'persistPlayer', id: id },
+                { _: 'persistEncounter', drawn: spent },
+                { _: 'persistRoom' },
+                { _: 'appendLog', name: 'encounter.resolve' },
+            ],
+        },
+    }
+}
+
+/** Lean `Mythroads.Engine.Shop.buy`. */
+export function Shop_buy(
+    s: State,
+    p: PlayerState,
+    kind: Game_Inventory_ShopKind,
+    itemId: string,
+): Except<Error, Prod<State, Effect[]>> {
+    const itemById_1 = itemById(itemId)
+    switch (itemById_1._) {
+        case 'none': {
+            return { _: 'error', a: { _: 'unknownItem' } }
+        }
+        case 'some': {
+            const val = itemById_1.val
+            const price = val.price
+            const Game_Inventory_instDecidableEqShopKind_1 = Game_Inventory_instDecidableEqShopKind(
+                val.shop,
+                kind,
+            )
+            if (Game_Inventory_instDecidableEqShopKind_1) {
+                const p_1 = p
+                const id = p_1.id
+                const scrutinee = p_1.gold < price
+                if (scrutinee) {
+                    return { _: 'error', a: { _: 'insufficientGold' } }
+                } else {
+                    return {
+                        _: 'ok',
+                        a: {
+                            fst: State_mapPlayer(s, id, (a0) => Shop_buy__lam_0(price, itemId, a0)),
+                            snd: [
+                                { _: 'persistPlayer', id: id },
+                                { _: 'appendLog', name: 'shop.buy' },
+                            ],
+                        },
+                    }
+                }
+            } else {
+                return { _: 'error', a: { _: 'itemNotHere' } }
+            }
+        }
+    }
+    throw new Error('non-exhaustive match on Option')
+}
+
+/** Lean `Mythroads.Engine.Shop.equip`. */
+export function Shop_equip(
+    s: State,
+    actor: string,
+    p: PlayerState,
+    rowId: string,
+    slot: Game_Inventory_EquipmentSlot,
+): Except<Error, Prod<State, Effect[]>> {
+    const p_1 = p
+    const id = p_1.id
+    const _x_1: never[] = []
+    const Game_Inventory_equipInventory_1 = Game_Inventory_equipInventory(
+        actor,
+        p_1.owner,
+        id,
+        rowId,
+        slot,
+        List_mapTR_loop__at__Mythroads_Engine_Shop_equip_spec_0(id, p_1.items, _x_1),
+    )
+    switch (Game_Inventory_equipInventory_1._) {
+        case 'error': {
+            const a = Game_Inventory_equipInventory_1.a
+            switch (a._) {
+                case 'notOwner': {
+                    return { _: 'error', a: { _: 'unauthorized' } }
+                }
+                default: {
+                    return { _: 'error', a: { _: 'cannotEquip' } }
+                }
+            }
+        }
+        case 'ok': {
+            return {
+                _: 'ok',
+                a: {
+                    fst: State_mapPlayer(s, id, (a0) =>
+                        Shop_equip__lam_0(Game_Inventory_equipInventory_1.a, a0),
+                    ),
+                    snd: [
+                        { _: 'persistPlayer', id: id },
+                        { _: 'appendLog', name: 'inventory.equip' },
+                        ..._x_1,
+                    ],
+                },
+            }
+        }
+    }
+    throw new Error('non-exhaustive match on Except')
+}
+
+/** Lean `Mythroads.Engine.State.advanceTurn`. */
+export function State_advanceTurn(s: State, message: string): State {
+    const s_1 = s
+    const players = s_1.players
+    const turn = s_1.turn
+    const _x_2: number = players.length
+    const scrutinee = 0 < _x_2
+    if (scrutinee) {
+        return {
+            code: s_1.code,
+            host: s_1.host,
+            players: players,
+            turn: Game_Turn_nextIndex(turn, _x_2),
+            round: Game_Turn_nextRound(s_1.round, turn, _x_2),
+            phase: { _: 'awaitingRoll' },
+            message: message,
+            lastRoll: s_1.lastRoll,
+            rng: s_1.rng,
+            rngCounter: s_1.rngCounter,
+            camera: s_1.camera,
+            version: s_1.version,
+        }
+    } else {
+        return s_1
+    }
+}
+
+/** Lean `Mythroads.Engine.node`. */
+export function node(id: number): Game_World_Node {
+    const List_find_q__at__Mythroads_Engine_node_spec_0_1 =
+        List_find_q__at__Mythroads_Engine_node_spec_0(id, Game_World_nodes())
+    switch (List_find_q__at__Mythroads_Engine_node_spec_0_1._) {
+        case 'none': {
+            return {
+                id: 0,
+                label: 'Hearthkeep',
+                kind: { _: 'castle' },
+                point: { x: -540, z: 320 },
+                landmark: { _: 'none' },
+            }
+        }
+        case 'some': {
+            return List_find_q__at__Mythroads_Engine_node_spec_0_1.val
+        }
+    }
+    throw new Error('non-exhaustive match on Option')
+}
+
+/** Lean `Mythroads.Engine.CameraStep.clamp`. */
+export function CameraStep_clamp(low: number, high: number, value: number): number {
+    // join point
+    const _jp_1 = (_y_2: number): number => {
+        const scrutinee = low <= _y_2
+        if (scrutinee) {
+            return _y_2
+        } else {
+            return low
+        }
+    }
+    const scrutinee_1 = high <= value
+    if (scrutinee_1) {
+        return _jp_1(high)
+    } else {
+        return _jp_1(value)
+    }
+}
+
+/** Lean `Mythroads.Engine.CameraStep.move._lam_1`. */
+export function CameraStep_move__lam_1(_: PUnit): number {
+    return -CameraStep_panStep()
+}
+
+/** Lean `Mythroads.Engine.CameraStep.panStep`. */
+export function CameraStep_panStep(): number {
+    return 90
+}
+
+/** Lean `Mythroads.Engine.CameraStep.move._lam_0`. */
+export function CameraStep_move__lam_0(_x_1: Direction): number {
+    return 0
+}
+
+/** Lean `Mythroads.Engine.Zoom.delta`. */
+export function Zoom_delta(x_1: Zoom): number {
+    const x_1_1 = x_1
+    switch (x_1_1._) {
+        case 'nearer': {
+            return -1
+        }
+        case 'farther': {
+            return 1
+        }
+    }
+    throw new Error('non-exhaustive match on Mythroads.Engine.Zoom')
+}
+
+/** Lean `Mythroads.Game.Random.nextState`. */
+export function Game_Random_nextState(state: number): number {
+    return natMod(state * 48271, 2147483647)
+}
+
+/** Lean `_private.Init.Data.List.Impl.0.List.takeTR.go._redArg`. */
+export function _private_Init_Data_List_Impl_0_List_takeTR_go__redArg(
+    l: unknown[],
+    a_1: unknown[],
+    a_2: number,
+    a_3: unknown[],
+): unknown[] {
+    const a_1_1 = a_1
+    if (a_1_1.length === 0) {
+        return l
+    } else {
+        const scrutinee = a_2 === 0
+        if (scrutinee) {
+            return a_3
+        } else {
+            return _private_Init_Data_List_Impl_0_List_takeTR_go__redArg(
+                l,
+                a_1_1.slice(1),
+                natSub(a_2, 1),
+                [...a_3, a_1_1[0]],
+            )
+        }
+    }
+}
+
+/** Lean `Mythroads.Engine.Lobby.ownedBy`. */
+export function Lobby_ownedBy(s: State, actor: string): Option<PlayerState> {
+    const scrutinee = actor === ''
+    if (scrutinee) {
+        return { _: 'none' }
+    } else {
+        const s_1 = s
+        return List_find_q__at__Mythroads_Engine_Lobby_ownedBy_spec_0(actor, s_1.players)
+    }
+}
+
+/** Lean `Mythroads.Engine.Lobby.namedBy`. */
+export function Lobby_namedBy(s: State, name: string): Option<PlayerState> {
+    const s_1 = s
+    return List_find_q__at__Mythroads_Engine_Lobby_namedBy_spec_0(name, s_1.players)
+}
+
 /** Lean `Mythroads.Engine.Lobby.freshPlayer`. */
 export function Lobby_freshPlayer(
     id: string,
@@ -2972,6 +3118,233 @@ export function String_mapAux__at___private_Mythroads_Convex_Module_0_Mythroads_
             return _jp_1(_x_9)
         }
     }
+}
+
+/** Lean `Mythroads.Engine.instDecidableEqSelection`. */
+export function instDecidableEqSelection(x_1: Selection, x_2: Selection): boolean {
+    return instDecidableEqSelection_decEq(x_1, x_2)
+}
+
+/** Lean `Option.instDecidableEq._redArg`. */
+export function Option_instDecidableEq__redArg(
+    inst: (a0: unknown, a1: unknown) => boolean,
+    a: Option<unknown>,
+    b: Option<unknown>,
+): boolean {
+    const a_1 = a
+    switch (a_1._) {
+        case 'none': {
+            const b_1 = b
+            switch (b_1._) {
+                case 'none': {
+                    return true
+                }
+                case 'some': {
+                    return false
+                }
+            }
+            throw new Error('non-exhaustive match on Option')
+        }
+        case 'some': {
+            const b_2 = b
+            switch (b_2._) {
+                case 'none': {
+                    return false
+                }
+                case 'some': {
+                    return inst(a_1.val, b_2.val)
+                }
+            }
+            throw new Error('non-exhaustive match on Option')
+        }
+    }
+    throw new Error('non-exhaustive match on Option')
+}
+
+/** Lean `Mythroads.Engine.instDecidableEqCombatState.decEq`. */
+export function instDecidableEqCombatState_decEq(x_1: CombatState, x_2: CombatState): boolean {
+    const x_1_1 = x_1
+    const x_2_1 = x_2
+    const _x_37: boolean = x_1_1.playerId === x_2_1.playerId
+    if (_x_37) {
+        const _x_38: boolean = x_1_1.spaceId === x_2_1.spaceId
+        if (_x_38) {
+            const _x_39: boolean = Game_Combat_instDecidableEqEnemy_decEq(x_1_1.enemy, x_2_1.enemy)
+            if (_x_39) {
+                const _x_40: boolean = x_1_1.enemyHp === x_2_1.enemyHp
+                if (_x_40) {
+                    const _x_41: boolean = x_1_1.enemyDefensePenalty === x_2_1.enemyDefensePenalty
+                    if (_x_41) {
+                        const _x_42: boolean = x_1_1.enemyMagicPenalty === x_2_1.enemyMagicPenalty
+                        if (_x_42) {
+                            const _x_43: boolean =
+                                x_1_1.enemyAthleticsPenalty === x_2_1.enemyAthleticsPenalty
+                            if (_x_43) {
+                                const _x_44: boolean =
+                                    x_1_1.enemyAgilityPenalty === x_2_1.enemyAgilityPenalty
+                                if (_x_44) {
+                                    const _x_45: boolean =
+                                        x_1_1.playerDefensePenalty === x_2_1.playerDefensePenalty
+                                    if (_x_45) {
+                                        const _x_46: boolean =
+                                            x_1_1.playerMagicPenalty === x_2_1.playerMagicPenalty
+                                        if (_x_46) {
+                                            const _x_47: boolean =
+                                                x_1_1.playerAthleticsPenalty ===
+                                                x_2_1.playerAthleticsPenalty
+                                            if (_x_47) {
+                                                const _x_48: boolean =
+                                                    x_1_1.playerAgilityPenalty ===
+                                                    x_2_1.playerAgilityPenalty
+                                                if (_x_48) {
+                                                    const _x_49: boolean =
+                                                        x_1_1.round === x_2_1.round
+                                                    if (_x_49) {
+                                                        const _x_51: boolean =
+                                                            Option_instDecidableEq__redArg(
+                                                                instDecidableEqString as (
+                                                                    a0: unknown,
+                                                                    a1: unknown,
+                                                                ) => boolean,
+                                                                x_1_1.lastAttack,
+                                                                x_2_1.lastAttack,
+                                                            )
+                                                        if (_x_51) {
+                                                            const _x_53: boolean =
+                                                                Option_instDecidableEq__redArg(
+                                                                    Game_Combat_instDecidableEqGuard as (
+                                                                        a0: unknown,
+                                                                        a1: unknown,
+                                                                    ) => boolean,
+                                                                    x_1_1.lastGuard,
+                                                                    x_2_1.lastGuard,
+                                                                )
+                                                            if (_x_53) {
+                                                                const _x_55: boolean =
+                                                                    Option_instDecidableEq__redArg(
+                                                                        instDecidableEqNat as (
+                                                                            a0: unknown,
+                                                                            a1: unknown,
+                                                                        ) => boolean,
+                                                                        x_1_1.lastDamage,
+                                                                        x_2_1.lastDamage,
+                                                                    )
+                                                                if (_x_55) {
+                                                                    return (
+                                                                        x_1_1.message ===
+                                                                        x_2_1.message
+                                                                    )
+                                                                } else {
+                                                                    return _x_55
+                                                                }
+                                                            } else {
+                                                                return _x_53
+                                                            }
+                                                        } else {
+                                                            return _x_51
+                                                        }
+                                                    } else {
+                                                        return _x_49
+                                                    }
+                                                } else {
+                                                    return _x_48
+                                                }
+                                            } else {
+                                                return _x_47
+                                            }
+                                        } else {
+                                            return _x_46
+                                        }
+                                    } else {
+                                        return _x_45
+                                    }
+                                } else {
+                                    return _x_44
+                                }
+                            } else {
+                                return _x_43
+                            }
+                        } else {
+                            return _x_42
+                        }
+                    } else {
+                        return _x_41
+                    }
+                } else {
+                    return _x_40
+                }
+            } else {
+                return _x_39
+            }
+        } else {
+            return _x_38
+        }
+    } else {
+        return _x_37
+    }
+}
+
+/** Lean `Mythroads.Engine.instDecidableEqCombatStage`. */
+export function instDecidableEqCombatStage(x_1: CombatStage, y_2: CombatStage): boolean {
+    return CombatStage_ctorIdx(x_1) === CombatStage_ctorIdx(y_2)
+}
+
+/** Lean `Mythroads.Engine.instDecidableEqEncounterState.decEq`. */
+export function instDecidableEqEncounterState_decEq(
+    x_1: EncounterState,
+    x_2: EncounterState,
+): boolean {
+    const x_1_1 = x_1
+    const resolved_8 = x_1_1.resolved
+    const x_2_1 = x_2
+    const resolved_14 = x_2_1.resolved
+    const _x_15: boolean = x_1_1.playerId === x_2_1.playerId
+    if (_x_15) {
+        const _x_16: boolean = x_1_1.spaceId === x_2_1.spaceId
+        if (_x_16) {
+            const _x_17: boolean = Game_Encounter_instDecidableEqKind(x_1_1.kind, x_2_1.kind)
+            if (_x_17) {
+                const _x_18: boolean = Game_Encounter_instDecidableEqOutcome_decEq(
+                    x_1_1.outcome,
+                    x_2_1.outcome,
+                )
+                if (_x_18) {
+                    const _x_19: boolean = x_1_1.wheelIndex === x_2_1.wheelIndex
+                    if (_x_19) {
+                        const resolved_8_1 = resolved_8
+                        if (resolved_8_1) {
+                            return resolved_14
+                        } else {
+                            const resolved_14_1 = resolved_14
+                            if (resolved_14_1) {
+                                return resolved_8_1
+                            } else {
+                                return _x_19
+                            }
+                        }
+                    } else {
+                        return _x_19
+                    }
+                } else {
+                    return _x_18
+                }
+            } else {
+                return _x_17
+            }
+        } else {
+            return _x_16
+        }
+    } else {
+        return _x_15
+    }
+}
+
+/** Lean `Mythroads.Game.Inventory.instDecidableEqShopKind`. */
+export function Game_Inventory_instDecidableEqShopKind(
+    x_1: Game_Inventory_ShopKind,
+    y_2: Game_Inventory_ShopKind,
+): boolean {
+    return Game_Inventory_ShopKind_ctorIdx(x_1) === Game_Inventory_ShopKind_ctorIdx(y_2)
 }
 
 /** Lean `Mythroads.Engine.State.draw`. */
@@ -3760,6 +4133,7 @@ export function Battle_defeat(
     s: State,
     p: PlayerState,
     battle: CombatState,
+    logged: CombatState,
 ): Except<Error, Prod<State, Effect[]>> {
     const p_1 = p
     const id = p_1.id
@@ -3776,7 +4150,7 @@ export function Battle_defeat(
                     `${p_1.name} fell to ${enemy.name} and awoke at Hearthkeep, losing ${String(_y_2)} gold.`,
                 ),
                 snd: [
-                    { _: 'persistCombat' },
+                    { _: 'persistCombat', battle: logged, stage: { _: 'resolved' } },
                     { _: 'persistPlayer', id: id },
                     { _: 'persistRoom' },
                     { _: 'appendLog', name: 'combat.guard' },
@@ -3784,10 +4158,10 @@ export function Battle_defeat(
             },
         }
     }
-    const _x_27: number = 3
-    const scrutinee = _x_27 <= gold
+    const _x_28: number = 3
+    const scrutinee = _x_28 <= gold
     if (scrutinee) {
-        return _jp_1(_x_27)
+        return _jp_1(_x_28)
     } else {
         return _jp_1(gold)
     }
@@ -3980,14 +4354,6 @@ export function Encounters_summary(outcome: Game_Encounter_Outcome): string {
 /** Lean `Mythroads.Engine.itemById`. */
 export function itemById(id: string): Option<Game_Inventory_ItemDefinition> {
     return List_find_q__at__Mythroads_Engine_itemById_spec_0(id, Game_Inventory_itemDefinitions())
-}
-
-/** Lean `Mythroads.Game.Inventory.instDecidableEqShopKind`. */
-export function Game_Inventory_instDecidableEqShopKind(
-    x_1: Game_Inventory_ShopKind,
-    y_2: Game_Inventory_ShopKind,
-): boolean {
-    return Game_Inventory_ShopKind_ctorIdx(x_1) === Game_Inventory_ShopKind_ctorIdx(y_2)
 }
 
 /** Lean `Mythroads.Engine.Shop.buy._lam_0`. */
@@ -4343,17 +4709,6 @@ export function List_find_q__at__Mythroads_Engine_node_spec_0(
     }
 }
 
-/** Lean `Mythroads.Engine.Lobby.codeAlphabet`. */
-export function Lobby_codeAlphabet(): number[] {
-    return leanChars('ABCDEFGHJKLMNPQRSTUVWXYZ23456789')
-}
-
-/** Lean `Mythroads.Game.Random.drawBounded`. */
-export function Game_Random_drawBounded(state: number, bound: number): Game_Random_Draw {
-    const next: number = Game_Random_nextState(state)
-    return { value: natMod(next, bound), state: next }
-}
-
 /** Lean `List.find?._at_.Mythroads.Engine.Lobby.ownedBy.spec_0`. */
 export function List_find_q__at__Mythroads_Engine_Lobby_ownedBy_spec_0(
     actor: string,
@@ -4403,225 +4758,6 @@ export function List_find_q__at__Mythroads_Engine_Lobby_namedBy_spec_0(
     }
 }
 
-/** Lean `Mythroads.Engine.instDecidableEqSelection`. */
-export function instDecidableEqSelection(x_1: Selection, x_2: Selection): boolean {
-    return instDecidableEqSelection_decEq(x_1, x_2)
-}
-
-/** Lean `Option.instDecidableEq._redArg`. */
-export function Option_instDecidableEq__redArg(
-    inst: (a0: unknown, a1: unknown) => boolean,
-    a: Option<unknown>,
-    b: Option<unknown>,
-): boolean {
-    const a_1 = a
-    switch (a_1._) {
-        case 'none': {
-            const b_1 = b
-            switch (b_1._) {
-                case 'none': {
-                    return true
-                }
-                case 'some': {
-                    return false
-                }
-            }
-            throw new Error('non-exhaustive match on Option')
-        }
-        case 'some': {
-            const b_2 = b
-            switch (b_2._) {
-                case 'none': {
-                    return false
-                }
-                case 'some': {
-                    return inst(a_1.val, b_2.val)
-                }
-            }
-            throw new Error('non-exhaustive match on Option')
-        }
-    }
-    throw new Error('non-exhaustive match on Option')
-}
-
-/** Lean `Mythroads.Engine.instDecidableEqCombatState.decEq`. */
-export function instDecidableEqCombatState_decEq(x_1: CombatState, x_2: CombatState): boolean {
-    const x_1_1 = x_1
-    const x_2_1 = x_2
-    const _x_37: boolean = x_1_1.playerId === x_2_1.playerId
-    if (_x_37) {
-        const _x_38: boolean = x_1_1.spaceId === x_2_1.spaceId
-        if (_x_38) {
-            const _x_39: boolean = Game_Combat_instDecidableEqEnemy_decEq(x_1_1.enemy, x_2_1.enemy)
-            if (_x_39) {
-                const _x_40: boolean = x_1_1.enemyHp === x_2_1.enemyHp
-                if (_x_40) {
-                    const _x_41: boolean = x_1_1.enemyDefensePenalty === x_2_1.enemyDefensePenalty
-                    if (_x_41) {
-                        const _x_42: boolean = x_1_1.enemyMagicPenalty === x_2_1.enemyMagicPenalty
-                        if (_x_42) {
-                            const _x_43: boolean =
-                                x_1_1.enemyAthleticsPenalty === x_2_1.enemyAthleticsPenalty
-                            if (_x_43) {
-                                const _x_44: boolean =
-                                    x_1_1.enemyAgilityPenalty === x_2_1.enemyAgilityPenalty
-                                if (_x_44) {
-                                    const _x_45: boolean =
-                                        x_1_1.playerDefensePenalty === x_2_1.playerDefensePenalty
-                                    if (_x_45) {
-                                        const _x_46: boolean =
-                                            x_1_1.playerMagicPenalty === x_2_1.playerMagicPenalty
-                                        if (_x_46) {
-                                            const _x_47: boolean =
-                                                x_1_1.playerAthleticsPenalty ===
-                                                x_2_1.playerAthleticsPenalty
-                                            if (_x_47) {
-                                                const _x_48: boolean =
-                                                    x_1_1.playerAgilityPenalty ===
-                                                    x_2_1.playerAgilityPenalty
-                                                if (_x_48) {
-                                                    const _x_49: boolean =
-                                                        x_1_1.round === x_2_1.round
-                                                    if (_x_49) {
-                                                        const _x_51: boolean =
-                                                            Option_instDecidableEq__redArg(
-                                                                instDecidableEqString as (
-                                                                    a0: unknown,
-                                                                    a1: unknown,
-                                                                ) => boolean,
-                                                                x_1_1.lastAttack,
-                                                                x_2_1.lastAttack,
-                                                            )
-                                                        if (_x_51) {
-                                                            const _x_53: boolean =
-                                                                Option_instDecidableEq__redArg(
-                                                                    Game_Combat_instDecidableEqGuard as (
-                                                                        a0: unknown,
-                                                                        a1: unknown,
-                                                                    ) => boolean,
-                                                                    x_1_1.lastGuard,
-                                                                    x_2_1.lastGuard,
-                                                                )
-                                                            if (_x_53) {
-                                                                const _x_55: boolean =
-                                                                    Option_instDecidableEq__redArg(
-                                                                        instDecidableEqNat as (
-                                                                            a0: unknown,
-                                                                            a1: unknown,
-                                                                        ) => boolean,
-                                                                        x_1_1.lastDamage,
-                                                                        x_2_1.lastDamage,
-                                                                    )
-                                                                if (_x_55) {
-                                                                    return (
-                                                                        x_1_1.message ===
-                                                                        x_2_1.message
-                                                                    )
-                                                                } else {
-                                                                    return _x_55
-                                                                }
-                                                            } else {
-                                                                return _x_53
-                                                            }
-                                                        } else {
-                                                            return _x_51
-                                                        }
-                                                    } else {
-                                                        return _x_49
-                                                    }
-                                                } else {
-                                                    return _x_48
-                                                }
-                                            } else {
-                                                return _x_47
-                                            }
-                                        } else {
-                                            return _x_46
-                                        }
-                                    } else {
-                                        return _x_45
-                                    }
-                                } else {
-                                    return _x_44
-                                }
-                            } else {
-                                return _x_43
-                            }
-                        } else {
-                            return _x_42
-                        }
-                    } else {
-                        return _x_41
-                    }
-                } else {
-                    return _x_40
-                }
-            } else {
-                return _x_39
-            }
-        } else {
-            return _x_38
-        }
-    } else {
-        return _x_37
-    }
-}
-
-/** Lean `Mythroads.Engine.instDecidableEqCombatStage`. */
-export function instDecidableEqCombatStage(x_1: CombatStage, y_2: CombatStage): boolean {
-    return CombatStage_ctorIdx(x_1) === CombatStage_ctorIdx(y_2)
-}
-
-/** Lean `Mythroads.Engine.instDecidableEqEncounterState.decEq`. */
-export function instDecidableEqEncounterState_decEq(
-    x_1: EncounterState,
-    x_2: EncounterState,
-): boolean {
-    const x_1_1 = x_1
-    const resolved_8 = x_1_1.resolved
-    const x_2_1 = x_2
-    const resolved_14 = x_2_1.resolved
-    const _x_15: boolean = x_1_1.playerId === x_2_1.playerId
-    if (_x_15) {
-        const _x_16: boolean = x_1_1.spaceId === x_2_1.spaceId
-        if (_x_16) {
-            const _x_17: boolean = Game_Encounter_instDecidableEqKind(x_1_1.kind, x_2_1.kind)
-            if (_x_17) {
-                const _x_18: boolean = Game_Encounter_instDecidableEqOutcome_decEq(
-                    x_1_1.outcome,
-                    x_2_1.outcome,
-                )
-                if (_x_18) {
-                    const _x_19: boolean = x_1_1.wheelIndex === x_2_1.wheelIndex
-                    if (_x_19) {
-                        const resolved_8_1 = resolved_8
-                        if (resolved_8_1) {
-                            return resolved_14
-                        } else {
-                            const resolved_14_1 = resolved_14
-                            if (resolved_14_1) {
-                                return resolved_8_1
-                            } else {
-                                return _x_19
-                            }
-                        }
-                    } else {
-                        return _x_19
-                    }
-                } else {
-                    return _x_18
-                }
-            } else {
-                return _x_17
-            }
-        } else {
-            return _x_16
-        }
-    } else {
-        return _x_15
-    }
-}
-
 /** Lean `Mythroads.Game.Player.startingStats`. */
 export function Game_Player_startingStats(): Game_Player_StartingStats {
     const _x_2: number = 10
@@ -4649,14 +4785,178 @@ export function List_reverseAux__redArg(x_1: unknown[], x_2: unknown[]): unknown
     }
 }
 
-/** Lean `Mythroads.Game.World.canTraverse`. */
-export function Game_World_canTraverse(origin: number, destination: number): boolean {
-    return Game_World_BoardGraph_canTraverse(Game_World_boardGraph(), origin, destination)
+/** Lean `Mythroads.Engine.instDecidableEqSelection.decEq`. */
+export function instDecidableEqSelection_decEq(x_1: Selection, x_2: Selection): boolean {
+    const x_1_1 = x_1
+    const x_2_1 = x_2
+    const _x_9: boolean = x_1_1.playerId === x_2_1.playerId
+    if (_x_9) {
+        const _x_10: boolean = x_1_1.destination === x_2_1.destination
+        if (_x_10) {
+            return instDecidableEqList__redArg(
+                instDecidableEqNat as (a0: unknown, a1: unknown) => boolean,
+                x_1_1.path,
+                x_2_1.path,
+            )
+        } else {
+            return _x_10
+        }
+    } else {
+        return _x_9
+    }
+}
+
+/** Lean `Mythroads.Game.Combat.instDecidableEqEnemy.decEq`. */
+export function Game_Combat_instDecidableEqEnemy_decEq(
+    x_1: Game_Combat_Enemy,
+    x_2: Game_Combat_Enemy,
+): boolean {
+    const x_1_1 = x_1
+    const x_2_1 = x_2
+    const _x_21: boolean = x_1_1.name === x_2_1.name
+    if (_x_21) {
+        const _x_22: boolean = Game_Magic_instDecidableEqElement(x_1_1.element, x_2_1.element)
+        if (_x_22) {
+            const _x_23: boolean = x_1_1.hp === x_2_1.hp
+            if (_x_23) {
+                const _x_24: boolean = x_1_1.attack === x_2_1.attack
+                if (_x_24) {
+                    const _x_25: boolean = x_1_1.defense === x_2_1.defense
+                    if (_x_25) {
+                        const _x_26: boolean = x_1_1.magic === x_2_1.magic
+                        if (_x_26) {
+                            const _x_27: boolean = x_1_1.athletics === x_2_1.athletics
+                            if (_x_27) {
+                                const _x_28: boolean = x_1_1.agility === x_2_1.agility
+                                if (_x_28) {
+                                    return x_1_1.reward === x_2_1.reward
+                                } else {
+                                    return _x_28
+                                }
+                            } else {
+                                return _x_27
+                            }
+                        } else {
+                            return _x_26
+                        }
+                    } else {
+                        return _x_25
+                    }
+                } else {
+                    return _x_24
+                }
+            } else {
+                return _x_23
+            }
+        } else {
+            return _x_22
+        }
+    } else {
+        return _x_21
+    }
+}
+
+/** Lean `instDecidableEqString`. */
+export function instDecidableEqString(s: string, s_1: string): boolean {
+    return s === s_1
 }
 
 /** Lean `instDecidableEqNat`. */
 export function instDecidableEqNat(n: number, m: number): boolean {
     return n === m
+}
+
+/** Lean `Mythroads.Engine.CombatStage.ctorIdx`. */
+export function CombatStage_ctorIdx(x: CombatStage): number {
+    const x_1 = x
+    switch (x_1._) {
+        case 'attackerChoice': {
+            return 0
+        }
+        case 'defenderChoice': {
+            return 1
+        }
+        case 'resolved': {
+            return 2
+        }
+    }
+    throw new Error('non-exhaustive match on Mythroads.Engine.CombatStage')
+}
+
+/** Lean `Mythroads.Game.Encounter.instDecidableEqKind`. */
+export function Game_Encounter_instDecidableEqKind(
+    x_1: Game_Encounter_Kind,
+    y_2: Game_Encounter_Kind,
+): boolean {
+    return Game_Encounter_Kind_ctorIdx(x_1) === Game_Encounter_Kind_ctorIdx(y_2)
+}
+
+/** Lean `Mythroads.Game.Encounter.instDecidableEqOutcome.decEq`. */
+export function Game_Encounter_instDecidableEqOutcome_decEq(
+    x_1: Game_Encounter_Outcome,
+    x_2: Game_Encounter_Outcome,
+): boolean {
+    const x_1_1 = x_1
+    const x_2_1 = x_2
+    const _x_17: boolean = x_1_1.id === x_2_1.id
+    if (_x_17) {
+        const _x_18: boolean = Game_Encounter_instDecidableEqKind(x_1_1.kind, x_2_1.kind)
+        if (_x_18) {
+            const _x_19: boolean = x_1_1.title === x_2_1.title
+            if (_x_19) {
+                const _x_20: boolean = x_1_1.description === x_2_1.description
+                if (_x_20) {
+                    const _x_21: boolean = x_1_1.goldDelta === x_2_1.goldDelta
+                    if (_x_21) {
+                        const _x_22: boolean = x_1_1.hpDelta === x_2_1.hpDelta
+                        if (_x_22) {
+                            return x_1_1.weight === x_2_1.weight
+                        } else {
+                            return _x_22
+                        }
+                    } else {
+                        return _x_21
+                    }
+                } else {
+                    return _x_20
+                }
+            } else {
+                return _x_19
+            }
+        } else {
+            return _x_18
+        }
+    } else {
+        return _x_17
+    }
+}
+
+/** Lean `Mythroads.Game.Inventory.ShopKind.ctorIdx`. */
+export function Game_Inventory_ShopKind_ctorIdx(x: Game_Inventory_ShopKind): number {
+    const x_1 = x
+    switch (x_1._) {
+        case 'armoury': {
+            return 0
+        }
+        case 'jeweller': {
+            return 1
+        }
+        case 'weapons': {
+            return 2
+        }
+        case 'items': {
+            return 3
+        }
+        case 'magic': {
+            return 4
+        }
+    }
+    throw new Error('non-exhaustive match on Mythroads.Game.Inventory.ShopKind')
+}
+
+/** Lean `Mythroads.Game.World.canTraverse`. */
+export function Game_World_canTraverse(origin: number, destination: number): boolean {
+    return Game_World_BoardGraph_canTraverse(Game_World_boardGraph(), origin, destination)
 }
 
 /** Lean `Mythroads.Engine.Movement.routeTail`. */
@@ -5322,29 +5622,6 @@ export function List_find_q__at__Mythroads_Engine_itemById_spec_0(
     }
 }
 
-/** Lean `Mythroads.Game.Inventory.ShopKind.ctorIdx`. */
-export function Game_Inventory_ShopKind_ctorIdx(x: Game_Inventory_ShopKind): number {
-    const x_1 = x
-    switch (x_1._) {
-        case 'armoury': {
-            return 0
-        }
-        case 'jeweller': {
-            return 1
-        }
-        case 'weapons': {
-            return 2
-        }
-        case 'items': {
-            return 3
-        }
-        case 'magic': {
-            return 4
-        }
-    }
-    throw new Error('non-exhaustive match on Mythroads.Game.Inventory.ShopKind')
-}
-
 /** Lean `Mythroads.Engine.PlayerState.spent`. */
 export function PlayerState_spent(p: PlayerState, amount: number): PlayerState {
     const p_1 = p
@@ -5503,150 +5780,55 @@ export function _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
     return { id: id, label: label, kind: kind, point: { x: x, z: z }, landmark: { _: 'none' } }
 }
 
-/** Lean `Mythroads.Game.Random.nextState`. */
-export function Game_Random_nextState(state: number): number {
-    return natMod(state * 48271, 2147483647)
-}
-
-/** Lean `Mythroads.Engine.instDecidableEqSelection.decEq`. */
-export function instDecidableEqSelection_decEq(x_1: Selection, x_2: Selection): boolean {
-    const x_1_1 = x_1
-    const x_2_1 = x_2
-    const _x_9: boolean = x_1_1.playerId === x_2_1.playerId
-    if (_x_9) {
-        const _x_10: boolean = x_1_1.destination === x_2_1.destination
-        if (_x_10) {
-            return instDecidableEqList__redArg(
-                instDecidableEqNat as (a0: unknown, a1: unknown) => boolean,
-                x_1_1.path,
-                x_2_1.path,
-            )
-        } else {
-            return _x_10
-        }
-    } else {
-        return _x_9
-    }
-}
-
-/** Lean `Mythroads.Game.Combat.instDecidableEqEnemy.decEq`. */
-export function Game_Combat_instDecidableEqEnemy_decEq(
-    x_1: Game_Combat_Enemy,
-    x_2: Game_Combat_Enemy,
+/** Lean `instDecidableEqList._redArg`. */
+export function instDecidableEqList__redArg(
+    inst_1: (a0: unknown, a1: unknown) => boolean,
+    xs: unknown[],
+    ys: unknown[],
 ): boolean {
-    const x_1_1 = x_1
-    const x_2_1 = x_2
-    const _x_21: boolean = x_1_1.name === x_2_1.name
-    if (_x_21) {
-        const _x_22: boolean = Game_Magic_instDecidableEqElement(x_1_1.element, x_2_1.element)
-        if (_x_22) {
-            const _x_23: boolean = x_1_1.hp === x_2_1.hp
-            if (_x_23) {
-                const _x_24: boolean = x_1_1.attack === x_2_1.attack
-                if (_x_24) {
-                    const _x_25: boolean = x_1_1.defense === x_2_1.defense
-                    if (_x_25) {
-                        const _x_26: boolean = x_1_1.magic === x_2_1.magic
-                        if (_x_26) {
-                            const _x_27: boolean = x_1_1.athletics === x_2_1.athletics
-                            if (_x_27) {
-                                const _x_28: boolean = x_1_1.agility === x_2_1.agility
-                                if (_x_28) {
-                                    return x_1_1.reward === x_2_1.reward
-                                } else {
-                                    return _x_28
-                                }
-                            } else {
-                                return _x_27
-                            }
-                        } else {
-                            return _x_26
-                        }
-                    } else {
-                        return _x_25
-                    }
-                } else {
-                    return _x_24
-                }
-            } else {
-                return _x_23
-            }
+    const xs_1 = xs
+    if (xs_1.length === 0) {
+        const ys_1 = ys
+        if (ys_1.length === 0) {
+            return true
         } else {
-            return _x_22
+            return false
         }
     } else {
-        return _x_21
+        const ys_2 = ys
+        if (ys_2.length === 0) {
+            return false
+        } else {
+            const _x_12: boolean = inst_1(xs_1[0], ys_2[0])
+            if (_x_12) {
+                return List_hasDecEq__redArg(inst_1, xs_1.slice(1), ys_2.slice(1))
+            } else {
+                return _x_12
+            }
+        }
     }
 }
 
-/** Lean `instDecidableEqString`. */
-export function instDecidableEqString(s: string, s_1: string): boolean {
-    return s === s_1
+/** Lean `Mythroads.Game.Magic.instDecidableEqElement`. */
+export function Game_Magic_instDecidableEqElement(
+    x_1: Game_Magic_Element,
+    y_2: Game_Magic_Element,
+): boolean {
+    return Game_Magic_Element_ctorIdx(x_1) === Game_Magic_Element_ctorIdx(y_2)
 }
 
-/** Lean `Mythroads.Engine.CombatStage.ctorIdx`. */
-export function CombatStage_ctorIdx(x: CombatStage): number {
+/** Lean `Mythroads.Game.Encounter.Kind.ctorIdx`. */
+export function Game_Encounter_Kind_ctorIdx(x: Game_Encounter_Kind): number {
     const x_1 = x
     switch (x_1._) {
-        case 'attackerChoice': {
+        case 'combat': {
             return 0
         }
-        case 'defenderChoice': {
+        case 'event': {
             return 1
         }
-        case 'resolved': {
-            return 2
-        }
     }
-    throw new Error('non-exhaustive match on Mythroads.Engine.CombatStage')
-}
-
-/** Lean `Mythroads.Game.Encounter.instDecidableEqKind`. */
-export function Game_Encounter_instDecidableEqKind(
-    x_1: Game_Encounter_Kind,
-    y_2: Game_Encounter_Kind,
-): boolean {
-    return Game_Encounter_Kind_ctorIdx(x_1) === Game_Encounter_Kind_ctorIdx(y_2)
-}
-
-/** Lean `Mythroads.Game.Encounter.instDecidableEqOutcome.decEq`. */
-export function Game_Encounter_instDecidableEqOutcome_decEq(
-    x_1: Game_Encounter_Outcome,
-    x_2: Game_Encounter_Outcome,
-): boolean {
-    const x_1_1 = x_1
-    const x_2_1 = x_2
-    const _x_17: boolean = x_1_1.id === x_2_1.id
-    if (_x_17) {
-        const _x_18: boolean = Game_Encounter_instDecidableEqKind(x_1_1.kind, x_2_1.kind)
-        if (_x_18) {
-            const _x_19: boolean = x_1_1.title === x_2_1.title
-            if (_x_19) {
-                const _x_20: boolean = x_1_1.description === x_2_1.description
-                if (_x_20) {
-                    const _x_21: boolean = x_1_1.goldDelta === x_2_1.goldDelta
-                    if (_x_21) {
-                        const _x_22: boolean = x_1_1.hpDelta === x_2_1.hpDelta
-                        if (_x_22) {
-                            return x_1_1.weight === x_2_1.weight
-                        } else {
-                            return _x_22
-                        }
-                    } else {
-                        return _x_21
-                    }
-                } else {
-                    return _x_20
-                }
-            } else {
-                return _x_19
-            }
-        } else {
-            return _x_18
-        }
-    } else {
-        return _x_17
-    }
+    throw new Error('non-exhaustive match on Mythroads.Game.Encounter.Kind')
 }
 
 /** Lean `Mythroads.Game.World.boardGraph`. */
@@ -5718,38 +5900,36 @@ export function Landing_startCombat(
     const name = enemy.name
     const _x_1: number = 0
     const _x_3: Option<string> = { _: 'none' }
+    const battle: CombatState = {
+        playerId: p_1.id,
+        spaceId: spaceId,
+        enemy: enemy,
+        enemyHp: enemy.hp,
+        enemyDefensePenalty: _x_1,
+        enemyMagicPenalty: _x_1,
+        enemyAthleticsPenalty: _x_1,
+        enemyAgilityPenalty: _x_1,
+        playerDefensePenalty: _x_1,
+        playerMagicPenalty: _x_1,
+        playerAthleticsPenalty: _x_1,
+        playerAgilityPenalty: _x_1,
+        round: 1,
+        lastAttack: _x_3,
+        lastGuard: _x_3,
+        lastDamage: _x_3,
+        message: `Choose how to attack the ${name}.`,
+    }
+    const _x_8: CombatStage = { _: 'attackerChoice' }
     return {
         _: 'ok',
         a: {
             fst: State_withPhase(
                 s,
-                {
-                    _: 'combat',
-                    battle: {
-                        playerId: p_1.id,
-                        spaceId: spaceId,
-                        enemy: enemy,
-                        enemyHp: enemy.hp,
-                        enemyDefensePenalty: _x_1,
-                        enemyMagicPenalty: _x_1,
-                        enemyAthleticsPenalty: _x_1,
-                        enemyAgilityPenalty: _x_1,
-                        playerDefensePenalty: _x_1,
-                        playerMagicPenalty: _x_1,
-                        playerAthleticsPenalty: _x_1,
-                        playerAgilityPenalty: _x_1,
-                        round: 1,
-                        lastAttack: _x_3,
-                        lastGuard: _x_3,
-                        lastDamage: _x_3,
-                        message: `Choose how to attack the ${name}.`,
-                    },
-                    stage: { _: 'attackerChoice' },
-                },
+                { _: 'combat', battle: battle, stage: _x_8 },
                 `${p_1.name} faces a ${name}!`,
             ),
             snd: [
-                { _: 'persistCombat' },
+                { _: 'persistCombat', battle: battle, stage: _x_8 },
                 { _: 'persistRoom' },
                 { _: 'appendLog', name: 'landing.combat' },
             ],
@@ -5767,26 +5947,24 @@ export function Landing_startEvent(
     const State_draw_1 = State_draw(s, Game_Encounter_totalWeight(_x_1))
     const p_1 = p
     const outcome: Game_Encounter_Outcome = Landing_pickEncounter(_x_1, State_draw_1.fst as number)
+    const revealed: EncounterState = {
+        playerId: p_1.id,
+        spaceId: spaceId,
+        kind: _x_1,
+        outcome: outcome,
+        wheelIndex: Landing_wheelIndexOf(_x_1, outcome),
+        resolved: false,
+    }
     return {
         _: 'ok',
         a: {
             fst: State_withPhase(
                 State_draw_1.snd as State,
-                {
-                    _: 'encounter',
-                    drawn: {
-                        playerId: p_1.id,
-                        spaceId: spaceId,
-                        kind: _x_1,
-                        outcome: outcome,
-                        wheelIndex: Landing_wheelIndexOf(_x_1, outcome),
-                        resolved: false,
-                    },
-                },
+                { _: 'encounter', drawn: revealed },
                 `${p_1.name} spins the event wheel!`,
             ),
             snd: [
-                { _: 'persistEncounter' },
+                { _: 'persistEncounter', drawn: revealed },
                 { _: 'persistRoom' },
                 { _: 'appendLog', name: 'landing.event' },
             ],
@@ -6431,55 +6609,59 @@ export function _private_Init_Data_List_Impl_0_List_zipWithTR_go__redArg(
     }
 }
 
-/** Lean `instDecidableEqList._redArg`. */
-export function instDecidableEqList__redArg(
+/** Lean `List.hasDecEq._redArg`. */
+export function List_hasDecEq__redArg(
     inst_1: (a0: unknown, a1: unknown) => boolean,
-    xs: unknown[],
-    ys: unknown[],
+    x_2: unknown[],
+    x_3: unknown[],
 ): boolean {
-    const xs_1 = xs
-    if (xs_1.length === 0) {
-        const ys_1 = ys
-        if (ys_1.length === 0) {
+    const x_2_1 = x_2
+    if (x_2_1.length === 0) {
+        const x_3_1 = x_3
+        if (x_3_1.length === 0) {
             return true
         } else {
             return false
         }
     } else {
-        const ys_2 = ys
-        if (ys_2.length === 0) {
-            return false
+        const _x_10: boolean = false
+        const x_3_2 = x_3
+        if (x_3_2.length === 0) {
+            return _x_10
         } else {
-            const _x_12: boolean = inst_1(xs_1[0], ys_2[0])
-            if (_x_12) {
-                return List_hasDecEq__redArg(inst_1, xs_1.slice(1), ys_2.slice(1))
+            const _x_13: boolean = List_hasDecEq__redArg(inst_1, x_2_1.slice(1), x_3_2.slice(1))
+            const inst_1_1 = inst_1(x_2_1[0], x_3_2[0])
+            if (inst_1_1) {
+                if (_x_13) {
+                    return _x_13
+                } else {
+                    return _x_10
+                }
             } else {
-                return _x_12
+                return _x_10
             }
         }
     }
 }
 
-/** Lean `Mythroads.Game.Magic.instDecidableEqElement`. */
-export function Game_Magic_instDecidableEqElement(
-    x_1: Game_Magic_Element,
-    y_2: Game_Magic_Element,
-): boolean {
-    return Game_Magic_Element_ctorIdx(x_1) === Game_Magic_Element_ctorIdx(y_2)
-}
-
-/** Lean `Mythroads.Game.Encounter.Kind.ctorIdx`. */
-export function Game_Encounter_Kind_ctorIdx(x: Game_Encounter_Kind): number {
+/** Lean `Mythroads.Game.Magic.Element.ctorIdx`. */
+export function Game_Magic_Element_ctorIdx(x: Game_Magic_Element): number {
     const x_1 = x
     switch (x_1._) {
-        case 'combat': {
+        case 'fire': {
             return 0
         }
-        case 'event': {
+        case 'water': {
             return 1
         }
+        case 'wind': {
+            return 2
+        }
+        case 'earth': {
+            return 3
+        }
     }
-    throw new Error('non-exhaustive match on Mythroads.Game.Encounter.Kind')
+    throw new Error('non-exhaustive match on Mythroads.Game.Magic.Element')
 }
 
 /** Lean `Mythroads.Game.World.roads`. */
@@ -6726,61 +6908,6 @@ export function Game_Magic_weakAgainst(x_1: Game_Magic_Element): Game_Magic_Elem
         }
         case 'earth': {
             return { _: 'fire' }
-        }
-    }
-    throw new Error('non-exhaustive match on Mythroads.Game.Magic.Element')
-}
-
-/** Lean `List.hasDecEq._redArg`. */
-export function List_hasDecEq__redArg(
-    inst_1: (a0: unknown, a1: unknown) => boolean,
-    x_2: unknown[],
-    x_3: unknown[],
-): boolean {
-    const x_2_1 = x_2
-    if (x_2_1.length === 0) {
-        const x_3_1 = x_3
-        if (x_3_1.length === 0) {
-            return true
-        } else {
-            return false
-        }
-    } else {
-        const _x_10: boolean = false
-        const x_3_2 = x_3
-        if (x_3_2.length === 0) {
-            return _x_10
-        } else {
-            const _x_13: boolean = List_hasDecEq__redArg(inst_1, x_2_1.slice(1), x_3_2.slice(1))
-            const inst_1_1 = inst_1(x_2_1[0], x_3_2[0])
-            if (inst_1_1) {
-                if (_x_13) {
-                    return _x_13
-                } else {
-                    return _x_10
-                }
-            } else {
-                return _x_10
-            }
-        }
-    }
-}
-
-/** Lean `Mythroads.Game.Magic.Element.ctorIdx`. */
-export function Game_Magic_Element_ctorIdx(x: Game_Magic_Element): number {
-    const x_1 = x
-    switch (x_1._) {
-        case 'fire': {
-            return 0
-        }
-        case 'water': {
-            return 1
-        }
-        case 'wind': {
-            return 2
-        }
-        case 'earth': {
-            return 3
         }
     }
     throw new Error('non-exhaustive match on Mythroads.Game.Magic.Element')

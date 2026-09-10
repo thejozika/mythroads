@@ -83,21 +83,20 @@ def select (s : State) (p : PlayerState) (moves : Nat) (selection : Option Selec
     (destination : NodeId) : Outcome :=
   match selection with
   | none =>
-      if destination ≠ p.position then .error .illegalMove
+      if destination ≠ p.position then .error .routeNotStarted
       else
-        .ok (s.withPhase (.moving moves (some { playerId := p.id, destination := p.position,
-                                                path := [] }))
-              (planningMessage p.position moves),
-             [.persistSelection, .persistRoom, .appendLog "movement.select"])
+        let opened : Selection := { playerId := p.id, destination := p.position, path := [] }
+        .ok (s.withPhase (.moving moves (some opened)) (planningMessage p.position moves),
+             [.persistSelection opened, .persistRoom, .appendLog "movement.select"])
   | some current =>
       match previewRouteStep p.position current.path destination moves with
-      | none => .error .illegalMove
+      | none => .error .roadUnavailable
       | some path =>
           let previewed := routeHead p.position path
-          .ok (s.withPhase (.moving moves (some { playerId := p.id, destination := previewed,
-                                                  path }))
+          let planned : Selection := { playerId := p.id, destination := previewed, path }
+          .ok (s.withPhase (.moving moves (some planned))
                 (planningMessage previewed (moves - path.length)),
-               [.persistSelection, .persistRoom, .appendLog "movement.select"])
+               [.persistSelection planned, .persistRoom, .appendLog "movement.select"])
 
 /-- `movement.cancel`: throw the planned route away and keep the roll. -/
 def cancel (s : State) (moves : Nat) : Outcome :=
@@ -114,12 +113,13 @@ resolve.
 -/
 def stepMove (s : State) (p : PlayerState) (moves : Nat) (selection : Option Selection)
     (destination : NodeId) : Outcome :=
-  match selection with
-  | none => .error .illegalMove
+  if moves = 0 then .error .noMovementLeft
+  else match selection with
+  | none => .error .routeUnavailable
   | some current =>
-      if moves = 0 ∨ current.destination ≠ destination ∨ current.path.length ≠ moves
+      if current.destination ≠ destination ∨ current.path.length ≠ moves
           ∨ !routeValid p.position current.path then
-        .error .illegalMove
+        .error .routeUnavailable
       else
         match Landing.resolveLanding (s.mapPlayer p.id fun q =>
             { q with position := destination,

@@ -99,7 +99,7 @@ def attack (s : State) (p : PlayerState) (battle : CombatState) (choice : Strike
            else choice.title ++ " lowered the enemy's " ++ hex.stat.label ++ ".")
         .ok (drawn.2.withPhase (.combat logged .defenderChoice)
               (battle.enemy.name ++ " prepares a counterattack. Choose a guard."),
-             [.persistCombat, .persistRoom, .appendLog "combat.attack"])
+             [.persistCombat logged .defenderChoice, .persistRoom, .appendLog "combat.attack"])
     | none =>
         let result := strikeDamage choice guard (playerStats p battle) (enemyStats battle)
           (some battle.enemy.element) 35
@@ -113,21 +113,27 @@ def attack (s : State) (p : PlayerState) (battle : CombatState) (choice : Strike
                  |>.withPhase (.combat logged .resolved) "").advanceTurn
                 (p.name ++ " defeated " ++ battle.enemy.name ++ " and won " ++
                   toString battle.enemy.reward ++ " gold."),
-               [.persistCombat, .persistPlayer p.id, .persistRoom, .appendLog "combat.attack"])
+               [.persistCombat logged .resolved, .persistPlayer p.id, .persistRoom,
+                .appendLog "combat.attack"])
         else
           .ok (hit.2.withPhase (.combat logged .defenderChoice)
                 (battle.enemy.name ++ " prepares a counterattack. Choose a guard."),
-               [.persistCombat, .persistRoom, .appendLog "combat.attack"])
+               [.persistCombat logged .defenderChoice, .persistRoom,
+                .appendLog "combat.attack"])
 
-/-- Defeat: full health, up to three gold lost, back to Hearthkeep, and the turn passes. -/
-def defeat (s : State) (p : PlayerState) (battle : CombatState) : Outcome :=
+/-- Defeat: full health, up to three gold lost, back to Hearthkeep, and the turn passes.
+
+`logged` is the battle row as the closing exchange left it, which the interpreter must
+still write even though the state has already moved on to the next hero. -/
+def defeat (s : State) (p : PlayerState) (battle logged : CombatState) : Outcome :=
   let loss := min 3 p.gold
   .ok ((s.mapPlayer p.id fun q =>
           { q with hp := q.maxHp, gold := q.gold - loss, position := 0,
                    previousPosition := none }).advanceTurn
         (p.name ++ " fell to " ++ battle.enemy.name ++ " and awoke at Hearthkeep, losing " ++
           toString loss ++ " gold."),
-       [.persistCombat, .persistPlayer p.id, .persistRoom, .appendLog "combat.guard"])
+       [.persistCombat logged .resolved, .persistPlayer p.id, .persistRoom,
+        .appendLog "combat.guard"])
 
 /--
 `combat.guard`: the enemy replies and the hero either survives into the next round or
@@ -148,7 +154,7 @@ def guard (s : State) (p : PlayerState) (battle : CombatState) (stance : Combat.
       .ok (drawn.2.withPhase (.combat logged .attackerChoice)
             (if blocked then p.name ++ " resisted the hex. Choose another attack."
              else p.name ++ " was weakened. Choose another attack."),
-           [.persistCombat, .persistRoom, .appendLog "combat.guard"])
+           [.persistCombat logged .attackerChoice, .persistRoom, .appendLog "combat.guard"])
   | none =>
       let result := strikeDamage choice stance (enemyStats battle) (playerStats p battle) none
         (equippedWardPower p)
@@ -158,11 +164,12 @@ def guard (s : State) (p : PlayerState) (battle : CombatState) (stance : Combat.
       let logged := echo { battle with round := battle.round + 1 } choice stance damage
         (blowMessage (battle.enemy.name ++ "'s ") choice stance result damage)
       if hp = 0 then
-        defeat (hit.2.withPhase (.combat logged .resolved) "") p battle
+        defeat (hit.2.withPhase (.combat logged .resolved) "") p battle logged
       else
         .ok ((hit.2.mapPlayer p.id fun q => q.damaged damage).withPhase
               (.combat logged .attackerChoice)
               (p.name ++ " weathered the counterattack. Choose another attack."),
-             [.persistCombat, .persistPlayer p.id, .persistRoom, .appendLog "combat.guard"])
+             [.persistCombat logged .attackerChoice, .persistPlayer p.id, .persistRoom,
+              .appendLog "combat.guard"])
 
 end Mythroads.Engine.Battle

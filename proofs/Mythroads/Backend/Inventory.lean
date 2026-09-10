@@ -21,46 +21,6 @@ def equipmentSlotType : TsType :=
 private def inventoryQuery : Expr :=
   Query.indexedRead .playerItems .playerItemsByPlayerId [id "playerId"] (.take 40)
 
-def equipItemFunction : Function where
-  name := "equipItem"
-  parameters := [
-    { name := "ctx", type := .named "MutationCtx" },
-    { name := "args", type := .obj [
-        ("playerId", .id .players),
-        ("playerItemId", .id .playerItems),
-        ("slot", .named "EquipmentSlot")
-      ] }
-  ]
-  returns := .promise .void
-  body := [
-    .constDecl "playerId" (prop (id "args") "playerId"),
-    .constDecl "playerItemId" (prop (id "args") "playerItemId"),
-    .constDecl "slot" (prop (id "args") "slot"),
-    .expression (.await (call (id "requirePlayerOwner") [id "ctx", id "playerId"])),
-    .constDecl "owned" (Query.getIn .playerItems (id "playerItemId")),
-    .constDecl "item" (.conditional (id "owned")
-      (call (id "getItem") [prop (id "owned") "itemId"]) .null),
-    .ifThen
-      (.binary
-        (.binary
-          (.binary (.prefix "!" (id "owned")) "||"
-            (.binary (prop (id "owned") "playerId") "!==" (id "playerId")))
-          "||" (.prefix "!" (id "item")))
-        "||" (.prefix "!" (call (prop (prop (id "item") "slots") "includes") [id "slot"])))
-      [.throw (.new "ConvexError" [.string "That item cannot be equipped there."])],
-    .constDecl "inventory" inventoryQuery,
-    .constDecl "occupied"
-      (call (prop (id "inventory") "find")
-        [.arrow ["candidate"]
-          (.binary (prop (id "candidate") "equippedSlot") "===" (id "slot"))]),
-    .ifThen (id "occupied") [
-      .expression (Query.patchIn .playerItems (prop (id "occupied") "_id")
-        (.object [("equippedSlot", .undefined)]))
-    ],
-    .expression (Query.patchIn .playerItems (id "playerItemId")
-      (.object [("equippedSlot", id "slot")]))
-  ]
-
 def inventoryQueryDefinition : EndpointDefinition where
   name := "inventoryQueryDefinition"
   arguments := [("playerId", (Ty.id .players).validator)]
@@ -87,21 +47,15 @@ def inventoryQueryDefinition : EndpointDefinition where
     ]
   }
 
-/-- The owner-only inventory read and the equip transaction. -/
+/-- The owner-only inventory read. Equipping is a rule now, and lives in the engine. -/
 def module : Module where
   provenance := some "proofs/Mythroads/Backend/Inventory.lean"
   imports := [
     { source := "convex/values", bindings := [{ name := "ConvexError" }, { name := "v" }] },
-    { source := "../../shared/item.system", bindings := [{ name := "getItem" }] },
     { source := "../_generated/dataModel", bindings := [{ name := "Id", isType := true }] },
-    { source := "../_generated/server", bindings := [{ name := "MutationCtx", isType := true }, { name := "QueryCtx", isType := true }] },
-    { source := "../auth/authorization", bindings := [{ name := "requirePlayerOwner" }] },
+    { source := "../_generated/server", bindings := [{ name := "QueryCtx", isType := true }] },
     { source := "../schema", «default» := "schema" }
   ]
-  items := [
-    .endpoint inventoryQueryDefinition,
-    .typeAlias "EquipmentSlot" equipmentSlotType,
-    .function equipItemFunction
-  ]
+  items := [.endpoint inventoryQueryDefinition]
 
 end Mythroads.Backend.Inventory

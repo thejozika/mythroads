@@ -33,6 +33,7 @@ def quote (value : String) : String :=
 
 /-- Lays out a TypeScript type. Types never break, so this is a `Doc.text` of one line. -/
 partial def typeDoc : TsType → Doc
+  | .inferred => Doc.empty
   | .void => .text "void"
   | .boolean => .text "boolean"
   | .number => .text "number"
@@ -85,12 +86,14 @@ partial def exprDoc : Expr → Doc
   | .object fields =>
       .concat [.text "{ ",
         Doc.joinWith ", " (fields.map fun (name, value) =>
-          .concat [.text (name ++ ": "), exprDoc value]),
+          if name == "..." then .concat [.text "...", exprDoc value]
+          else .concat [.text (name ++ ": "), exprDoc value]),
         .text " }"]
   | .shorthand names => .text ("{ " ++ join ", " names ++ " }")
   | .array values => .concat [.text "[", Doc.joinWith ", " (values.map exprDoc), .text "]"]
   | .spread value => .concat [.text "...", exprDoc value]
   | .asConst value => .concat [exprDoc value, .text " as const"]
+  | .cast value type => .concat [.text "(", exprDoc value, .text " as ", typeDoc type, .text ")"]
 
 /-- Renders a TypeScript expression as source text. -/
 def emitExpr (value : Expr) : String := Doc.render (exprDoc value)
@@ -146,7 +149,11 @@ def functionDoc (function : Function) : Doc :=
     .text ((if function.isExported then "export " else "") ++
       (if function.isAsync then "async " else "") ++ "function " ++ function.name ++ "("),
     Doc.joinWith ", " (function.parameters.map parameterDoc),
-    .text "): ", typeDoc function.returns, .text " ", statementsBlock function.body, .text "\n"]
+    .text ")",
+    match function.returns with
+    | .inferred => Doc.empty
+    | type => .concat [.text ": ", typeDoc type],
+    .text " ", statementsBlock function.body, .text "\n"]
 
 /-- Renders a Lean-authored `Function` syntax tree as executable TypeScript source. -/
 def emitFunction (function : Function) : String := Doc.render (functionDoc function)

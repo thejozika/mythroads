@@ -119,9 +119,10 @@ theorem buy_only_in_shop (ph : Phase) (itemId : Mythroads.ItemId)
   | shop kind => exact ⟨kind, rfl⟩
   | _ => simp [permitted] at h
 
-/-- `game.start` is accepted only in the lobby. -/
-theorem start_only_in_lobby (ph : Phase) (h : permitted ph .gameStart = true) : ph = .lobby := by
-  cases ph <;> first | rfl | simp [permitted] at h
+/-- Outside the lobby `game.start` changes nothing: a resent start is an idempotent no-op. -/
+theorem start_outside_lobby_is_noop {s : State} (h : s.phase ≠ Phase.lobby) :
+    Lobby.start s = .ok (s, [.appendLog "game.start"]) := by
+  simp [Lobby.start, h]
 
 /-- Camera commands are accepted in every phase and are never durable. -/
 theorem camera_is_ambient_and_ephemeral (ph : Phase) (direction : Direction) (delta : Zoom) :
@@ -175,8 +176,8 @@ theorem ok_transition {s s' : State} {env : Envelope} {fx : List Effect}
   case _ => exact ok_cameraMove ok h
   case _ => exact ok_cameraZoom ok h
   case _ => exact ok_join ok h
-  case _ => exact ok_create h
   case _ => exact ok_start ok h
+  case _ => exact ok_create h
   case _ => exact ok_withActive (fun _ _ _ hh => ok_roll ok hh) h
   case _ => exact ok_withActive (fun _ _ _ hh => ok_select ok hh) h
   case _ => exact ok_cancel ok h

@@ -65,8 +65,12 @@ def mapPlayer (s : State) (pid : Mythroads.PlayerId) (f : PlayerState → Player
 
 /--
 **Primitive 2.** Pass the turn: advance the cursor with wraparound, bump the round on
-wraparound, clear the per-turn payloads and ask the next hero for a roll. This is the
-Lean form of the generated `advanceTurn`.
+wraparound, drop back to `awaitingRoll` and announce it. This is the Lean form of the
+generated `advanceTurn`.
+
+`lastRoll` deliberately survives. It is the face of the dice still lying on the table,
+which the `rooms.lastRoll` column keeps until the next hero rolls; clearing it here
+would blank the board between turns.
 -/
 def advanceTurn (s : State) (message : String) : State :=
   if 0 < s.players.length then
@@ -74,7 +78,6 @@ def advanceTurn (s : State) (message : String) : State :=
       turn := Game.Turn.nextIndex s.turn s.players.length,
       round := Game.Turn.nextRound s.round s.turn s.players.length,
       phase := .awaitingRoll,
-      lastRoll := [],
       message }
   else s
 

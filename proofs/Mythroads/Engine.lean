@@ -2,6 +2,7 @@ import Mythroads.Engine.Core
 import Mythroads.Engine.Room
 import Mythroads.Engine.Combat
 import Mythroads.Engine.Event
+import Mythroads.Engine.Message
 import Mythroads.Engine.Step
 import Mythroads.Engine.Step.Camera
 import Mythroads.Engine.Step.Combat
@@ -34,6 +35,7 @@ Read the modules in this order.
 | `Engine.Room` | total board lookup and the only two mutation primitives |
 | `Engine.Combat` | the damage formula and the battle statistics, in exact fixed point |
 | `Engine.Event` | the event alphabet and the three gates: `authorized`, `onTurn`, `permitted` |
+| `Engine.Message` | the sentence each refusal shows, keyed on the error and the event |
 | `Engine.Step.*` | one module per phase family: lobby, movement, landing, battle, encounter, shop, camera |
 | `Engine.Step` | `transition`, the flat `(phase, event)` table, and `step`, the three gates in front of it |
 | `Engine.Replay` | the durable log is the truth; `State` is its cache |
@@ -51,9 +53,11 @@ restated: the board graph, matchup tables, magic techniques, item catalogue, enc
 wheel, Park–Miller generator and turn order are imported from `Mythroads.Game.*`, which
 already generates the TypeScript those handlers call.
 
-Four behaviours of the generated code are deliberately *not* modelled, because they are
-not rules. Room-code collision retries and Convex row identifiers need database reads;
-the 2200 ms cooling-off before an encounter may be acknowledged is a wall clock; and
-message text, while reproduced, is display state rather than a game outcome. Each is
-noted in the module that would otherwise carry it.
+Two behaviours of the generated code are deliberately *not* modelled, because they are
+not rules but boundary policies: retrying a room code that collides with a stored one
+needs a database read, and the 2200 ms cooling-off before an encounter may be
+acknowledged is a wall clock. Both are carried out by the generated boundary, which
+declares them as explicit policy steps, and each is noted in the module that would
+otherwise carry it. Convex row identifiers are likewise the boundary's: a hero the rules
+have just created carries a placeholder id until the interpreter inserts the row.
 -/

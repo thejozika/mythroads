@@ -19,63 +19,64 @@ inductive Authority where
   | account | roomHost | playerOwner
   deriving Repr, DecidableEq
 
-inductive Route where
-  | createRoom | joinRoom | startRoom
-  | rollMovement | selectDestination | cancelDestination | movePlayer
-  | chooseAttack | chooseGuard | resolveEncounter
-  | buyItem | equipItem | leaveShop
-  | toggleCamera | moveCamera | zoomCamera
-  deriving Repr, DecidableEq
+/--
+One wire event: its validator shape and the two classifications the runtime needs.
 
+The classification is *not* independent of the rules. `Mythroads.Engine.Event` carries `name`,
+`authority` and `durable` as total functions on the alphabet, and the `#guard`s at the bottom of
+`Mythroads/Engine/Event.lean` hold this list to them entry for entry, so a constructor added to
+the game without a manifest entry — or with the wrong authority — stops the build. The manifest
+stays here rather than being read out of the engine only because `Engine.Event` imports this
+module for `Authority`, not the other way round.
+-/
 structure EventSpec where
   type : String
   subjects : Ty
   data : Ty
   authority : Authority
-  route : Route
   persistent : Bool := true
   deriving Repr
 
 private def spec (type : String) (subjects data : Ty) (authority : Authority)
-    (route : Route) (persistent := true) : EventSpec :=
-  { type, subjects, data, authority, route, persistent }
+    (persistent := true) : EventSpec :=
+  { type, subjects, data, authority, persistent }
 
 def specs : List EventSpec := [
-  spec "room.create" empty (Ty.obj [("seed", .optional .number)]) .account .createRoom,
+  spec "room.create" empty (Ty.obj [("seed", .optional .number)]) .account,
   spec "player.join" (Ty.obj [("code", .string)])
-    (Ty.obj [("name", .string), ("color", .string)]) .account .joinRoom,
-  spec "game.start" (Ty.obj [("roomId", .id .rooms)]) empty .roomHost .startRoom,
-  spec "movement.roll" roomPlayer empty .playerOwner .rollMovement,
+    (Ty.obj [("name", .string), ("color", .string)]) .account,
+  spec "game.start" (Ty.obj [("roomId", .id .rooms)]) empty .roomHost,
+  spec "movement.roll" roomPlayer empty .playerOwner,
   spec "movement.select" roomPlayer (Ty.obj [("destination", .number)])
-    .playerOwner .selectDestination,
-  spec "movement.cancel" roomPlayer empty .playerOwner .cancelDestination,
+    .playerOwner,
+  spec "movement.cancel" roomPlayer empty .playerOwner,
   spec "movement.step" roomPlayer (Ty.obj [("destination", .number)])
-    .playerOwner .movePlayer,
+    .playerOwner,
   spec "combat.attack" roomPlayer (Ty.obj [("attack", literals [
     "stab", "chargeHigh", "chargeSide", "leap", "emberBlast", "scorchArmor",
     "tideNeedle", "undertow", "galeBlade", "windShear", "stoneCrash", "calcify"
-  ])]) .playerOwner .chooseAttack,
+  ])]) .playerOwner,
   spec "combat.guard" roomPlayer (Ty.obj [("guard", literals [
     "high", "side", "brace", "ward"
-  ])]) .playerOwner .chooseGuard,
+  ])]) .playerOwner,
   spec "encounter.resolve" (Ty.obj [
     ("roomId", .id .rooms), ("playerId", .id .players),
     ("encounterId", .id .encounters)
-  ]) empty .playerOwner .resolveEncounter,
-  spec "shop.buy" roomPlayer (Ty.obj [("itemId", .string)]) .playerOwner .buyItem,
+  ]) empty .playerOwner,
+  spec "shop.buy" roomPlayer (Ty.obj [("itemId", .string)]) .playerOwner,
   spec "inventory.equip" (Ty.obj [
     ("playerId", .id .players), ("playerItemId", .id .playerItems)
   ]) (Ty.obj [("slot", literals
     (Inventory.allEquipmentSlots.map Inventory.EquipmentSlot.label))])
-    .playerOwner .equipItem,
-  spec "shop.leave" roomPlayer empty .playerOwner .leaveShop,
-  spec "camera.toggle" roomPlayer empty .playerOwner .toggleCamera false,
+    .playerOwner,
+  spec "shop.leave" roomPlayer empty .playerOwner,
+  spec "camera.toggle" roomPlayer empty .playerOwner false,
   spec "camera.move" roomPlayer (Ty.obj [("direction", literals [
     "up", "down", "left", "right"
-  ])]) .playerOwner .moveCamera false,
+  ])]) .playerOwner false,
   spec "camera.zoom" roomPlayer (Ty.obj [("delta", .union [
     .literalNumber (-1), .literalNumber 1
-  ])]) .playerOwner .zoomCamera false
+  ])]) .playerOwner false
 ]
 
 def EventSpec.validator (value : EventSpec) : Ty :=

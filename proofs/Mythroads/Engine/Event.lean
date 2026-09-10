@@ -37,6 +37,9 @@ inductive Direction where
 def Direction.label : Direction → String
   | .up => "up" | .down => "down" | .left => "left" | .right => "right"
 
+/-- Every pan direction, in wire order, so the boundary can read the column back exhaustively. -/
+def directions : List Direction := [.up, .down, .left, .right]
+
 /-- A single zoom notch. The wire carries `-1` (nearer) or `1` (farther). -/
 inductive Zoom where
   /-- Pull the camera in one unit. -/
@@ -183,17 +186,20 @@ def authorized (s : State) (env : Envelope) : Bool :=
 The phase gate: the one table saying which events each phase accepts. Read top to
 bottom it is the game's turn-structure specification.
 
-Two entries are deliberately phase-free. `inventory.equip` is accepted in every
-phase because equipping is an inventory operation the boundary only owner-checks,
-and the camera commands are accepted everywhere because the shared view must keep
-working while a battle or a shop is open.
+Three families are deliberately phase-free. `inventory.equip` is accepted in every
+phase because equipping is an inventory operation the boundary only owner-checks; the
+camera commands are accepted everywhere because the shared view must keep working
+while a battle or a shop is open; and `game.start` is accepted everywhere so that a
+resend is an idempotent no-op inside `Lobby.start` rather than a refusal the host
+cannot distinguish from a real failure.
 -/
 def permitted (phase : Phase) (e : Event) : Bool :=
   match phase, e with
   | _, .inventoryEquip _ _ => true
   | _, .cameraToggle | _, .cameraMove _ | _, .cameraZoom _ => true
   | _, .playerJoin _ _ _ => true
-  | .lobby, .roomCreate _ | .lobby, .gameStart => true
+  | _, .gameStart => true
+  | .lobby, .roomCreate _ => true
   | .awaitingRoll, .movementRoll => true
   | .moving _ _, .movementSelect _ => true
   | .moving _ _, .movementCancel => true

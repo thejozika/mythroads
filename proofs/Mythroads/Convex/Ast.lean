@@ -18,6 +18,9 @@ type as `name: T | undefined`, and Convex can only produce the former.
 
 /-- A TypeScript type expression. -/
 inductive TsType where
+  /-- No annotation at all: TypeScript infers the result. The column builders want this, because
+  their result is a wide object literal nobody should have to restate as a type. -/
+  | inferred
   /-- The `void` type. -/
   | void
   /-- The `boolean` type. -/
@@ -88,7 +91,8 @@ inductive Expr where
   | conditional (condition whenTrue whenFalse : Expr)
   /-- An expression-bodied arrow function. -/
   | arrow (parameters : List String) (body : Expr)
-  /-- An object literal. -/
+  /-- An object literal. A field named `...` is rendered as a spread of its value, which is how
+  a generated row is assembled from a shared column block plus the one column that row owns. -/
   | object (fields : List (String × Expr))
   /-- A shorthand object literal, `{ a, b }`, where each property takes the value of the
   identically named binding. -/
@@ -99,6 +103,9 @@ inductive Expr where
   | spread (value : Expr)
   /-- `value as const`. -/
   | asConst (value : Expr)
+  /-- `value as T`. The engine speaks in plain strings, so a row identifier crossing back into
+  Convex has to be re-branded; this is the only place that happens. -/
+  | cast (value : Expr) (type : TsType)
   deriving Repr
 
 /-- A state-changing or control-flow statement in a generated TypeScript function body. -/

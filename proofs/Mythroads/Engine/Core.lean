@@ -225,22 +225,31 @@ structure State where
   version : Nat
   deriving Repr, DecidableEq, Inhabited
 
-/-- A request the Convex interpreter must carry out after the pure transition succeeded. -/
+/--
+A request the Convex interpreter must carry out after the pure transition succeeded.
+
+Every row-writing effect **carries the row it describes** rather than pointing at the
+new `State` for it. That is not redundancy: a transition may open a battle and close it
+in the same step — `combat.attack` that empties the enemy writes the final battle row
+*and* passes the turn — so by the time the interpreter runs, `State.phase` has already
+moved on and the row it must write is no longer reachable from the state. Carrying the
+payload makes the interpreter a total `match` on nine constructors with no lookback.
+-/
 inductive Effect where
-  /-- Patch one `players` row from the new state. -/
+  /-- Patch one `players` row from the new state, or insert it when the hero is new. -/
   | persistPlayer (id : Mythroads.PlayerId)
   /-- Patch the `rooms` row from the new state. -/
   | persistRoom
-  /-- Upsert the `combats` row backing `Phase.combat`. -/
-  | persistCombat
-  /-- Upsert the `encounters` row backing `Phase.encounter`. -/
-  | persistEncounter
-  /-- Upsert the `roomSelections` row backing a planned route. -/
-  | persistSelection
+  /-- Upsert the `combats` row holding this battle at this stage. -/
+  | persistCombat (battle : CombatState) (stage : CombatStage)
+  /-- Upsert the `encounters` row holding this drawn encounter. -/
+  | persistEncounter (drawn : EncounterState)
+  /-- Upsert the `roomSelections` row holding this planned route. -/
+  | persistSelection (selection : Selection)
   /-- Delete the `roomSelections` row. -/
   | clearSelection
-  /-- Upsert the ephemeral `roomCameras` projection. -/
-  | persistCamera
+  /-- Upsert the ephemeral `roomCameras` projection from this camera. -/
+  | persistCamera (camera : Camera)
   /-- Append one durable `gameEvents` row under this wire name. -/
   | appendLog (name : String)
   /-- Send an ephemeral message that is never appended to the log. -/
@@ -257,8 +266,14 @@ inductive Error where
   | wrongPhase
   /-- The named hero is not in this room. -/
   | unknownPlayer
-  /-- The requested route or step is not on the board. -/
-  | illegalMove
+  /-- Route planning must begin on the hero's own node. -/
+  | routeNotStarted
+  /-- There is no declared road from the planned route's head to that node. -/
+  | roadUnavailable
+  /-- The planned route does not match the committed one, or does not consume the roll. -/
+  | routeUnavailable
+  /-- The hero has no movement left to commit. -/
+  | noMovementLeft
   /-- The hero cannot afford the purchase. -/
   | insufficientGold
   /-- The room already holds `maxPlayers` heroes. -/

@@ -4,13 +4,13 @@ import { internal } from '../_generated/api'
 import type { MutationCtx } from '../_generated/server'
 import { authorizeGameEvent } from '../auth/authorization'
 import { persistGameEvent, priorDispatchResult } from '../events/persistence'
-import { routeGameEvent } from '../events/router'
 import {
     type DispatchResult,
     dispatchResultValidator,
     type GameEvent,
     gameEventValidator,
 } from '../events/validators'
+import { applyGameEvent } from './aggregate/boundary.generated'
 
 export const dispatchMutationDefinition = {
     args: { commandId: v.optional(v.string()), event: gameEventValidator },
@@ -35,7 +35,7 @@ export const executeMutationDefinition = {
         if (priorResult) {
             return priorResult
         }
-        const result = await routeGameEvent(ctx, event, actorAuthId)
+        const result = await applyGameEvent(ctx, event, actorAuthId)
         await persistGameEvent(ctx, event, result, commandId, actorAuthId)
         return result
     },

@@ -184,8 +184,11 @@ The layout that actually shipped keeps the paths the handwritten files already h
 had to move:
 
 ```text
-convex/generated/     schema, game API, and one module per domain handler
-convex/events/        validators, router, policy, authority, persistence, retention
+convex/generated/     schema, game API, the owner-only inventory read, Park-Miller
+convex/generated/aggregate/
+                      the load-step-save boundary: enums, load, rows, persist,
+                      envelope, boundary
+convex/events/        validators, policy, authority, persistence, retention
 convex/auth/          authorization
 convex/rooms/         public room queries
 shared/generated/     board, world, controller input, combat, magic, items, encounters,

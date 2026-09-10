@@ -74,45 +74,15 @@ def chanceHitsFunction : Function where
     .return (.binary (id "roll") "<" (id "favorable"))
   ]
 
-def drawRoomRandomFunction : Function where
-  name := "drawRoomRandom"
-  parameters := [
-    { name := "ctx", type := .named "MutationCtx" },
-    { name := "roomId", type := .id .rooms }, { name := "bound", type := .number }
-  ]
-  returns := .promise .number
-  body := [
-    .constDecl "room" (.await (call (prop (prop (id "ctx") "db") "get") [id "roomId"])),
-    .ifThen (.prefix "!" (id "room")) [
-      .throw (.new "Error" [.string "Cannot draw randomness for a missing room."])
-    ],
-    .constDecl "draw" (call (id "drawBounded") [
-      .binary (prop (id "room") "rngState") "??"
-        (call (id "normalizeSeed") [prop (id "room") "_creationTime"]),
-      id "bound"
-    ]),
-    .expression (.await (call (prop (prop (id "ctx") "db") "patch") [
-      id "roomId", .object [
-        ("rngState", prop (id "draw") "state"),
-        ("rngCounter", .binary
-          (.binary (prop (id "room") "rngCounter") "??" (.number 0)) "+" (.number 1))
-      ]
-    ])),
-    .return (prop (id "draw") "value")
-  ]
-/-- The Park-Miller generator and the per-room draw that persists its state. -/
+/-- The Park-Miller generator, shared by the engine and by the room-code policy at the boundary. -/
 def module : Module where
   provenance := some "proofs/Mythroads/Game/Random.lean"
-  imports := [
-    { source := "../_generated/dataModel", bindings := [{ name := "Id", isType := true }] },
-    { source := "../_generated/server", bindings := [{ name := "MutationCtx", isType := true }] }
-  ]
+  imports := []
   items := [
     .function normalizeSeedFunction,
     .function nextRandomFunction,
     .function drawBoundedFunction,
-    .function chanceHitsFunction,
-    .function drawRoomRandomFunction
+    .function chanceHitsFunction
   ]
 
 end Mythroads.Backend.Random

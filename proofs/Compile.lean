@@ -21,13 +21,22 @@ generated Convex module.
 
 open Lean Mythroads.Compile
 
-/-- Everything the Convex adapter and the parity harness need to reach. -/
+/--
+Everything the Convex adapter and the parity harness need to reach.
+
+Beyond `step` itself the boundary needs four classifiers, the refusal table, and
+`Lobby.roomCode`. That last one is there for the collision retry: when a drawn code is
+already taken the boundary must draw the next one *from the same generator the rules
+use*, so it calls the engine's own function rather than restating Park-Miller.
+-/
 def roots : List Name :=
   [`Mythroads.Engine.step,
     `Mythroads.Engine.Event.name,
     `Mythroads.Engine.Event.authority,
     `Mythroads.Engine.Event.durable,
-    `Mythroads.Engine.Phase.name]
+    `Mythroads.Engine.Phase.name,
+    `Mythroads.Engine.Error.message,
+    `Mythroads.Engine.Lobby.roomCode]
 
 /-- The path of the compiled engine, relative to the output root. -/
 def outputPath : System.FilePath := "shared/generated/engine.generated.ts"

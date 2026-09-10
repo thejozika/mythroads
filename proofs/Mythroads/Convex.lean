@@ -59,7 +59,7 @@ inductive MutationStep where
   | authorizeEvent
   /-- Return the recorded result if this command id has already been applied. -/
   | returnPriorCommand
-  /-- Dispatch the event to its transaction. -/
+  /-- Load the room, run the rules over the event, and write the effects they return. -/
   | routeEvent
   /-- Append the event and its result to the durable log. -/
   | persistEvent
@@ -153,7 +153,7 @@ private def mutationStepBody : MutationStep → List Statement
         [.identifier "ctx", .identifier "commandId", .identifier "actorAuthId"])),
        .ifThen (.identifier "priorResult") [.return (.identifier "priorResult")]]
   | .routeEvent =>
-      [.constDecl "result" (.await (.call (.identifier "routeGameEvent")
+      [.constDecl "result" (.await (.call (.identifier "applyGameEvent")
         [.identifier "ctx", .identifier "event", .identifier "actorAuthId"]))]
   | .persistEvent =>
       [.expression (.await (.call (.identifier "persistGameEvent")
@@ -208,7 +208,7 @@ def module : Module where
     { source := "../auth/authorization", bindings := [{ name := "authorizeGameEvent" }] },
     { source := "../events/persistence", bindings := [
       { name := "persistGameEvent" }, { name := "priorDispatchResult" }] },
-    { source := "../events/router", bindings := [{ name := "routeGameEvent" }] },
+    { source := "./aggregate/boundary.generated", bindings := [{ name := "applyGameEvent" }] },
     { source := "../events/validators", bindings := [
       { name := "dispatchResultValidator" }, { name := "gameEventValidator" },
       { name := "DispatchResult", isType := true }, { name := "GameEvent", isType := true }] }

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { readdirSync, readFileSync } from 'node:fs'
 import test from 'node:test'
+
 import {
     canTraverse,
     getNode,
@@ -30,6 +31,7 @@ test('authoritative shared modules are only Lean-generated adapters', () => {
         'combat.system.ts',
         'controller-input.system.ts',
         'encounter.system.ts',
+        'engine.system.ts',
         'item.system.ts',
         'magic.system.ts',
         'world.type.ts',
@@ -40,24 +42,47 @@ test('authoritative shared modules are only Lean-generated adapters', () => {
     }
 })
 
-test('Convex compatibility modules contain no handwritten handlers', () => {
-    const adapters = [
-        '../../convex/camera.ts',
-        '../../convex/combat.ts',
-        '../../convex/encounters.ts',
-        '../../convex/game.ts',
-        '../../convex/gameHelpers.ts',
-        '../../convex/landings.ts',
-        '../../convex/players.ts',
-        '../../convex/rooms.ts',
-        '../../convex/rooms/queries.ts',
-        '../../convex/schema.ts',
-        '../../convex/shops.ts',
-    ]
-    for (const adapter of adapters) {
-        const source = readFileSync(new URL(adapter, import.meta.url), 'utf8')
-        assert.doesNotMatch(source, /\b(?:async\s+function|handler\s*:|ctx\.db\.)/)
+/** Every hand-maintained module under `convex/`: not generated, not Convex's own codegen. */
+function handwrittenConvexModules(directory = new URL('../../convex/', import.meta.url)) {
+    const found = []
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+        if (entry.name === '_generated') continue
+        const child = new URL(`${entry.name}${entry.isDirectory() ? '/' : ''}`, directory)
+        if (entry.isDirectory()) found.push(...handwrittenConvexModules(child))
+        else if (entry.name.endsWith('.ts') && !entry.name.endsWith('.generated.ts')) {
+            found.push(child)
+        }
     }
+    return found
+}
+
+test('Convex compatibility modules contain no handwritten handlers', () => {
+    // The list is discovered rather than enumerated, so a new hand-written module under
+    // `convex/` is covered by this rule the moment it appears. `auth.config.ts` is the one
+    // platform boundary that is genuinely authored here, and it registers nothing.
+    const modules = handwrittenConvexModules().filter(
+        (module) => !module.pathname.endsWith('/auth.config.ts'),
+    )
+    assert.ok(modules.length >= 8, 'expected the Convex adapters to still be there')
+    for (const module of modules) {
+        const source = readFileSync(module, 'utf8')
+        assert.doesNotMatch(
+            source,
+            /\b(?:async\s+function|handler\s*:|ctx\.db\.)/,
+            `${module.pathname} contains a handwritten handler body`,
+        )
+    }
+})
+
+test('the write side runs the compiled Lean engine rather than per-event handlers', () => {
+    const boundary = new URL(
+        '../../convex/generated/aggregate/boundary.generated.ts',
+        import.meta.url,
+    )
+    const source = readFileSync(boundary, 'utf8')
+    assert.match(source, /from '\.\.\/\.\.\/\.\.\/shared\/engine\.system'/)
+    assert.match(source, /\bstep\(before, envelope\)/)
+    assert.match(source, /\bsaveState\(/)
 })
 
 test('camera controls are ephemeral rather than durable game events', () => {

@@ -37,7 +37,7 @@ def toggle (s : State) (p : PlayerState) : Outcome :=
     | some camera =>
         { camera with
             free := not camera.free, targetX := landmark.point.x, targetZ := landmark.point.z }
-  .ok ({ s with camera := some next }, [.persistCamera, .notify "camera.toggle"])
+  .ok ({ s with camera := some next }, [.persistCamera next, .notify "camera.toggle"])
 
 /-- `camera.move`: pan the free camera, clamped to the table the board sits on. -/
 def move (s : State) (direction : Direction) : Outcome :=
@@ -49,10 +49,10 @@ def move (s : State) (direction : Direction) : Outcome :=
           | .left => -panStep | .right => panStep | _ => 0
         let dz : Int := match direction with
           | .up => -panStep | .down => panStep | _ => 0
-        .ok ({ s with camera := some { camera with
-                 targetX := clamp (-700) 700 (camera.targetX + dx),
-                 targetZ := clamp (-550) 550 (camera.targetZ + dz) } },
-             [.persistCamera, .notify "camera.move"])
+        let panned : Camera := { camera with
+          targetX := clamp (-700) 700 (camera.targetX + dx),
+          targetZ := clamp (-550) 550 (camera.targetZ + dz) }
+        .ok ({ s with camera := some panned }, [.persistCamera panned, .notify "camera.move"])
   | none => .error .cameraNotFree
 
 /-- `camera.zoom`: one notch in or out, held between five and fifteen units. -/
@@ -61,9 +61,9 @@ def zoom (s : State) (delta : Zoom) : Outcome :=
   | some camera =>
       if !camera.free then .error .cameraNotFree
       else
-        .ok ({ s with camera := some { camera with
-                 distance := (clamp 5 15 ((camera.distance : Int) + delta.delta)).toNat } },
-             [.persistCamera, .notify "camera.zoom"])
+        let zoomed : Camera := { camera with
+          distance := (clamp 5 15 ((camera.distance : Int) + delta.delta)).toNat }
+        .ok ({ s with camera := some zoomed }, [.persistCamera zoomed, .notify "camera.zoom"])
   | none => .error .cameraNotFree
 
 end Mythroads.Engine.CameraStep
