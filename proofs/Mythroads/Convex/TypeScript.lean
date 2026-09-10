@@ -1,201 +1,205 @@
+import Mythroads.Convex.Ast
+
 namespace Mythroads.Convex.TypeScript
 
-inductive TsType where
-  | void
-  | boolean
-  | number
-  | string
-  | literalString (value : String)
-  | named (name : String)
-  | id (table : String)
-  | object (fields : List (String × TsType))
-  | array (inner : TsType)
-  | union (members : List TsType)
-  | promise (inner : TsType)
-  deriving Repr
+/-! # Printing the TypeScript syntax tree
 
-structure Parameter where
-  name : String
-  type : TsType
-  deriving Repr
+The printer is expressed entirely in terms of `Mythroads.Convex.Doc`: each `…Doc` function returns
+a layout document that knows *where* it breaks but not *how far* it is indented, and `Doc.indent`
+supplies the depth. That replaces the earlier design in which every printer took a `depth : Nat`
+and pasted `indentation depth` in front of each line — a scheme under which `emitAsyncHandler` was
+hard-wired to render correctly only at one nesting level. The rendered bytes did not change when
+this layer was introduced: `npm run proofs:check` is the proof.
 
-/-- A TypeScript expression represented as typed Lean data before code generation. -/
-inductive Expr where
-  | identifier (name : String)
-  | boolean (value : Bool)
-  | string (value : String)
-  | number (value : Nat)
-  | null
-  | undefined
-  | property (target : Expr) (name : String)
-  | optionalProperty (target : Expr) (name : String)
-  | index (target index : Expr)
-  | call (callee : Expr) (arguments : List Expr)
-  | new (constructor : String) (arguments : List Expr)
-  | await (value : Expr)
-  | prefix (operator : String) (value : Expr)
-  | binary (left : Expr) (operator : String) (right : Expr)
-  | conditional (condition whenTrue whenFalse : Expr)
-  | arrow (parameters : List String) (body : Expr)
-  | object (fields : List (String × Expr))
-  | array (values : List Expr)
-  | spread (value : Expr)
-  | asConst (value : Expr)
-  deriving Repr
+Final style (line width, trailing commas, method-chain breaking, import order) is Biome's job, not
+this module's. The printer only has to emit valid TypeScript with the structural breaks Biome
+preserves.
+-/
 
-/-- A state-changing or control-flow statement in a generated TypeScript function body. -/
-inductive Statement where
-  | constDecl (name : String) (value : Expr)
-  | constDeclTyped (name : String) (type : TsType) (value : Expr)
-  | letDecl (name : String) (value : Expr)
-  | constObjectRest (omitted : List String) (rest : String) (source : Expr)
-  | assign (target value : Expr)
-  | expression (value : Expr)
-  | voidValue (value : Expr)
-  | ifThen (condition : Expr) (body : List Statement)
-  | ifElse (condition : Expr) (whenTrue whenFalse : List Statement)
-  | throw (error : Expr)
-  | return (value : Expr)
-  | returnVoid
-  | break
-  | switch (value : Expr) (cases : List (String × List Statement))
-  | forOf (binding : String) (values : Expr) (body : List Statement)
-  | whileDo (condition : Expr) (body : List Statement)
-  deriving Repr
+/-- Builds an object type whose every field is required. Most emitters want this; only a validator
+translation that knows a field is `v.optional(...)` needs the three-component form directly. -/
+def TsType.obj (fields : List (String × TsType)) : TsType :=
+  .object (fields.map fun (name, type) => (name, type, false))
 
-/-- A complete generated TypeScript function: visibility, parameters, result type, and body. -/
-structure Function where
-  isExported : Bool := true
-  isAsync : Bool := true
-  name : String
-  parameters : List Parameter
-  returns : TsType
-  body : List Statement
-  deriving Repr
-
+/-- Joins strings with a separator. Kept for emitters that assemble plain text. -/
 def join (separator : String) : List String → String
   | [] => ""
   | [value] => value
   | value :: rest => value ++ separator ++ join separator rest
 
+/-- Renders a string as a single-quoted TypeScript literal, escaping backslashes and quotes. -/
 def quote (value : String) : String :=
   "'" ++ (value.replace "\\" "\\\\").replace "'" "\\'" ++ "'"
 
-partial def emitType : TsType → String
-  | .void => "void"
-  | .boolean => "boolean"
-  | .number => "number"
-  | .string => "string"
-  | .literalString value => quote value
-  | .named name => name
-  | .id table => s!"Id<{quote table}>"
+/-- Lays out a TypeScript type. Types never break, so this is a `Doc.text` of one line. -/
+partial def typeDoc : TsType → Doc
+  | .void => .text "void"
+  | .boolean => .text "boolean"
+  | .number => .text "number"
+  | .string => .text "string"
+  | .literalString value => .text (quote value)
+  | .named name => .text name
+  | .id table => .text s!"Id<{quote table.name}>"
+  | .doc table => .text s!"Doc<{quote table.name}>"
+  | .omit inner fields =>
+      .concat [.text "Omit<", typeDoc inner, .text ", ",
+        Doc.joinWith " | " (fields.map fun field => .text (quote field)), .text ">"]
   | .object fields =>
-      "{ " ++ join "; " (fields.map fun (name, type) => s!"{name}: {emitType type}") ++ " }"
-  | .array inner => s!"{emitType inner}[]"
-  | .union members => join " | " (members.map emitType)
-  | .promise inner => s!"Promise<{emitType inner}>"
+      .concat [.text "{ ",
+        Doc.joinWith "; " (fields.map fun (name, type, isOptional) =>
+          .concat [.text (if isOptional then name ++ "?: " else name ++ ": "), typeDoc type]),
+        .text " }"]
+  | .array inner => .concat [typeDoc inner, .text "[]"]
+  | .union members => Doc.joinWith " | " (members.map typeDoc)
+  | .promise inner => .concat [.text "Promise<", typeDoc inner, .text ">"]
 
-partial def emitExpr : Expr → String
-  | .identifier name => name
-  | .boolean value => if value then "true" else "false"
-  | .string value => quote value
-  | .number value => toString value
-  | .null => "null"
-  | .undefined => "undefined"
-  | .property target name => s!"{emitExpr target}.{name}"
-  | .optionalProperty target name => s!"{emitExpr target}?.{name}"
-  | .index target index => s!"{emitExpr target}[{emitExpr index}]"
+/-- Renders a TypeScript type as source text. -/
+def emitType (type : TsType) : String := Doc.render (typeDoc type)
+
+/-- Lays out a TypeScript expression. Expressions are emitted on one line; Biome decides where a
+long call chain or object literal actually wraps. -/
+partial def exprDoc : Expr → Doc
+  | .identifier name => .text name
+  | .boolean value => .text (if value then "true" else "false")
+  | .string value => .text (quote value)
+  | .number value => .text (toString value)
+  | .null => .text "null"
+  | .undefined => .text "undefined"
+  | .property target name => .concat [exprDoc target, .text ("." ++ name)]
+  | .optionalProperty target name => .concat [exprDoc target, .text ("?." ++ name)]
+  | .index target index => .concat [exprDoc target, .text "[", exprDoc index, .text "]"]
   | .call callee arguments =>
-      s!"{emitExpr callee}({join ", " (arguments.map emitExpr)})"
+      .concat [exprDoc callee, .text "(", Doc.joinWith ", " (arguments.map exprDoc), .text ")"]
   | .new constructor arguments =>
-      s!"new {constructor}({join ", " (arguments.map emitExpr)})"
-  | .await value => s!"await {emitExpr value}"
-  | .prefix operator value => s!"({operator}{emitExpr value})"
-  | .binary left operator right => s!"({emitExpr left} {operator} {emitExpr right})"
+      .concat [.text ("new " ++ constructor ++ "("),
+        Doc.joinWith ", " (arguments.map exprDoc), .text ")"]
+  | .await value => .concat [.text "await ", exprDoc value]
+  | .prefix operator value => .concat [.text ("(" ++ operator), exprDoc value, .text ")"]
+  | .binary left operator right =>
+      .concat [.text "(", exprDoc left, .text (" " ++ operator ++ " "), exprDoc right, .text ")"]
   | .conditional condition whenTrue whenFalse =>
-      s!"({emitExpr condition} ? {emitExpr whenTrue} : {emitExpr whenFalse})"
-  | .arrow parameters body => s!"({join ", " parameters}) => {emitExpr body}"
+      .concat [.text "(", exprDoc condition, .text " ? ", exprDoc whenTrue, .text " : ",
+        exprDoc whenFalse, .text ")"]
+  | .arrow parameters body =>
+      .concat [.text ("(" ++ join ", " parameters ++ ") => "), exprDoc body]
   | .object fields =>
-      "{ " ++ join ", " (fields.map fun (name, value) => s!"{name}: {emitExpr value}") ++ " }"
-  | .array values => "[" ++ join ", " (values.map emitExpr) ++ "]"
-  | .spread value => s!"...{emitExpr value}"
-  | .asConst value => s!"{emitExpr value} as const"
+      .concat [.text "{ ",
+        Doc.joinWith ", " (fields.map fun (name, value) =>
+          .concat [.text (name ++ ": "), exprDoc value]),
+        .text " }"]
+  | .shorthand names => .text ("{ " ++ join ", " names ++ " }")
+  | .array values => .concat [.text "[", Doc.joinWith ", " (values.map exprDoc), .text "]"]
+  | .spread value => .concat [.text "...", exprDoc value]
+  | .asConst value => .concat [exprDoc value, .text " as const"]
 
-def indentation (depth : Nat) : String := String.ofList (List.replicate (depth * 4) ' ')
+/-- Renders a TypeScript expression as source text. -/
+def emitExpr (value : Expr) : String := Doc.render (exprDoc value)
 
 mutual
-  partial def emitStatement (depth : Nat) : Statement → String
-    | .constDecl name value => s!"{indentation depth}const {name} = {emitExpr value}\n"
+  -- A doc comment may not precede `mutual`, so the explanation lives here: `statementDoc` lays out
+  -- one statement with no leading indentation, and `statementsDoc` puts one statement per line.
+  -- All nesting comes from `Doc.blockLines`, so a statement renders correctly at any depth.
+  partial def statementDoc : Statement → Doc
+    | .constDecl name value => .concat [.text ("const " ++ name ++ " = "), exprDoc value]
     | .constDeclTyped name type value =>
-        s!"{indentation depth}const {name}: {emitType type} = {emitExpr value}\n"
-    | .letDecl name value => s!"{indentation depth}let {name} = {emitExpr value}\n"
+        .concat [.text ("const " ++ name ++ ": "), typeDoc type, .text " = ", exprDoc value]
+    | .letDecl name value => .concat [.text ("let " ++ name ++ " = "), exprDoc value]
     | .constObjectRest omitted rest source =>
-        s!"{indentation depth}const \u007b {join ", " omitted}, ...{rest} \u007d = {emitExpr source}\n"
-    | .assign target value => s!"{indentation depth}{emitExpr target} = {emitExpr value}\n"
-    | .expression value => s!"{indentation depth}{emitExpr value}\n"
-    | .voidValue value => s!"{indentation depth}void {emitExpr value}\n"
+        .concat [.text ("const { " ++ join ", " omitted ++ ", ..." ++ rest ++ " } = "),
+          exprDoc source]
+    | .assign target value => .concat [exprDoc target, .text " = ", exprDoc value]
+    | .expression value => exprDoc value
+    | .voidValue value => .concat [.text "void ", exprDoc value]
     | .ifThen condition body =>
-        s!"{indentation depth}if ({emitExpr condition}) \u007b\n" ++
-        emitStatements (depth + 1) body ++ s!"{indentation depth}\u007d\n"
+        .concat [.text "if (", exprDoc condition, .text ") ", statementsBlock body]
     | .ifElse condition whenTrue whenFalse =>
-        s!"{indentation depth}if ({emitExpr condition}) \u007b\n" ++
-        emitStatements (depth + 1) whenTrue ++ s!"{indentation depth}\u007d else \u007b\n" ++
-        emitStatements (depth + 1) whenFalse ++ s!"{indentation depth}\u007d\n"
-    | .throw error => s!"{indentation depth}throw {emitExpr error}\n"
-    | .return value => s!"{indentation depth}return {emitExpr value}\n"
-    | .returnVoid => s!"{indentation depth}return\n"
-    | .break => s!"{indentation depth}break\n"
+        .concat [.text "if (", exprDoc condition, .text ") ", statementsBlock whenTrue,
+          .text " else ", statementsBlock whenFalse]
+    | .throw error => .concat [.text "throw ", exprDoc error]
+    | .return value => .concat [.text "return ", exprDoc value]
+    | .returnVoid => .text "return"
+    | .break => .text "break"
     | .switch value cases =>
-        s!"{indentation depth}switch ({emitExpr value}) \u007b\n" ++
-        join "" (cases.map fun (label, body) =>
-          s!"{indentation (depth + 1)}case {quote label}: \u007b\n" ++
-          emitStatements (depth + 2) body ++
-          s!"{indentation (depth + 1)}\u007d\n") ++
-        s!"{indentation depth}\u007d\n"
+        .concat [.text "switch (", exprDoc value, .text ") ",
+          Doc.blockLines (cases.map fun (label, body) =>
+            .concat [.text ("case " ++ quote label ++ ": "), statementsBlock body])]
     | .forOf binding values body =>
-        s!"{indentation depth}for (const {binding} of {emitExpr values}) \u007b\n" ++
-        emitStatements (depth + 1) body ++ s!"{indentation depth}\u007d\n"
+        .concat [.text ("for (const " ++ binding ++ " of "), exprDoc values, .text ") ",
+          statementsBlock body]
     | .whileDo condition body =>
-        s!"{indentation depth}while ({emitExpr condition}) \u007b\n" ++
-        emitStatements (depth + 1) body ++ s!"{indentation depth}\u007d\n"
+        .concat [.text "while (", exprDoc condition, .text ") ", statementsBlock body]
 
-  partial def emitStatements (depth : Nat) (statements : List Statement) : String :=
-    join "" (statements.map (emitStatement depth))
+  partial def statementsDoc (statements : List Statement) : Doc :=
+    Doc.lines (statements.map statementDoc)
+
+  partial def statementsBlock (statements : List Statement) : Doc :=
+    Doc.blockLines (statements.map statementDoc)
 end
 
-def emitParameter (parameter : Parameter) : String :=
-  s!"{parameter.name}: {emitType parameter.type}"
+/-- Lays out one declared parameter, `name: T`. -/
+def parameterDoc (parameter : Parameter) : Doc :=
+  .concat [.text (parameter.name ++ ": "), typeDoc parameter.type]
+
+/-- Lays out a Lean-authored `Function` as a TypeScript function declaration, newline-terminated. -/
+def functionDoc (function : Function) : Doc :=
+  .concat [
+    .text ((if function.isExported then "export " else "") ++
+      (if function.isAsync then "async " else "") ++ "function " ++ function.name ++ "("),
+    Doc.joinWith ", " (function.parameters.map parameterDoc),
+    .text "): ", typeDoc function.returns, .text " ", statementsBlock function.body, .text "\n"]
 
 /-- Renders a Lean-authored `Function` syntax tree as executable TypeScript source. -/
-def emitFunction (function : Function) : String :=
-  let exportPrefix := if function.isExported then "export " else ""
-  let asyncPrefix := if function.isAsync then "async " else ""
-  exportPrefix ++ asyncPrefix ++ "function " ++ function.name ++ "(" ++
-  join ", " (function.parameters.map emitParameter) ++ s!"): {emitType function.returns} \u007b\n" ++
-  emitStatements 1 function.body ++ "}\n"
+def emitFunction (function : Function) : String := Doc.render (functionDoc function)
 
-def emitTypeAlias (name : String) (type : TsType) : String :=
-  s!"export type {name} = {emitType type}\n"
+/-- Lays out an exported type alias, newline-terminated. -/
+def typeAliasDoc (name : String) (type : TsType) : Doc :=
+  .concat [.text ("export type " ++ name ++ " = "), typeDoc type, .text "\n"]
 
+/-- Renders an exported type alias. -/
+def emitTypeAlias (name : String) (type : TsType) : String := Doc.render (typeAliasDoc name type)
+
+/-- The `handler` of a Convex endpoint definition: an async arrow over `(ctx, args)`. -/
 structure AsyncHandler where
+  /-- The handler parameters, conventionally the context and a destructured argument object. -/
   parameters : List Parameter
+  /-- An explicit result annotation. Convex needs one on any handler whose return type would
+  otherwise be inferred through a cycle; `none` lets the `returns` validator do the checking. -/
+  returns : Option TsType := none
+  /-- The statements of the handler body. -/
   body : List Statement
 
-def emitAsyncHandler (handler : AsyncHandler) : String :=
-  "async (" ++ join ", " (handler.parameters.map emitParameter) ++ ") => \u007b\n" ++
-  emitStatements 2 handler.body ++ "    \u007d"
+/-- Lays out an async arrow function. Unlike the pre-`Doc` printer this carries no baked-in
+nesting level, so a handler renders correctly wherever it is placed. -/
+def asyncHandlerDoc (handler : AsyncHandler) : Doc :=
+  .concat [.text "async (", Doc.joinWith ", " (handler.parameters.map parameterDoc), .text ")",
+    match handler.returns with
+    | none => Doc.empty
+    | some type => .concat [.text ": ", typeDoc type],
+    .text " => ", statementsBlock handler.body]
 
+/-- A Convex `{ args, returns, handler }` record exported for a registrar to wrap. -/
 structure EndpointDefinition where
+  /-- The exported binding name. -/
   name : String
+  /-- The argument validators, keyed by argument name. -/
   arguments : List (String × Expr)
+  /-- The return validator. -/
   returns : Expr
+  /-- The handler implementation. -/
   handler : AsyncHandler
 
+/-- Lays out an endpoint definition as an exported object literal, newline-terminated. -/
+def endpointDefinitionDoc (endpoint : EndpointDefinition) : Doc :=
+  .concat [
+    .text ("export const " ++ endpoint.name ++ " = "),
+    Doc.blockLines [
+      .concat [.text "args: ", exprDoc (.object endpoint.arguments), .text ","],
+      .concat [.text "returns: ", exprDoc endpoint.returns, .text ","],
+      .concat [.text "handler: ", asyncHandlerDoc endpoint.handler, .text ","]],
+    .text "\n"]
+
+/-- Renders an endpoint definition as exported TypeScript source. -/
 def emitEndpointDefinition (endpoint : EndpointDefinition) : String :=
-  s!"export const {endpoint.name} = \u007b\n" ++
-  "    args: " ++ emitExpr (.object endpoint.arguments) ++ ",\n" ++
-  "    returns: " ++ emitExpr endpoint.returns ++ ",\n" ++
-  "    handler: " ++ emitAsyncHandler endpoint.handler ++ ",\n" ++
-  "\u007d\n"
+  Doc.render (endpointDefinitionDoc endpoint)
 
 end Mythroads.Convex.TypeScript

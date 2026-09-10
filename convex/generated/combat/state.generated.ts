@@ -1,5 +1,6 @@
+/** Generated from proofs/Mythroads/Backend/Combat/State.lean. Do not edit by hand. */
 import { ConvexError } from 'convex/values'
-import { enemyForSpace, type BattleStats } from '../../../shared/combat.system'
+import { type BattleStats, enemyForSpace } from '../../../shared/combat.system'
 import type { DebuffStat } from '../../../shared/magic.system'
 import type { Doc, Id } from '../../_generated/dataModel'
 import type { MutationCtx } from '../../_generated/server'

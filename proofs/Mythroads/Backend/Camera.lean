@@ -1,7 +1,9 @@
-import Mythroads.Convex.TypeScript
+import Mythroads.Convex.Module
+import Mythroads.Convex.Query
 
 namespace Mythroads.Backend.Camera
 
+open Mythroads.Convex
 open Mythroads.Convex.TypeScript
 
 private def id (name : String) : Expr := .identifier name
@@ -12,26 +14,21 @@ private def method (target : Expr) (name : String) (arguments : List Expr := [])
 private def reject (message : String) : Statement :=
   .throw (.new "ConvexError" [.string message])
 
-private def subjectsType : TsType := .object [
-  ("roomId", .id "rooms"), ("playerId", .id "players")
+private def subjectsType : TsType := .obj [
+  ("roomId", .id .rooms), ("playerId", .id .players)
 ]
 private def delta : Expr := .binary (.number 9) "/" (.number 10)
 
 private def cameraQuery : Expr :=
-  .await (method
-    (method
-      (method (prop (id "ctx") "db") "query" [.string "roomCameras"])
-      "withIndex" [.string "by_roomId", .arrow ["query"]
-        (method (id "query") "eq" [.string "roomId", id "roomId"])])
-    "unique")
+  Query.indexedRead .roomCameras .roomCamerasByRoomId [id "roomId"] .unique
 
 def cameraForRoomFunction : Function where
   isExported := false
   name := "cameraForRoom"
   parameters := [
-    { name := "ctx", type := .named "MutationCtx" }, { name := "roomId", type := .id "rooms" }
+    { name := "ctx", type := .named "MutationCtx" }, { name := "roomId", type := .id .rooms }
   ]
-  returns := .promise (.union [.named "Doc<'roomCameras'>", .named "null"])
+  returns := .promise (.union [.doc .roomCameras, .named "null"])
   body := [.return cameraQuery]
 
 def requireCameraFunction : Function where
@@ -40,9 +37,9 @@ def requireCameraFunction : Function where
   parameters := [
     { name := "ctx", type := .named "MutationCtx" }, { name := "subjects", type := subjectsType }
   ]
-  returns := .promise (.object [
-    ("room", .named "Doc<'rooms'>"), ("player", .named "Doc<'players'>"),
-    ("camera", .union [.named "Doc<'roomCameras'>", .named "null"])
+  returns := .promise (.obj [
+    ("room", .doc .rooms), ("player", .doc .players),
+    ("camera", .union [.doc .roomCameras, .named "null"])
   ])
   body := [
     .constDecl "room" (.await (method (prop (id "ctx") "db") "get"
@@ -81,13 +78,11 @@ def toggleCameraFunction : Function where
         ]
       ])), .returnVoid
     ],
-    .expression (.await (method (prop (id "ctx") "db") "insert" [
-      .string "roomCameras", .object [
+    .expression (Query.insert .roomCameras (.object [
         ("roomId", prop (prop (id "control") "room") "_id"), ("mode", .string "free"),
         ("targetX", prop (id "node") "x"), ("targetZ", prop (id "node") "z"),
         ("distance", .number 8), ("updatedAt", call (prop (id "Date") "now"))
-      ]
-    ]))
+      ]))
   ]
 
 private def directionDelta (negative positive : String) : Expr :=
@@ -149,9 +144,21 @@ def zoomCameraFunction : Function where
     ]))
   ]
 
-def emitCamera : String :=
-  emitFunction cameraForRoomFunction ++ "\n" ++ emitFunction requireCameraFunction ++ "\n" ++
-  emitFunction toggleCameraFunction ++ "\n" ++ emitFunction moveCameraFunction ++ "\n" ++
-  emitFunction zoomCameraFunction
+/-- The ephemeral spectator camera transactions. -/
+def module : Module where
+  provenance := some "proofs/Mythroads/Backend/Camera.lean"
+  imports := [
+    { source := "convex/values", bindings := [{ name := "ConvexError" }] },
+    { source := "../../shared/board.system", bindings := [{ name := "getNode" }] },
+    { source := "../_generated/dataModel", bindings := [{ name := "Doc", isType := true }, { name := "Id", isType := true }] },
+    { source := "../_generated/server", bindings := [{ name := "MutationCtx", isType := true }] }
+  ]
+  items := [
+    .function cameraForRoomFunction,
+    .function requireCameraFunction,
+    .function toggleCameraFunction,
+    .function moveCameraFunction,
+    .function zoomCameraFunction
+  ]
 
 end Mythroads.Backend.Camera

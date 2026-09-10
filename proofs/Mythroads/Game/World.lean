@@ -1,7 +1,8 @@
-import Mythroads.Convex.TypeScript
+import Mythroads.Convex.Module
 
 namespace Mythroads.Game.World
 
+open Mythroads.Convex
 open Mythroads.Convex.TypeScript
 
 /-- The gameplay role attached to a board node. Rendering derives its visual identifier from this value. -/
@@ -132,13 +133,13 @@ def availableRoads (position : Nat) : List AvailableRoad := boardGraph.available
 def canTraverse (origin destination : Nat) : Bool :=
   boardGraph.canTraverse origin destination
 
-theorem oneWayBridgeAllowsForward : canTraverse 12 13 = true := by native_decide
-theorem oneWayBridgeRejectsReverse : canTraverse 13 12 = false := by native_decide
-theorem castleIsStart : (nodes.find? fun node => node.id = 0).map Node.kind = some .castle := by native_decide
+theorem oneWayBridgeAllowsForward : canTraverse 12 13 = true := by decide
+theorem oneWayBridgeRejectsReverse : canTraverse 13 12 = false := by decide
+theorem castleIsStart : (nodes.find? fun node => node.id = 0).map Node.kind = some .castle := by decide
 theorem everyRoadEndpointExists : roads.all (fun road =>
     nodes.any (fun node => node.id = road.origin) ∧
     nodes.any (fun node => node.id = road.destination)) = true := by
-  native_decide
+  decide
 
 private def coordinate (value : Int) : String := toString value ++ " / 100"
 private def point (value : Point) : String :=
@@ -171,9 +172,8 @@ private def renderTerrain : Terrain → String
       coordinate center.x ++ ", z: " ++ coordinate center.z ++ ", radius: " ++
       coordinate radius ++ ", height: " ++ coordinate height ++ " },\n"
 
-def emitTypeScript : String :=
-  "/** Generated from proofs/Mythroads/Game/World.lean. Do not edit by hand. */\n" ++
-  "import type { ShopKind } from '../item.system'\nimport type { LogicalGameWorld, SpaceKind, WorldNode, WorldRoad } from '../world.type'\n\n" ++
+/-- The body of `shared/generated/board.generated.ts`. -/
+private def boardBody : String :=
   "export type { SpaceKind, WorldNode as BoardNode } from '../world.type'\n" ++
   "const node = (definition: Omit<WorldNode, 'visualId'>): WorldNode => ({ ...definition, visualId: `space.${definition.kind}` })\n" ++
   "const WORLD_NODES: Omit<WorldNode, 'visualId'>[] = [\n" ++
@@ -194,9 +194,8 @@ def emitTypeScript : String :=
   "export type ReachableRoute = { destination: number; path: number[] }\n" ++
   "export function reachableRoutes(position: number, previousPosition: number | undefined, steps: number) { if (steps <= 0) return []; type RouteState = { current: number; previous?: number; path: number[] }; let routes = new Map<string, RouteState>([[`${position}:${previousPosition ?? 'none'}`, { current: position, previous: previousPosition, path: [] }]]); for (let step = 0; step < steps; step += 1) { const nextRoutes = new Map<string, RouteState>(); for (const route of routes.values()) { for (const destination of availableSteps(route.current, route.previous)) { const key = `${destination}:${route.current}`; if (!nextRoutes.has(key)) nextRoutes.set(key, { current: destination, previous: route.current, path: [...route.path, destination] }) } } routes = nextRoutes } const destinations = new Map<number, number[]>(); for (const route of routes.values()) if (!destinations.has(route.current)) destinations.set(route.current, route.path); return [...destinations].map(([destination, path]) => ({ destination, path })) }\n"
 
-def emitTypes : String :=
-  "/** Generated from proofs/Mythroads/Game/World.lean. Do not edit by hand. */\n" ++
-  "import type { ShopKind } from '../item.system'\n\n" ++
+/-- The body of `shared/generated/world.generated.ts`. -/
+private def typesBody : String :=
   "export type SpaceKind = 'castle' | 'combat' | 'event' | ShopKind\n" ++
   "export type WorldVisualId = `space.${SpaceKind}`\n" ++
   "export type WorldNode = { id: number; label: string; kind: SpaceKind; visualId: WorldVisualId; x: number; z: number; landmark?: { visualId: 'landmark.castle'; offsetX: number; offsetZ: number } }\n" ++
@@ -204,12 +203,37 @@ def emitTypes : String :=
   "export type WorldTerrainFeature = { id: string; kind: 'hill'; visualId: 'terrain.hill'; x: number; z: number; radius: number; height: number } | { id: string; kind: 'lake'; visualId: 'terrain.lake'; x: number; z: number; radiusX: number; radiusZ: number } | { id: string; kind: 'river'; visualId: 'terrain.river'; width: number; points: { x: number; z: number }[] }\n" ++
   "export type LogicalGameWorld = { id: string; label: string; version: number; nodes: WorldNode[]; roads: WorldRoad[]; terrain: WorldTerrainFeature[] }\n"
 
-def emitControllerInput : String :=
-  "/** Generated from proofs/Mythroads/Game/World.lean. Do not edit by hand. */\n" ++
-  "import { availableRoads, getNode } from '../board.system.ts'\n\n" ++
+/-- The body of `shared/generated/controller-input.generated.ts`. -/
+private def controllerInputBody : String :=
   "export type CardinalDirection = 'up' | 'down' | 'left' | 'right'\n" ++
   "export function directionForStep(originId: number, destinationId: number): CardinalDirection { const origin = getNode(originId); const destination = getNode(destinationId); const deltaX = destination.x - origin.x; const deltaZ = destination.z - origin.z; if (Math.abs(deltaX) > Math.abs(deltaZ)) return deltaX > 0 ? 'right' : 'left'; return deltaZ > 0 ? 'down' : 'up' }\n" ++
   "export function directionalRoads(position: number) { const result: Partial<Record<CardinalDirection, number>> = {}; for (const { destination } of availableRoads(position)) result[directionForStep(position, destination)] = destination; return result }\n" ++
   "export function directionalTargets(originId: number, destinations: number[]) { const origin = getNode(originId); const result: Partial<Record<CardinalDirection, number>> = {}; const distance: Partial<Record<CardinalDirection, number>> = {}; for (const destinationId of destinations) { if (destinationId === originId) continue; const destination = getNode(destinationId); const direction = directionForStep(originId, destinationId); const squared = (destination.x - origin.x) ** 2 + (destination.z - origin.z) ** 2; if (distance[direction] === undefined || squared < (distance[direction] ?? Infinity)) { result[direction] = destinationId; distance[direction] = squared } } return result }\n"
+
+
+/-- The board graph as data for the browser renderer and the movement transactions. -/
+def boardModule : Module where
+  provenance := some "proofs/Mythroads/Game/World.lean"
+  imports := [
+    { source := "../item.system", bindings := [{ name := "ShopKind", isType := true }] },
+    { source := "../world.type", bindings := [
+      { name := "LogicalGameWorld", isType := true }, { name := "SpaceKind", isType := true },
+      { name := "WorldNode", isType := true }, { name := "WorldRoad", isType := true }] }
+  ]
+  items := [.raw boardBody]
+
+/-- The structural types the board module and the renderer share. -/
+def worldTypesModule : Module where
+  provenance := some "proofs/Mythroads/Game/World.lean"
+  imports := [{ source := "../item.system", bindings := [{ name := "ShopKind", isType := true }] }]
+  items := [.raw typesBody]
+
+/-- Cardinal-direction helpers for the controller's d-pad. -/
+def controllerInputModule : Module where
+  provenance := some "proofs/Mythroads/Game/World.lean"
+  imports := [{ source := "../board.system.ts", bindings := [
+    { name := "availableRoads" }, { name := "getNode" }] }]
+  items := [.raw controllerInputBody]
+
 
 end Mythroads.Game.World

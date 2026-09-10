@@ -1,8 +1,9 @@
-import Mythroads.Convex.TypeScript
+import Mythroads.Convex.Module
 import Mythroads.Game.Events
 
 namespace Mythroads.Backend.Router
 
+open Mythroads.Convex
 open Mythroads.Convex.TypeScript
 open Mythroads.Game.Events
 
@@ -70,6 +71,20 @@ def routeFunction : Function where
     .return (.object [("kind", .string "accepted")])
   ]
 
-def emitRouter : String := emitFunction routeFunction
+/-- The exhaustive dispatch from a `GameEvent` to its transaction. -/
+def module : Module where
+  provenance := some "proofs/Mythroads/Game/Events.lean"
+  imports := [
+    { source := "../_generated/server", bindings := [{ name := "MutationCtx", isType := true }] },
+    { source := "../camera", bindings := [{ name := "moveCamera" }, { name := "toggleCamera" }, { name := "zoomCamera" }] },
+    { source := "../combat", bindings := [{ name := "chooseAttack" }, { name := "chooseGuard" }] },
+    { source := "../encounters", bindings := [{ name := "resolveEncounter" }] },
+    { source := "../rooms", bindings := [{ name := "cancelDestination" }, { name := "createRoom" }, { name := "joinRoom" }, { name := "movePlayer" }, { name := "rollMovement" }, { name := "selectDestination" }, { name := "startRoom" }] },
+    { source := "../shops", bindings := [{ name := "buyItem" }, { name := "equipItem" }, { name := "leaveShop" }] },
+    { source := "./validators", bindings := [{ name := "DispatchResult", isType := true }, { name := "GameEvent", isType := true }] }
+  ]
+  items := [
+    .function routeFunction
+  ]
 
 end Mythroads.Backend.Router

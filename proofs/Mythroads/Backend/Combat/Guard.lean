@@ -1,7 +1,10 @@
+import Mythroads.Convex.Module
+import Mythroads.Convex.Query
 import Mythroads.Backend.Combat.State
 
 namespace Mythroads.Backend.Combat.Guard
 
+open Mythroads.Convex
 open Mythroads.Convex.TypeScript
 open Mythroads.Backend.Combat.State
 
@@ -9,12 +12,7 @@ private def concat (left right : Expr) : Expr := .binary left "+" right
 private def label (catalog value : String) : Expr := .index (id catalog) (id value)
 
 private def inventoryQuery : Expr :=
-  .await (method
-    (method
-      (method (prop (id "ctx") "db") "query" [.string "playerItems"])
-      "withIndex" [.string "by_playerId", .arrow ["query"]
-        (method (id "query") "eq" [.string "playerId", prop (id "player") "_id"])] )
-    "take" [.number 40])
+  Query.indexedRead .playerItems .playerItemsByPlayerId [prop (id "player") "_id"] (.take 40)
 
 private def blockedCombatMessage : Expr :=
   concat
@@ -50,8 +48,8 @@ def chooseGuardFunction : Function where
   name := "chooseGuard"
   parameters := [
     { name := "ctx", type := .named "MutationCtx" },
-    { name := "subjects", type := .object [
-        ("roomId", .id "rooms"), ("playerId", .id "players")
+    { name := "subjects", type := .obj [
+        ("roomId", .id .rooms), ("playerId", .id .players)
       ] },
     { name := "guard", type := .named "GuardStance" }
   ]
@@ -164,6 +162,22 @@ def chooseGuardFunction : Function where
     ]))
   ]
 
-def emitGuard : String := emitFunction chooseGuardFunction
+/-- The enemy half of a combat round. -/
+def module : Module where
+  provenance := some "proofs/Mythroads/Backend/Combat/Guard.lean"
+  imports := [
+    { source := "../../../shared/combat.system", bindings := [{ name := "ATTACK_LABELS" }, { name := "GUARD_LABELS" }, { name := "isMagicTechnique" }, { name := "PHYSICAL_ATTACKS" }, { name := "strikeDamage" }, { name := "GuardStance", isType := true }] },
+    { source := "../../../shared/item.system", bindings := [{ name := "equippedMagic" }] },
+    { source := "../../../shared/magic.system", bindings := [{ name := "MAGIC_LOADOUTS" }, { name := "MAGIC_TECHNIQUES" }] },
+    { source := "../../_generated/dataModel", bindings := [{ name := "Id", isType := true }] },
+    { source := "../../_generated/server", bindings := [{ name := "MutationCtx", isType := true }] },
+    { source := "../../gameHelpers", bindings := [{ name := "advanceTurn" }] },
+    { source := "../../random/state", bindings := [{ name := "drawRoomRandom" }] },
+    { source := "../random.generated", bindings := [{ name := "chanceHits" }] },
+    { source := "./state.generated", bindings := [{ name := "activeCombat" }, { name := "debuffPatch" }, { name := "enemyStats" }, { name := "playerStats" }] }
+  ]
+  items := [
+    .function chooseGuardFunction
+  ]
 
 end Mythroads.Backend.Combat.Guard

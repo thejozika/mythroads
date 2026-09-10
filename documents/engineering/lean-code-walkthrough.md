@@ -61,14 +61,16 @@ the word.
 
 ```text
 proofs/Mythroads/Convex.lean ── endpoint declarations ─┐
-                                                      ├─> proofs/Main.lean
+                                                      ├─> proofs/Emit.lean
 proofs/Mythroads/Authz.lean  ── model and theorems ────┘          │
                                                                   │ lake exe
+                                                                  │ mythroads-emit
                                                                   ▼
-                                         TypeScript printed to standard output
+                                        every generated file, written to a
+                                            staging directory in one run
                                                                   │
                                       scripts/lean/check-generated.mjs
-                                             │ format with Biome
+                                             │ organize + format with Biome
                                              ▼
                                  convex/generated/game-api.generated.ts
                                              │
@@ -319,17 +321,21 @@ They do not reimplement the handlers. The handler definitions supplied to `query
 [`scripts/lean/check-generated.mjs`](../../scripts/lean/check-generated.mjs) connects the Lean and
 Node toolchains:
 
-1. run `lake exe mythroads-codegen` inside `proofs/`;
-2. capture the TypeScript printed by Lean;
-3. format it through the repository's installed Biome version;
-4. with `--write`, replace the generated artifact;
-5. without `--write`, compare bytes and fail if the committed file is stale.
+1. build and run `lake exe mythroads-emit <staging>` inside `proofs/`, which writes every
+   generated file named by `outputs` in [`proofs/Emit.lean`](../../proofs/Emit.lean);
+2. canonicalize the staging tree with the repository's installed Biome version — the
+   `organizeImports` assist first, then the formatter — so Biome, not Lean, is the arbiter of
+   import order and layout;
+3. with `--write`, copy the staging tree over the repository;
+4. without `--write`, compare the two trees byte for byte and fail on any file that is stale or
+   missing, or on any committed `*.generated.ts` that no longer has a Lean source.
 
 Use:
 
 ```bash
 npm run proofs:generate  # deliberately refresh generated TypeScript
 npm run proofs:check     # prove and verify that no generated drift exists
+npm run proofs:axioms    # verify no theorem depends on sorry or on a native_decide axiom
 npm run check            # run the entire repository gate
 ```
 

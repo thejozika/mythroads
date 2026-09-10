@@ -3,6 +3,7 @@ import type { ShopKind } from '../item.system'
 import type { LogicalGameWorld, SpaceKind, WorldNode, WorldRoad } from '../world.type'
 
 export type { SpaceKind, WorldNode as BoardNode } from '../world.type'
+
 const node = (definition: Omit<WorldNode, 'visualId'>): WorldNode => ({
     ...definition,
     visualId: `space.${definition.kind}`,

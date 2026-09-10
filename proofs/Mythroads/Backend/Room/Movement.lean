@@ -1,7 +1,10 @@
-import Mythroads.Convex.TypeScript
+import Mythroads.Backend.Room.Lobby
+import Mythroads.Convex.Module
+import Mythroads.Convex.Query
 
 namespace Mythroads.Backend.Room.Movement
 
+open Mythroads.Convex
 open Mythroads.Convex.TypeScript
 
 private def id (name : String) : Expr := .identifier name
@@ -12,23 +15,18 @@ private def method (target : Expr) (name : String) (arguments : List Expr := [])
 private def reject (message : String) : Statement :=
   .throw (.new "ConvexError" [.string message])
 
-private def roomPlayerType (destination := false) : TsType := .object
-  ([("roomId", .id "rooms"), ("playerId", .id "players")] ++
+private def roomPlayerType (destination := false) : TsType := .obj
+  ([("roomId", .id .rooms), ("playerId", .id .players)] ++
     if destination then [("destination", .number)] else [])
 
 private def selectionByRoom (roomId : Expr) : Expr :=
-  .await (method
-    (method
-      (method (prop (id "ctx") "db") "query" [.string "roomSelections"])
-      "withIndex" [.string "by_roomId", .arrow ["query"]
-        (method (id "query") "eq" [.string "roomId", roomId])])
-    "first")
+  Query.indexedRead .roomSelections .roomSelectionsByRoomId [roomId] .first
 
 def clearSelectionFunction : Function where
   isExported := false
   name := "clearSelection"
   parameters := [
-    { name := "ctx", type := .named "MutationCtx" }, { name := "roomId", type := .id "rooms" }
+    { name := "ctx", type := .named "MutationCtx" }, { name := "roomId", type := .id .rooms }
   ]
   returns := .promise .void
   body := [
@@ -140,9 +138,7 @@ def selectDestinationFunction : Function where
         prop (id "current") "_id", id "value"
       ]))
     ] [
-      .expression (.await (method (prop (id "ctx") "db") "insert" [
-        .string "roomSelections", id "value"
-      ]))
+      .expression (Query.insert .roomSelections (id "value"))
     ],
     .constDecl "nodeLabel" (prop (call (id "getNode") [id "previewDestination"]) "label"),
     .constDecl "message" (.conditional (id "remaining")
@@ -233,9 +229,31 @@ def movePlayerFunction : Function where
     ]))
   ]
 
-def emitMovement : String :=
-  emitFunction clearSelectionFunction ++ "\n" ++ emitFunction rollMovementFunction ++ "\n" ++
-  emitFunction selectDestinationFunction ++ "\n" ++ emitFunction cancelDestinationFunction ++
-  "\n" ++ emitFunction movePlayerFunction
+/-- The movement half of `convex/generated/room.generated.ts`. -/
+def items : List Item := [
+  .function clearSelectionFunction,
+  .function rollMovementFunction,
+  .function selectDestinationFunction,
+  .function cancelDestinationFunction,
+  .function movePlayerFunction
+]
+
+/-- The room module is the one generated file assembled from two Lean emitters, so it is declared
+here rather than in either half: the lobby transactions followed by the movement transactions. -/
+def module : Module where
+  provenance := some "proofs/Mythroads/Backend/Room/*.lean"
+  imports := [
+    { source := "convex/values", bindings := [{ name := "ConvexError" }] },
+    { source := "../../shared/board.system", bindings := [
+      { name := "canTraverse" }, { name := "getNode" }, { name := "previewRouteStep" }] },
+    { source := "../_generated/dataModel", bindings := [{ name := "Id", isType := true }] },
+    { source := "../_generated/server", bindings := [{ name := "MutationCtx", isType := true }] },
+    { source := "../gameHelpers", bindings := [{ name := "roomPhase" }] },
+    { source := "../landings", bindings := [{ name := "resolveLanding" }] },
+    { source := "../players", bindings := [{ name := "createPlayer" }] },
+    { source := "./random.generated", bindings := [
+      { name := "drawBounded" }, { name := "normalizeSeed" }] }
+  ]
+  items := Lobby.items ++ items
 
 end Mythroads.Backend.Room.Movement

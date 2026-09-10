@@ -20,8 +20,13 @@ import Mythroads.Backend.Retention
 import Mythroads.Backend.Shop
 import Mythroads.Backend.Turn
 import Mythroads.Convex
-import Mythroads.Convex.Emit.Schema
+import Mythroads.Convex.Ast
+import Mythroads.Convex.Doc
+import Mythroads.Convex.Module
+import Mythroads.Convex.Query
 import Mythroads.Convex.Schema
+import Mythroads.Convex.Table
+import Mythroads.Convex.Ty
 import Mythroads.Convex.TypeScript
 import Mythroads.Game.Events
 import Mythroads.Game.Encounter

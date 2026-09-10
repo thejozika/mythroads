@@ -1,8 +1,9 @@
-import Mythroads.Convex.TypeScript
+import Mythroads.Convex.Module
 import Mythroads.Game.Magic
 
 namespace Mythroads.Game.Combat
 
+open Mythroads.Convex
 open Mythroads.Convex.TypeScript
 open Mythroads.Game.Magic
 
@@ -52,11 +53,11 @@ def committedCharges : List PhysicalAttack := [.chargeHigh, .chargeSide, .leap]
 theorem everyChargeHasWeakNeutralStrong : committedCharges.all (fun attack =>
     guards.any (physicalMatchup attack · = .weak) ∧
     guards.any (physicalMatchup attack · = .neutral) ∧
-    guards.any (physicalMatchup attack · = .strong)) = true := by native_decide
+    guards.any (physicalMatchup attack · = .strong)) = true := by decide
 
 theorem wardIsExposedToPhysicalAttacks :
     physicalAttacks.all (fun attack => physicalMatchup attack .ward = .strong) = true := by
-  native_decide
+  decide
 
 structure Enemy where
   name : String
@@ -82,7 +83,7 @@ def enemies : List Enemy := [
 ]
 
 theorem enemyCatalogNonempty : enemies ≠ [] := by decide
-theorem enemiesHavePositiveHealth : enemies.all (fun enemy => 0 < enemy.hp) = true := by native_decide
+theorem enemiesHavePositiveHealth : enemies.all (fun enemy => 0 < enemy.hp) = true := by decide
 
 private def record (values : List (String × String)) : String :=
   "{ " ++ join ", " (values.map fun (key, value) => key ++ ": " ++ value) ++ " }"
@@ -103,9 +104,8 @@ private def renderEnemy (enemy : Enemy) : String :=
     ("agility", toString enemy.agility), ("reward", toString enemy.reward)
   ] ++ ",\n"
 
-def emitTypeScript : String :=
-  "/** Generated from proofs/Mythroads/Game/Combat.lean. Do not edit by hand. */\n" ++
-  "import { elementMatchup, MAGIC_TECHNIQUES, type Element, type ImpactType, type MagicTechniqueId } from '../magic.system.ts'\n\n" ++
+/-- The body of `shared/generated/combat.generated.ts`, assembled from the catalogue above. -/
+private def body : String :=
   "export const PHYSICAL_ATTACKS = [" ++ join ", " (physicalAttacks.map fun value => quote value.label) ++ "] as const\n" ++
   "export const GUARD_STANCES = [" ++ join ", " (guards.map fun value => quote value.label) ++ "] as const\n" ++
   "export type PhysicalAttack = (typeof PHYSICAL_ATTACKS)[number]\nexport type GuardStance = (typeof GUARD_STANCES)[number]\n" ++
@@ -128,5 +128,14 @@ def emitTypeScript : String :=
   "export function strikeDamage(attack: CombatAttack, guard: GuardStance, attacker: BattleStats, defender: BattleStats, targetElement?: Element, wardPower = 0.35) { const technique = isMagicTechnique(attack) ? MAGIC_TECHNIQUES[attack] : undefined; const arcane = technique?.delivery === 'arcane'; const impact = technique && ['wucht', 'stich', 'hieb'].includes(technique.delivery) ? (technique.delivery as ImpactType) : undefined; const matchup = arcane ? elementMatchup(technique.element, targetElement) : impact ? IMPACT_MATCHUPS[impact][guard] : physicalMatchup(attack as PhysicalAttack, guard); const physical = !arcane; const techniquePower = technique ? 0 : attack === 'stab' ? 0 : attacker.athletics * 0.35; const attackValue = technique ? attacker.magic : attacker.attack; const resistance = arcane ? defender.magic * 0.55 : defender.defense * 0.55; const brace = physical && guard === 'brace' ? defender.athletics * 0.25 : 0; const ward = arcane && guard === 'ward' ? wardPower : 1; const accuracy = arcane ? 1 : Math.max(0.5, Math.min(0.98, 0.75 + (attacker.agility - defender.agility) * 0.04)); const power = technique?.power ?? POWER[attack as PhysicalAttack]; return { matchup, accuracy, damage: Math.max(1, Math.round((attackValue * power + techniquePower - resistance - brace) * MULTIPLIER[matchup] * ward)) } }\n" ++
   "const ENEMIES = [\n" ++ join "" (enemies.map renderEnemy) ++ "] as const\n" ++
   "export function enemyForSpace(spaceId: number) { return ENEMIES[spaceId % ENEMIES.length] }\n"
+
+/-- The physical attack, guard, and enemy catalogues plus the damage formula. -/
+def module : Module where
+  provenance := some "proofs/Mythroads/Game/Combat.lean"
+  imports := [{ source := "../magic.system.ts", bindings := [
+    { name := "elementMatchup" }, { name := "MAGIC_TECHNIQUES" },
+    { name := "Element", isType := true }, { name := "ImpactType", isType := true },
+    { name := "MagicTechniqueId", isType := true }] }]
+  items := [.raw body]
 
 end Mythroads.Game.Combat

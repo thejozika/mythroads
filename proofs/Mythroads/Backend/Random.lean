@@ -1,8 +1,9 @@
-import Mythroads.Convex.TypeScript
+import Mythroads.Convex.Module
 import Mythroads.Game.Random
 
 namespace Mythroads.Backend.Random
 
+open Mythroads.Convex
 open Mythroads.Convex.TypeScript
 open Mythroads.Game.Random
 
@@ -39,7 +40,7 @@ def drawBoundedFunction : Function where
   parameters := [
     { name := "state", type := .number }, { name := "bound", type := .number }
   ]
-  returns := .object [("value", .number), ("state", .number)]
+  returns := .obj [("value", .number), ("state", .number)]
   body := [
     .ifThen (.binary (id "bound") "<=" (.number 0)) [
       .throw (.new "RangeError" [.string "Random bounds must be positive."])
@@ -77,7 +78,7 @@ def drawRoomRandomFunction : Function where
   name := "drawRoomRandom"
   parameters := [
     { name := "ctx", type := .named "MutationCtx" },
-    { name := "roomId", type := .id "rooms" }, { name := "bound", type := .number }
+    { name := "roomId", type := .id .rooms }, { name := "bound", type := .number }
   ]
   returns := .promise .number
   body := [
@@ -99,9 +100,19 @@ def drawRoomRandomFunction : Function where
     ])),
     .return (prop (id "draw") "value")
   ]
-def emitRandomBackend : String :=
-  emitFunction normalizeSeedFunction ++ "\n" ++ emitFunction nextRandomFunction ++ "\n" ++
-  emitFunction drawBoundedFunction ++ "\n" ++ emitFunction chanceHitsFunction
-  ++ "\n" ++ emitFunction drawRoomRandomFunction
+/-- The Park-Miller generator and the per-room draw that persists its state. -/
+def module : Module where
+  provenance := some "proofs/Mythroads/Game/Random.lean"
+  imports := [
+    { source := "../_generated/dataModel", bindings := [{ name := "Id", isType := true }] },
+    { source := "../_generated/server", bindings := [{ name := "MutationCtx", isType := true }] }
+  ]
+  items := [
+    .function normalizeSeedFunction,
+    .function nextRandomFunction,
+    .function drawBoundedFunction,
+    .function chanceHitsFunction,
+    .function drawRoomRandomFunction
+  ]
 
 end Mythroads.Backend.Random

@@ -4,9 +4,9 @@ import { canTraverse, getNode, previewRouteStep } from '../../shared/board.syste
 import type { Id } from '../_generated/dataModel'
 import type { MutationCtx } from '../_generated/server'
 import { roomPhase } from '../gameHelpers'
-import { drawBounded, normalizeSeed } from './random.generated'
 import { resolveLanding } from '../landings'
 import { createPlayer } from '../players'
+import { drawBounded, normalizeSeed } from './random.generated'
 
 function roomCode(state: number): { code: string; state: number } {
     const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'

@@ -1,7 +1,8 @@
-import Mythroads.Convex.TypeScript
+import Mythroads.Convex.Module
 
 namespace Mythroads.Game.Encounter
 
+open Mythroads.Convex
 open Mythroads.Convex.TypeScript
 
 inductive Kind where | combat | event deriving Repr, DecidableEq
@@ -44,9 +45,9 @@ def outcomes : List Outcome := [
 def outcomesFor (kind : Kind) : List Outcome := outcomes.filter fun value => value.kind = kind
 def totalWeight (kind : Kind) : Nat := (outcomesFor kind).foldl (fun sum value => sum + value.weight) 0
 
-theorem combatWeightPositive : 0 < totalWeight .combat := by native_decide
-theorem eventWeightPositive : 0 < totalWeight .event := by native_decide
-theorem allWeightsPositive : outcomes.all (fun value => 0 < value.weight) = true := by native_decide
+theorem combatWeightPositive : 0 < totalWeight .combat := by decide
+theorem eventWeightPositive : 0 < totalWeight .event := by decide
+theorem allWeightsPositive : outcomes.all (fun value => 0 < value.weight) = true := by decide
 
 private def renderOutcome (value : Outcome) : String :=
   "    { id: " ++ quote value.id ++ ", kind: " ++ quote value.kind.label ++
@@ -54,8 +55,8 @@ private def renderOutcome (value : Outcome) : String :=
   ", goldDelta: " ++ toString value.goldDelta ++ ", hpDelta: " ++ toString value.hpDelta ++
   ", weight: " ++ toString value.weight ++ " },\n"
 
-def emitTypeScript : String :=
-  "/** Generated from proofs/Mythroads/Game/Encounter.lean. Do not edit by hand. */\n" ++
+/-- The body of `shared/generated/encounter.generated.ts`, assembled from the catalogue above. -/
+private def body : String :=
   "export type EncounterKind = 'combat' | 'event'\n" ++
   "export type EncounterOutcome = { id: string; kind: EncounterKind; title: string; description: string; goldDelta: number; hpDelta: number; weight: number }\n\n" ++
   "export const ENCOUNTERS: EncounterOutcome[] = [\n" ++
@@ -67,5 +68,10 @@ def emitTypeScript : String :=
   "    let cursor = Math.min(Math.max(Math.trunc(roll), 0), encounterWeight(kind) - 1)\n" ++
   "    for (const outcome of choices) { cursor -= outcome.weight; if (cursor < 0) return outcome }\n" ++
   "    return choices[choices.length - 1]\n}\n"
+
+/-- The encounter-wheel catalogue shared by the browser and Convex. -/
+def module : Module where
+  provenance := some "proofs/Mythroads/Game/Encounter.lean"
+  items := [.raw body]
 
 end Mythroads.Game.Encounter

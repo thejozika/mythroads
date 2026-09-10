@@ -1,15 +1,16 @@
-import Mythroads.Convex.TypeScript
+import Mythroads.Convex.Module
 
 namespace Mythroads.Backend.Authority
 
+open Mythroads.Convex
 open Mythroads.Convex.TypeScript
 
 private def id (name : String) : Expr := .identifier name
 private def prop (target : Expr) (name : String) : Expr := .property target name
 
-def authorityType : TsType := .object [
+def authorityType : TsType := .obj [
   ("mode", .union [.literalString "authenticated", .literalString "developmentBypass"]),
-  ("actorPlayerId", .union [.id "players", .named "undefined"]),
+  ("actorPlayerId", .union [.id .players, .named "undefined"]),
   ("actorAuthId", .union [.string, .named "undefined"])
 ]
 
@@ -37,7 +38,16 @@ def resolveAuthorityFunction : Function where
     ])
   ]
 
-def emitAuthority : String :=
-  emitTypeAlias "EventAuthority" authorityType ++ "\n" ++ emitFunction resolveAuthorityFunction
+/-- The runtime projection of an event onto the authority recorded with it. -/
+def module : Module where
+  provenance := some "proofs/Mythroads/Game/Events.lean"
+  imports := [
+    { source := "../_generated/dataModel", bindings := [{ name := "Id", isType := true }] },
+    { source := "./validators", bindings := [{ name := "DispatchResult", isType := true }, { name := "GameEvent", isType := true }] }
+  ]
+  items := [
+    .typeAlias "EventAuthority" authorityType,
+    .function resolveAuthorityFunction
+  ]
 
 end Mythroads.Backend.Authority

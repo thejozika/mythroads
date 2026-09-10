@@ -1,7 +1,8 @@
-import Mythroads.Convex.TypeScript
+import Mythroads.Convex.Module
 
 namespace Mythroads.Game.Magic
 
+open Mythroads.Convex
 open Mythroads.Convex.TypeScript
 
 inductive Element where
@@ -134,8 +135,8 @@ private def renderEdge (element : Element) : String :=
   "    " ++ element.label ++ ": { strong: " ++ quote (strongAgainst element).label ++
   ", weak: " ++ quote (weakAgainst element).label ++ " },\n"
 
-def emitTypeScript : String :=
-  "/** Generated from proofs/Mythroads/Game/Magic.lean. Do not edit by hand. */\n" ++
+/-- The body of `shared/generated/magic.generated.ts`, assembled from the catalogue above. -/
+private def body : String :=
   "export const ELEMENTS = [" ++ join ", " (elements.map fun value => quote value.label) ++
   "] as const\nexport type Element = (typeof ELEMENTS)[number]\n" ++
   "export type ImpactType = 'wucht' | 'stich' | 'hieb'\n" ++
@@ -155,5 +156,10 @@ def emitTypeScript : String :=
   "    if (ELEMENT_EDGE[element].strong === target) return 'strong' as const\n" ++
   "    if (ELEMENT_EDGE[element].weak === target) return 'weak' as const\n" ++
   "    return 'neutral' as const\n}\n"
+
+/-- The magic-technique catalogue and the element matchup table. -/
+def module : Module where
+  provenance := some "proofs/Mythroads/Game/Magic.lean"
+  items := [.raw body]
 
 end Mythroads.Game.Magic

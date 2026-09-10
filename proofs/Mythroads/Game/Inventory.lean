@@ -1,9 +1,10 @@
-import Mythroads.Convex.TypeScript
+import Mythroads.Convex.Module
 import Mythroads.Game.Magic
 import Mythroads.Identity
 
 namespace Mythroads.Game.Inventory
 
+open Mythroads.Convex
 open Mythroads.Convex.TypeScript
 open Mythroads.Game.Magic
 
@@ -118,7 +119,7 @@ def itemDefinitions : List ItemDefinition := [
 ]
 
 theorem everyItemHasNonemptyIdentity :
-    itemDefinitions.all (fun item => !item.id.isEmpty ∧ !item.name.isEmpty) = true := by native_decide
+    itemDefinitions.all (fun item => !item.id.isEmpty ∧ !item.name.isEmpty) = true := by decide
 
 private def renderSlots (slots : List EquipmentSlot) : String :=
   "[" ++ join ", " (slots.map fun slot => quote slot.label) ++ "]"
@@ -132,9 +133,8 @@ private def renderItem (item : ItemDefinition) : String :=
     | none => ""
     | some value => ", wardPower: " ++ toString value ++ " / 100") ++ " },\n"
 
-def emitTypeScript : String :=
-  "/** Generated from proofs/Mythroads/Game/Inventory.lean. Do not edit by hand. */\n" ++
-  "import { MAGIC_LOADOUTS, type Element } from '../magic.system.ts'\n\n" ++
+/-- The body of `shared/generated/item.generated.ts`, assembled from the catalogue above. -/
+private def body : String :=
   "export type ShopKind = 'armoury' | 'jeweller' | 'weapons' | 'items' | 'magic'\n" ++
   "export type EquipmentSlot = " ++
   join " | " (allEquipmentSlots.map fun slot => quote slot.label) ++ "\n" ++
@@ -211,5 +211,12 @@ theorem otherItemsReleaseRequestedSlot (requestedItem : ItemId) (slot : Equipmen
   split
   · simp
   · assumption
+
+/-- The item catalogue, equipment slots, and the equipped-magic projection. -/
+def module : Mythroads.Convex.Module where
+  provenance := some "proofs/Mythroads/Game/Inventory.lean"
+  imports := [{ source := "../magic.system.ts", bindings := [
+    { name := "MAGIC_LOADOUTS" }, { name := "Element", isType := true }] }]
+  items := [.raw body]
 
 end Mythroads.Game.Inventory

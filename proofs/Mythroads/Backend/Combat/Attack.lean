@@ -1,7 +1,10 @@
+import Mythroads.Convex.Module
+import Mythroads.Convex.Query
 import Mythroads.Backend.Combat.State
 
 namespace Mythroads.Backend.Combat.Attack
 
+open Mythroads.Convex
 open Mythroads.Convex.TypeScript
 open Mythroads.Backend.Combat.State
 
@@ -9,12 +12,7 @@ private def concat (left right : Expr) : Expr := .binary left "+" right
 private def label (catalog value : String) : Expr := .index (id catalog) (id value)
 
 private def inventoryQuery : Expr :=
-  .await (method
-    (method
-      (method (prop (id "ctx") "db") "query" [.string "playerItems"])
-      "withIndex" [.string "by_playerId", .arrow ["query"]
-        (method (id "query") "eq" [.string "playerId", prop (id "player") "_id"])])
-    "take" [.number 40])
+  Query.indexedRead .playerItems .playerItemsByPlayerId [prop (id "player") "_id"] (.take 40)
 
 private def debuffMessage : Expr := .conditional (id "blocked")
   (concat (concat (label "GUARD_LABELS" "guard") (.string " nullified "))
@@ -36,8 +34,8 @@ def chooseAttackFunction : Function where
   name := "chooseAttack"
   parameters := [
     { name := "ctx", type := .named "MutationCtx" },
-    { name := "subjects", type := .object [
-        ("roomId", .id "rooms"), ("playerId", .id "players")
+    { name := "subjects", type := .obj [
+        ("roomId", .id .rooms), ("playerId", .id .players)
       ] },
     { name := "attack", type := .named "CombatAttack" }
   ]
@@ -139,6 +137,23 @@ def chooseAttackFunction : Function where
     ]))
   ]
 
-def emitAttack : String := emitFunction chooseAttackFunction
+/-- The hero half of a combat round. -/
+def module : Module where
+  provenance := some "proofs/Mythroads/Backend/Combat/Attack.lean"
+  imports := [
+    { source := "convex/values", bindings := [{ name := "ConvexError" }] },
+    { source := "../../../shared/combat.system", bindings := [{ name := "ATTACK_LABELS" }, { name := "GUARD_LABELS" }, { name := "GUARD_STANCES" }, { name := "isMagicTechnique" }, { name := "strikeDamage" }, { name := "CombatAttack", isType := true }] },
+    { source := "../../../shared/item.system", bindings := [{ name := "equippedMagic" }] },
+    { source := "../../../shared/magic.system", bindings := [{ name := "MAGIC_TECHNIQUES" }] },
+    { source := "../../_generated/dataModel", bindings := [{ name := "Id", isType := true }] },
+    { source := "../../_generated/server", bindings := [{ name := "MutationCtx", isType := true }] },
+    { source := "../../gameHelpers", bindings := [{ name := "advanceTurn" }] },
+    { source := "../../random/state", bindings := [{ name := "drawRoomRandom" }] },
+    { source := "../random.generated", bindings := [{ name := "chanceHits" }] },
+    { source := "./state.generated", bindings := [{ name := "activeCombat" }, { name := "debuffPatch" }, { name := "enemyStats" }, { name := "playerStats" }] }
+  ]
+  items := [
+    .function chooseAttackFunction
+  ]
 
 end Mythroads.Backend.Combat.Attack

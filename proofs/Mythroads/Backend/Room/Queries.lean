@@ -1,7 +1,10 @@
-import Mythroads.Convex.TypeScript
+import Mythroads.Convex.Module
+import Mythroads.Convex.Query
+import Mythroads.Convex.Ty
 
 namespace Mythroads.Backend.Room.Queries
 
+open Mythroads.Convex
 open Mythroads.Convex.TypeScript
 
 private def id (name : String) : Expr := .identifier name
@@ -12,20 +15,16 @@ private def method (target : Expr) (name : String) (arguments : List Expr := [])
 private def vcall (name : String) (arguments : List Expr := []) : Expr :=
   call (prop (id "v") name) arguments
 
-private def byIndex (table index key : String) (value : Expr) (terminal : String)
-    (terminalArguments : List Expr := []) : Expr :=
-  method
-    (method
-      (method (prop (id "ctx") "db") "query" [.string table])
-      "withIndex" [.string index, .arrow ["lookup"]
-        (method (id "lookup") "eq" [.string key, value])])
-    terminal terminalArguments
+/-- Every read in this module goes through an index, with the lambda binder spelled `lookup`. -/
+private def byIndex (table : Table) (index : Index table) (value : Expr)
+    (terminal : Query.Terminal) : Expr :=
+  Query.indexedRead table index [value] terminal "lookup"
 
 def roomViewFunction : Function where
   isExported := false
   isAsync := false
   name := "roomView"
-  parameters := [{ name := "room", type := .named "Doc<'rooms'>" }]
+  parameters := [{ name := "room", type := .doc .rooms }]
   returns := .named "Omit<Doc<'rooms'>, 'hostAuthId' | 'rngState' | 'rngCounter'>"
   body := [
     .constObjectRest ["hostAuthId", "rngCounter", "rngState"] "view" (id "room"),
@@ -39,7 +38,7 @@ def playerViewFunction : Function where
   isExported := false
   isAsync := false
   name := "playerView"
-  parameters := [{ name := "player", type := .named "Doc<'players'>" }]
+  parameters := [{ name := "player", type := .doc .players }]
   returns := .named "Omit<Doc<'players'>, 'authId'>"
   body := [
     .constObjectRest ["authId"] "view" (id "player"),
@@ -51,7 +50,7 @@ def publicPlayerFunction : Function where
   isExported := false
   isAsync := false
   name := "publicPlayer"
-  parameters := [{ name := "player", type := .named "Doc<'players'>" }]
+  parameters := [{ name := "player", type := .doc .players }]
   returns := .named "PublicPlayer"
   body := [.return (.object [
     ("_id", prop (id "player") "_id"), ("name", prop (id "player") "name"),
@@ -65,7 +64,7 @@ def activeStateFunction : Function where
   name := "activeState"
   parameters := [
     { name := "ctx", type := .named "QueryCtx" },
-    { name := "room", type := .named "Doc<'rooms'>" }
+    { name := "room", type := .doc .rooms }
   ]
   returns := .promise (.named "ActiveState")
   body := [
@@ -73,18 +72,18 @@ def activeStateFunction : Function where
       (.await (method (prop (id "ctx") "db") "get" [prop (id "room") "activeEncounterId"])) .null),
     .constDecl "combat" (.conditional (prop (id "room") "activeCombatId")
       (.await (method (prop (id "ctx") "db") "get" [prop (id "room") "activeCombatId"])) .null),
-    .constDecl "selection" (.await (byIndex "roomSelections" "by_roomId" "roomId"
-      (prop (id "room") "_id") "first")),
-    .constDecl "camera" (.await (byIndex "roomCameras" "by_roomId" "roomId"
-      (prop (id "room") "_id") "unique")),
+    .constDecl "selection" ((byIndex .roomSelections .roomSelectionsByRoomId
+      (prop (id "room") "_id") .first)),
+    .constDecl "camera" ((byIndex .roomCameras .roomCamerasByRoomId
+      (prop (id "room") "_id") .unique)),
     .return (.object [
       ("encounter", id "encounter"), ("combat", id "combat"),
       ("selection", id "selection"), ("camera", id "camera")
     ])
   ]
 
-private def findRoom : Expr := .await (byIndex "rooms" "by_code" "code"
-  (method (id "code") "toUpperCase") "unique")
+private def findRoom : Expr := (byIndex .rooms .roomsByCode
+  (method (id "code") "toUpperCase") .unique)
 
 private def activeFields : List (String × Expr) := [
   ("encounter", prop (id "active") "encounter"),
@@ -94,10 +93,10 @@ private def activeFields : List (String × Expr) := [
 ]
 
 private def activeValidatorFields : List (String × Expr) := [
-  ("encounter", vcall "union" [vcall "null", call (prop (id "schema") "doc") [.string "encounters"]]),
-  ("combat", vcall "union" [vcall "null", call (prop (id "schema") "doc") [.string "combats"]]),
-  ("selection", vcall "union" [vcall "null", call (prop (id "schema") "doc") [.string "roomSelections"]]),
-  ("camera", vcall "union" [vcall "null", call (prop (id "schema") "doc") [.string "roomCameras"]])
+  ("encounter", vcall "union" [vcall "null", (Ty.document .encounters).validator]),
+  ("combat", vcall "union" [vcall "null", (Ty.document .combats).validator]),
+  ("selection", vcall "union" [vcall "null", (Ty.document .roomSelections).validator]),
+  ("camera", vcall "union" [vcall "null", (Ty.document .roomCameras).validator])
 ]
 
 def displayDefinition : EndpointDefinition where
@@ -110,13 +109,13 @@ def displayDefinition : EndpointDefinition where
   handler := {
     parameters := [
       { name := "ctx", type := .named "QueryCtx" },
-      { name := "{ code }", type := .object [("code", .string)] }
+      { name := "{ code }", type := .obj [("code", .string)] }
     ]
     body := [
       .constDecl "room" findRoom,
       .ifThen (.prefix "!" (id "room")) [.return .null],
-      .constDecl "players" (.await (byIndex "players" "by_room" "roomId"
-        (prop (id "room") "_id") "take" [.number 4])),
+      .constDecl "players" ((byIndex .players .playersByRoom
+        (prop (id "room") "_id") (.take 4))),
       .constDecl "identity" (.await (method (prop (id "ctx") "auth") "getUserIdentity")),
       .constDecl "active" (.await (call (id "activeState") [id "ctx", id "room"])),
       .return (.object ([
@@ -135,14 +134,14 @@ def displayDefinition : EndpointDefinition where
 
 def controllerDefinition : EndpointDefinition where
   name := "controllerByCodeDefinition"
-  arguments := [("code", vcall "string"), ("playerId", vcall "id" [.string "players"])]
+  arguments := [("code", vcall "string"), ("playerId", (Ty.id .players).validator)]
   returns := vcall "union" [vcall "null", vcall "object" [.object (
     [("room", id "roomViewValidator"),
      ("players", vcall "array" [id "playerViewValidator"])] ++ activeValidatorFields)]]
   handler := {
     parameters := [
       { name := "ctx", type := .named "QueryCtx" },
-      { name := "{ code, playerId }", type := .object [("code", .string), ("playerId", .id "players")] }
+      { name := "{ code, playerId }", type := .obj [("code", .string), ("playerId", .id .players)] }
     ]
     body := [
       .constDecl "room" findRoom,
@@ -161,38 +160,46 @@ def controllerDefinition : EndpointDefinition where
 def myPlayerDefinition : EndpointDefinition where
   name := "myPlayerByCodeDefinition"
   arguments := [("code", vcall "string")]
-  returns := vcall "union" [vcall "null", vcall "id" [.string "players"]]
+  returns := vcall "union" [vcall "null", (Ty.id .players).validator]
   handler := {
     parameters := [
       { name := "ctx", type := .named "QueryCtx" },
-      { name := "{ code }", type := .object [("code", .string)] }
+      { name := "{ code }", type := .obj [("code", .string)] }
     ]
     body := [
       .constDecl "authId" (.await (call (id "requireAuthId") [id "ctx"])),
       .ifThen (.prefix "!" (id "authId")) [.return .null],
       .constDecl "room" findRoom,
       .ifThen (.prefix "!" (id "room")) [.return .null],
-      .constDecl "player" (.await (method
-        (method
-          (method (prop (id "ctx") "db") "query" [.string "players"])
-          "withIndex" [.string "by_room_and_authId", .arrow ["lookup"]
-            (method (method (id "lookup") "eq" [.string "roomId", prop (id "room") "_id"])
-              "eq" [.string "authId", id "authId"])])
-        "unique")),
+      .constDecl "player" (Query.indexedRead .players .playersByRoomAndAuthId
+        [prop (id "room") "_id", id "authId"] .unique "lookup"),
       .return (.binary (.optionalProperty (id "player") "_id") "??" .null)
     ]
   }
 
-def emitQueries : String :=
-  "type PublicPlayer = { _id: Id<'players'>; name: string; color: string; position: number; previousPosition?: number; joinedAt: number }\n" ++
-  "type ActiveState = { encounter: Doc<'encounters'> | null; combat: Doc<'combats'> | null; selection: Doc<'roomSelections'> | null; camera: Doc<'roomCameras'> | null }\n\n" ++
-  "const roomViewValidator = schema.doc('rooms').omit('hostAuthId', 'rngState', 'rngCounter')\n" ++
-  "const playerViewValidator = schema.doc('players').omit('authId')\n" ++
-  "const publicPlayerValidator = v.object({ _id: v.id('players'), name: v.string(), color: v.string(), position: v.number(), previousPosition: v.optional(v.number()), joinedAt: v.number() })\n\n" ++
-  emitFunction roomViewFunction ++ "\n" ++ emitFunction playerViewFunction ++ "\n" ++
-  emitFunction publicPlayerFunction ++ "\n" ++ emitFunction activeStateFunction ++ "\n" ++
-  emitEndpointDefinition displayDefinition ++ "\n" ++
-  emitEndpointDefinition controllerDefinition ++ "\n" ++
-  emitEndpointDefinition myPlayerDefinition
+/-- The read-side projections and the three public room queries. -/
+def module : Module where
+  provenance := some "proofs/Mythroads/Backend/Room/Queries.lean"
+  imports := [
+    { source := "convex/values", bindings := [{ name := "v" }] },
+    { source := "../_generated/dataModel", bindings := [{ name := "Doc", isType := true }, { name := "Id", isType := true }] },
+    { source := "../_generated/server", bindings := [{ name := "QueryCtx", isType := true }] },
+    { source := "../auth/authorization", bindings := [{ name := "developmentAuthBypass" }, { name := "requireAuthId" }, { name := "requirePlayerOwner" }] },
+    { source := "../schema", «default» := "schema" }
+  ]
+  items := [
+    .raw ("type PublicPlayer = { _id: Id<'players'>; name: string; color: string; position: number; previousPosition?: number; joinedAt: number }\n" ++
+      "type ActiveState = { encounter: Doc<'encounters'> | null; combat: Doc<'combats'> | null; selection: Doc<'roomSelections'> | null; camera: Doc<'roomCameras'> | null }\n"),
+    .raw ("const roomViewValidator = schema.doc('rooms').omit('hostAuthId', 'rngState', 'rngCounter')\n" ++
+      "const playerViewValidator = schema.doc('players').omit('authId')\n" ++
+      "const publicPlayerValidator = v.object({ _id: v.id('players'), name: v.string(), color: v.string(), position: v.number(), previousPosition: v.optional(v.number()), joinedAt: v.number() })\n"),
+    .function roomViewFunction,
+    .function playerViewFunction,
+    .function publicPlayerFunction,
+    .function activeStateFunction,
+    .endpoint displayDefinition,
+    .endpoint controllerDefinition,
+    .endpoint myPlayerDefinition
+  ]
 
 end Mythroads.Backend.Room.Queries

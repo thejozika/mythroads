@@ -11,6 +11,8 @@ not specification.
 - `npm run lint` / `npm run lint:fix` — Biome correctness and style checks.
 - `npm run format` / `npm run format:check` — deterministic formatting.
 - `npm run proofs:check` — compile Lean proofs and reject stale generated Convex code.
+- `npm run proofs:axioms` — reject any theorem that depends on `sorry` or on a `native_decide`
+  axiom instead of a kernel-checked proof.
 - `npm run check` — the complete blocking gate, including the production build.
 
 Do not weaken a check merely to land a change. Split or correct the code. Generated files under

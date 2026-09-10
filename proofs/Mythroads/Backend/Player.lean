@@ -1,17 +1,17 @@
-import Mythroads.Convex.TypeScript
+import Mythroads.Convex.Module
+import Mythroads.Convex.Query
 import Mythroads.Game.Inventory
 import Mythroads.Game.Player
 
 namespace Mythroads.Backend.Player
 
+open Mythroads.Convex
 open Mythroads.Convex.TypeScript
 open Mythroads.Game
 
 private def id (name : String) : Expr := .identifier name
 private def prop (target : Expr) (name : String) : Expr := .property target name
 private def call (target : Expr) (arguments : List Expr := []) : Expr := .call target arguments
-private def method (target : Expr) (name : String) (arguments : List Expr := []) : Expr :=
-  call (prop target name) arguments
 
 private def playerDocument : Expr := .object [
   ("roomId", id "roomId"), ("authId", id "authId"),
@@ -36,22 +36,28 @@ private def starterItem (itemId slot : String) : Expr := .object [
 def createPlayerFunction : Function where
   name := "createPlayer"
   parameters := [
-    { name := "ctx", type := .named "MutationCtx" }, { name := "roomId", type := .id "rooms" },
-    { name := "data", type := .object [("name", .string), ("color", .string)] },
+    { name := "ctx", type := .named "MutationCtx" }, { name := "roomId", type := .id .rooms },
+    { name := "data", type := .obj [("name", .string), ("color", .string)] },
     { name := "authId", type := .union [.string, .named "undefined"] }
   ]
-  returns := .promise (.id "players")
+  returns := .promise (.id .players)
   body := [
     .constDecl "createdAt" (call (prop (id "Date") "now")),
-    .constDecl "playerId" (.await (method (prop (id "ctx") "db") "insert"
-      [.string "players", playerDocument])),
-    .expression (.await (method (prop (id "ctx") "db") "insert"
-      [.string "playerItems", starterItem "ember_grimoire" "offensiveMagic"])),
-    .expression (.await (method (prop (id "ctx") "db") "insert"
-      [.string "playerItems", starterItem "aegis_script" "defensiveMagic"])),
+    .constDecl "playerId" (Query.insert .players playerDocument),
+    .expression (Query.insert .playerItems (starterItem "ember_grimoire" "offensiveMagic")),
+    .expression (Query.insert .playerItems (starterItem "aegis_script" "defensiveMagic")),
     .return (id "playerId")
   ]
 
-def emitPlayer : String := emitFunction createPlayerFunction
+/-- Player creation with the starting stats proved in `Game/Player.lean`. -/
+def module : Module where
+  provenance := some "proofs/Mythroads/Game/Player.lean"
+  imports := [
+    { source := "../_generated/dataModel", bindings := [{ name := "Id", isType := true }] },
+    { source := "../_generated/server", bindings := [{ name := "MutationCtx", isType := true }] }
+  ]
+  items := [
+    .function createPlayerFunction
+  ]
 
 end Mythroads.Backend.Player

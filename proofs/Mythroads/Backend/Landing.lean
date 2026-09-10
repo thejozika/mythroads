@@ -1,7 +1,8 @@
-import Mythroads.Convex.TypeScript
+import Mythroads.Convex.Module
 
 namespace Mythroads.Backend.Landing
 
+open Mythroads.Convex
 open Mythroads.Convex.TypeScript
 
 private def id (name : String) : Expr := .identifier name
@@ -15,8 +16,8 @@ def resolveLandingFunction : Function where
   name := "resolveLanding"
   parameters := [
     { name := "ctx", type := .named "MutationCtx" },
-    { name := "room", type := .named "Doc<'rooms'>" },
-    { name := "player", type := .named "Doc<'players'>" },
+    { name := "room", type := .doc .rooms },
+    { name := "player", type := .doc .players },
     { name := "destination", type := .number }
   ]
   returns := .promise .void
@@ -62,8 +63,8 @@ def startEventFunction : Function where
   isExported := false
   name := "startEvent"
   parameters := [
-    { name := "ctx", type := .named "MutationCtx" }, { name := "roomId", type := .id "rooms" },
-    { name := "player", type := .named "Doc<'players'>" },
+    { name := "ctx", type := .named "MutationCtx" }, { name := "roomId", type := .id .rooms },
+    { name := "player", type := .doc .players },
     { name := "destination", type := .number }
   ]
   returns := .promise .void
@@ -95,7 +96,21 @@ def startEventFunction : Function where
     ]))
   ]
 
-def emitLanding : String :=
-  emitFunction resolveLandingFunction ++ "\n" ++ emitFunction startEventFunction
+/-- What happens when a hero finishes a move on a space. -/
+def module : Module where
+  provenance := some "proofs/Mythroads/Backend/Landing.lean"
+  imports := [
+    { source := "../../shared/board.system", bindings := [{ name := "getNode" }, { name := "isShopKind" }] },
+    { source := "../../shared/encounter.system", bindings := [{ name := "encounterWeight" }, { name := "outcomesFor" }, { name := "pickEncounter" }] },
+    { source := "../_generated/dataModel", bindings := [{ name := "Doc", isType := true }, { name := "Id", isType := true }] },
+    { source := "../_generated/server", bindings := [{ name := "MutationCtx", isType := true }] },
+    { source := "../combat", bindings := [{ name := "startCombat" }] },
+    { source := "../gameHelpers", bindings := [{ name := "advanceTurn" }] },
+    { source := "../random/state", bindings := [{ name := "drawRoomRandom" }] }
+  ]
+  items := [
+    .function resolveLandingFunction,
+    .function startEventFunction
+  ]
 
 end Mythroads.Backend.Landing

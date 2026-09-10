@@ -1,9 +1,9 @@
 /** Generated from proofs/Mythroads/Game/Combat.lean. Do not edit by hand. */
 import {
-    elementMatchup,
-    MAGIC_TECHNIQUES,
     type Element,
+    elementMatchup,
     type ImpactType,
+    MAGIC_TECHNIQUES,
     type MagicTechniqueId,
 } from '../magic.system.ts'
 

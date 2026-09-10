@@ -1,22 +1,17 @@
-import Mythroads.Convex.TypeScript
+import Mythroads.Convex.Module
+import Mythroads.Convex.Query
 
 namespace Mythroads.Backend.Persistence
 
+open Mythroads.Convex
 open Mythroads.Convex.TypeScript
 
 private def id (name : String) : Expr := .identifier name
 private def prop (target : Expr) (name : String) : Expr := .property target name
 private def call (target : Expr) (arguments : List Expr := []) : Expr := .call target arguments
-private def method (target : Expr) (name : String) (arguments : List Expr := []) : Expr :=
-  call (prop target name) arguments
 
 private def eventByCommandId : Expr :=
-  method
-    (method
-      (method (prop (id "ctx") "db") "query" [.string "gameEvents"])
-      "withIndex" [.string "by_commandId", .arrow ["query"]
-        (method (id "query") "eq" [.string "commandId", id "commandId"])])
-    "unique"
+  Query.indexedRead .gameEvents .gameEventsByCommandId [id "commandId"] .unique
 
 def priorResultFunction : Function where
   name := "priorDispatchResult"
@@ -28,7 +23,7 @@ def priorResultFunction : Function where
   returns := .promise (.union [.named "DispatchResult", .named "null"])
   body := [
     .ifThen (.prefix "!" (id "commandId")) [.return .null],
-    .constDecl "existing" (.await eventByCommandId),
+    .constDecl "existing" eventByCommandId,
     .ifThen (.binary (.prefix "!" (id "existing")) "||"
       (.prefix "!" (.binary (.string "result") "in" (id "existing")))) [.return .null],
     .ifThen (.binary (id "actorAuthId") "&&"
@@ -69,11 +64,22 @@ def persistFunction : Function where
       ("createdAt", id "createdAt"), ("commandId", id "commandId"),
       ("roomId", id "roomId"), ("actorPlayerId", prop (id "authority") "actorPlayerId")
     ]),
-    .expression (.await (method (prop (id "ctx") "db") "insert"
-      [.string "gameEvents", id "record"]))
+    .expression (Query.insert .gameEvents (id "record"))
   ]
 
-def emitPersistence : String :=
-  emitFunction priorResultFunction ++ "\n" ++ emitFunction persistFunction
+/-- Command deduplication and the durable game-event log. -/
+def module : Module where
+  provenance := some "proofs/Mythroads/Game/Events.lean"
+  imports := [
+    { source := "convex/values", bindings := [{ name := "ConvexError" }] },
+    { source := "../_generated/server", bindings := [{ name := "MutationCtx", isType := true }] },
+    { source := "./authority", bindings := [{ name := "resolveEventAuthority" }] },
+    { source := "./policy", bindings := [{ name := "eventRoomId" }, { name := "isPersistentGameEvent" }] },
+    { source := "./validators", bindings := [{ name := "DispatchResult", isType := true }, { name := "GameEvent", isType := true }] }
+  ]
+  items := [
+    .function priorResultFunction,
+    .function persistFunction
+  ]
 
 end Mythroads.Backend.Persistence

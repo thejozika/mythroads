@@ -1,7 +1,9 @@
-import Mythroads.Convex.TypeScript
+import Mythroads.Convex.Module
+import Mythroads.Convex.Query
 
 namespace Mythroads.Backend.Turn
 
+open Mythroads.Convex
 open Mythroads.Convex.TypeScript
 
 private def id (name : String) : Expr := .identifier name
@@ -13,7 +15,7 @@ private def method (target : Expr) (name : String) (arguments : List Expr := [])
 def roomPhaseFunction : Function where
   isAsync := false
   name := "roomPhase"
-  parameters := [{ name := "room", type := .named "Doc<'rooms'>" }]
+  parameters := [{ name := "room", type := .doc .rooms }]
   returns := .named "RoomPhase"
   body := [
     .ifThen (prop (id "room") "phase") [.return (prop (id "room") "phase")],
@@ -22,19 +24,14 @@ def roomPhaseFunction : Function where
   ]
 
 private def playersQuery : Expr :=
-  .await (method
-    (method
-      (method (prop (id "ctx") "db") "query" [.string "players"])
-      "withIndex" [.string "by_room", .arrow ["query"]
-        (method (id "query") "eq" [.string "roomId", prop (id "room") "_id"])])
-    "take" [.number 4])
+  Query.indexedRead .players .playersByRoom [prop (id "room") "_id"] (.take 4)
 
 def advanceTurnFunction : Function where
   name := "advanceTurn"
   parameters := [
     { name := "ctx", type := .named "MutationCtx" },
-    { name := "room", type := .named "Doc<'rooms'>" },
-    { name := "playerId", type := .id "players" },
+    { name := "room", type := .doc .rooms },
+    { name := "playerId", type := .id .players },
     { name := "message", type := .string }
   ]
   returns := .promise .void
@@ -63,8 +60,17 @@ def advanceTurnFunction : Function where
     ]))
   ]
 
-def emitTurn : String :=
-  "export type RoomPhase = NonNullable<Doc<'rooms'>['phase']>\n\n" ++
-  emitFunction roomPhaseFunction ++ "\n" ++ emitFunction advanceTurnFunction
+/-- Turn order and phase reset. -/
+def module : Module where
+  provenance := some "proofs/Mythroads/Game/Turn.lean"
+  imports := [
+    { source := "../_generated/dataModel", bindings := [{ name := "Doc", isType := true }, { name := "Id", isType := true }] },
+    { source := "../_generated/server", bindings := [{ name := "MutationCtx", isType := true }] }
+  ]
+  items := [
+    .raw "export type RoomPhase = NonNullable<Doc<'rooms'>['phase']>\n",
+    .function roomPhaseFunction,
+    .function advanceTurnFunction
+  ]
 
 end Mythroads.Backend.Turn

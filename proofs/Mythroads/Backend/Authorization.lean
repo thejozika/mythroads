@@ -1,8 +1,9 @@
-import Mythroads.Convex.TypeScript
+import Mythroads.Convex.Module
 import Mythroads.Game.Events
 
 namespace Mythroads.Backend.Authorization
 
+open Mythroads.Convex
 open Mythroads.Convex.TypeScript
 open Mythroads.Game.Events
 
@@ -38,10 +39,10 @@ def requirePlayerOwnerFunction : Function where
   name := "requirePlayerOwner"
   parameters := [
     { name := "ctx", type := .named "AuthContext" },
-    { name := "playerId", type := .id "players" }
+    { name := "playerId", type := .id .players }
   ]
-  returns := .promise (.object [
-    ("authId", .union [.string, .named "null"]), ("player", .named "Doc<'players'>")
+  returns := .promise (.obj [
+    ("authId", .union [.string, .named "null"]), ("player", .doc .players)
   ])
   body := [
     .constDecl "authId" (.await (call (id "requireAuthId") [id "ctx"])),
@@ -87,8 +88,22 @@ def authorizeEventFunction : Function where
     error "This command has no authenticated actor."
   ]
 
-def emitAuthorization : String :=
-  emitFunction developmentBypassFunction ++ "\n" ++ emitFunction requireAuthIdFunction ++
-  "\n" ++ emitFunction requirePlayerOwnerFunction ++ "\n" ++ emitFunction authorizeEventFunction
+/-- The authorization helpers and the per-event authority switch. -/
+def module : Module where
+  provenance := some "proofs/Mythroads/Game/Events.lean"
+  imports := [
+    { source := "convex/values", bindings := [{ name := "ConvexError" }] },
+    { source := "../_generated/dataModel", bindings := [{ name := "Doc", isType := true }, { name := "Id", isType := true }] },
+    { source := "../_generated/server", bindings := [{ name := "MutationCtx", isType := true }, { name := "QueryCtx", isType := true }] },
+    { source := "../events/validators", bindings := [{ name := "GameEvent", isType := true }] }
+  ]
+  items := [
+    .raw ("declare const process: { env: Record<string, string | undefined> }\n" ++
+      "type AuthContext = Pick<MutationCtx | QueryCtx, 'auth' | 'db'>\n"),
+    .function developmentBypassFunction,
+    .function requireAuthIdFunction,
+    .function requirePlayerOwnerFunction,
+    .function authorizeEventFunction
+  ]
 
 end Mythroads.Backend.Authorization

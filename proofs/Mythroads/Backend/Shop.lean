@@ -1,7 +1,9 @@
-import Mythroads.Convex.TypeScript
+import Mythroads.Convex.Module
+import Mythroads.Convex.Query
 
 namespace Mythroads.Backend.Shop
 
+open Mythroads.Convex
 open Mythroads.Convex.TypeScript
 
 private def id (name : String) : Expr := .identifier name
@@ -12,8 +14,8 @@ private def method (target : Expr) (name : String) (arguments : List Expr := [])
 private def reject (message : String) : Statement :=
   .throw (.new "ConvexError" [.string message])
 
-private def shopArgs : TsType := .object [
-  ("roomId", .id "rooms"), ("playerId", .id "players"), ("itemId", .string)
+private def shopArgs : TsType := .obj [
+  ("roomId", .id .rooms), ("playerId", .id .players), ("itemId", .string)
 ]
 
 def buyItemFunction : Function where
@@ -47,11 +49,9 @@ def buyItemFunction : Function where
       id "playerId", .object [("gold", .binary (prop (id "player") "gold") "-"
         (prop (id "item") "price"))]
     ])),
-    .expression (.await (method (prop (id "ctx") "db") "insert" [
-      .string "playerItems", .object [
-        ("playerId", id "playerId"), ("itemId", id "itemId"),
-        ("purchasedAt", call (prop (id "Date") "now"))
-      ]
+    .expression (Query.insert .playerItems (.object [
+      ("playerId", id "playerId"), ("itemId", id "itemId"),
+      ("purchasedAt", call (prop (id "Date") "now"))
     ]))
   ]
 
@@ -59,8 +59,8 @@ def leaveShopFunction : Function where
   name := "leaveShop"
   parameters := [
     { name := "ctx", type := .named "MutationCtx" },
-    { name := "subjects", type := .object [
-        ("roomId", .id "rooms"), ("playerId", .id "players")
+    { name := "subjects", type := .obj [
+        ("roomId", .id .rooms), ("playerId", .id .players)
       ] }
   ]
   returns := .promise .void
@@ -82,6 +82,19 @@ def leaveShopFunction : Function where
     ]))
   ]
 
-def emitShop : String := emitFunction buyItemFunction ++ "\n" ++ emitFunction leaveShopFunction
+/-- Buying an item and leaving a shop. -/
+def module : Module where
+  provenance := some "proofs/Mythroads/Backend/Shop.lean"
+  imports := [
+    { source := "convex/values", bindings := [{ name := "ConvexError" }] },
+    { source := "../../shared/item.system", bindings := [{ name := "getItem" }] },
+    { source := "../_generated/dataModel", bindings := [{ name := "Id", isType := true }] },
+    { source := "../_generated/server", bindings := [{ name := "MutationCtx", isType := true }] },
+    { source := "../gameHelpers", bindings := [{ name := "advanceTurn" }, { name := "roomPhase" }] }
+  ]
+  items := [
+    .function buyItemFunction,
+    .function leaveShopFunction
+  ]
 
 end Mythroads.Backend.Shop

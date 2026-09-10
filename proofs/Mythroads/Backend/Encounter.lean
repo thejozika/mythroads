@@ -1,7 +1,8 @@
-import Mythroads.Convex.TypeScript
+import Mythroads.Convex.Module
 
 namespace Mythroads.Backend.Encounter
 
+open Mythroads.Convex
 open Mythroads.Convex.TypeScript
 
 private def id (name : String) : Expr := .identifier name
@@ -12,9 +13,9 @@ private def method (target : Expr) (name : String) (arguments : List Expr := [])
 private def reject (message : String) : Statement :=
   .throw (.new "ConvexError" [.string message])
 
-private def subjectsType : TsType := .object [
-  ("roomId", .id "rooms"), ("playerId", .id "players"),
-  ("encounterId", .id "encounters")
+private def subjectsType : TsType := .obj [
+  ("roomId", .id .rooms), ("playerId", .id .players),
+  ("encounterId", .id .encounters)
 ]
 
 private def effectText (field suffix : String) : Expr :=
@@ -89,6 +90,17 @@ def resolveEncounterFunction : Function where
     ]))
   ]
 
-def emitEncounter : String := emitFunction resolveEncounterFunction
+/-- The `encounter.resolve` transaction as one generated Convex module. -/
+def module : Module where
+  provenance := some "proofs/Mythroads/Backend/Encounter.lean"
+  imports := [
+    { source := "convex/values", bindings := [{ name := "ConvexError" }] },
+    { source := "../_generated/dataModel", bindings := [{ name := "Id", isType := true }] },
+    { source := "../_generated/server", bindings := [{ name := "MutationCtx", isType := true }] },
+    { source := "../gameHelpers", bindings := [{ name := "advanceTurn" }, { name := "roomPhase" }] }
+  ]
+  items := [
+    .function resolveEncounterFunction
+  ]
 
 end Mythroads.Backend.Encounter

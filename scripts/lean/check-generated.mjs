@@ -1,81 +1,106 @@
-import { readFileSync, writeFileSync } from 'node:fs'
+/**
+ * Drift check for the Lean-authored TypeScript boundary.
+ *
+ * The Lean side owns the list of generated files (`proofs/Emit.lean`'s `outputs`), so this script
+ * no longer restates it. It builds the single `mythroads-emit` executable, runs it into a staging
+ * directory, lets Biome canonicalize that tree (import order first, then formatting), and compares
+ * the result with the repository tree.
+ *
+ * Comparing whole trees rather than file-by-file also catches a case the previous per-executable
+ * loop could not: a generated file left behind in the repository after its Lean source was
+ * deleted.
+ *
+ * Default mode reports stale, missing, and extra files and exits non-zero. `--write` copies the
+ * staged tree over the repository instead, which is what `npm run proofs:generate` does.
+ */
 import { spawnSync } from 'node:child_process'
-import { resolve } from 'node:path'
+import {
+    cpSync,
+    mkdirSync,
+    mkdtempSync,
+    readFileSync,
+    readdirSync,
+    rmSync,
+    statSync,
+} from 'node:fs'
+import { tmpdir } from 'node:os'
+import { dirname, join, resolve } from 'node:path'
 
 const root = resolve(import.meta.dirname, '../..')
-const generatedModules = [
-    { executable: 'mythroads-codegen', file: 'game-api.generated.ts' },
-    { executable: 'mythroads-inventory-codegen', file: 'inventory.generated.ts' },
-    { executable: 'mythroads-schema-codegen', file: 'schema.generated.ts' },
-    { executable: 'mythroads-random-codegen', file: 'random.generated.ts' },
-    { executable: 'mythroads-events-codegen', file: '../events/validators.generated.ts' },
-    { executable: 'mythroads-router-codegen', file: '../events/router.generated.ts' },
-    { executable: 'mythroads-policy-codegen', file: '../events/policy.generated.ts' },
-    { executable: 'mythroads-authorization-codegen', file: '../auth/authorization.generated.ts' },
-    { executable: 'mythroads-authority-codegen', file: '../events/authority.generated.ts' },
-    { executable: 'mythroads-persistence-codegen', file: '../events/persistence.generated.ts' },
-    { executable: 'mythroads-retention-codegen', file: '../events/retention.generated.ts' },
-    { executable: 'mythroads-player-codegen', file: 'player.generated.ts' },
-    { executable: 'mythroads-shop-codegen', file: 'shop.generated.ts' },
-    { executable: 'mythroads-turn-codegen', file: 'turn.generated.ts' },
-    { executable: 'mythroads-encounter-codegen', file: 'encounter.generated.ts' },
-    { executable: 'mythroads-landing-codegen', file: 'landing.generated.ts' },
-    { executable: 'mythroads-camera-codegen', file: 'camera.generated.ts' },
-    { executable: 'mythroads-room-codegen', file: 'room.generated.ts' },
-    { executable: 'mythroads-room-queries-codegen', file: '../rooms/queries.generated.ts' },
-    { executable: 'mythroads-combat-state-codegen', file: 'combat/state.generated.ts' },
-    { executable: 'mythroads-combat-attack-codegen', file: 'combat/attack.generated.ts' },
-    { executable: 'mythroads-combat-guard-codegen', file: 'combat/guard.generated.ts' },
-    { executable: 'mythroads-magic-codegen', file: '../../shared/generated/magic.generated.ts' },
-    { executable: 'mythroads-item-codegen', file: '../../shared/generated/item.generated.ts' },
-    {
-        executable: 'mythroads-encounter-rules-codegen',
-        file: '../../shared/generated/encounter.generated.ts',
-    },
-    { executable: 'mythroads-world-codegen', file: '../../shared/generated/board.generated.ts' },
-    {
-        executable: 'mythroads-world-types-codegen',
-        file: '../../shared/generated/world.generated.ts',
-    },
-    {
-        executable: 'mythroads-controller-input-codegen',
-        file: '../../shared/generated/controller-input.generated.ts',
-    },
-    {
-        executable: 'mythroads-combat-rules-codegen',
-        file: '../../shared/generated/combat.generated.ts',
-    },
-]
+const proofs = join(root, 'proofs')
+const biome = join(root, 'node_modules/.bin/biome')
+const write = process.argv.includes('--write')
 
-for (const module of generatedModules) {
-    const target = resolve(root, 'convex/generated', module.file)
-    const result = spawnSync('lake', ['exe', module.executable], {
-        cwd: resolve(root, 'proofs'),
-        encoding: 'utf8',
-    })
+/** Runs a command, forwarding its output, and aborts the process if it fails. */
+const run = (command, args, options = {}) => {
+    const result = spawnSync(command, args, { stdio: 'inherit', ...options })
     if (result.status !== 0) {
-        process.stderr.write(result.stderr)
+        process.stderr.write(`${command} ${args.join(' ')} failed.\n`)
         process.exit(result.status ?? 1)
-    }
-    const formatted = spawnSync(
-        resolve(root, 'node_modules/.bin/biome'),
-        ['format', '--stdin-file-path', target],
-        { encoding: 'utf8', input: result.stdout },
-    )
-    if (formatted.status !== 0) {
-        process.stderr.write(formatted.stderr)
-        process.exit(formatted.status ?? 1)
-    }
-    if (process.argv.includes('--write')) {
-        writeFileSync(target, formatted.stdout)
-    } else if (readFileSync(target, 'utf8') !== formatted.stdout) {
-        process.stderr.write(`${module.file} is stale. Run npm run proofs:generate.\n`)
-        process.exit(1)
     }
 }
 
-process.stdout.write(
-    process.argv.includes('--write')
-        ? 'Generated Convex modules from Lean.\n'
-        : 'Lean proofs and generated Convex modules agree.\n',
-)
+/** Every file below `directory`, as paths relative to it, sorted for deterministic reporting. */
+const treeFiles = (directory, prefix = '') => {
+    const entries = []
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+        const child = join(directory, entry.name)
+        const name = prefix ? `${prefix}/${entry.name}` : entry.name
+        if (entry.isDirectory()) entries.push(...treeFiles(child, name))
+        else entries.push(name)
+    }
+    return entries.sort()
+}
+
+const staging = mkdtempSync(join(tmpdir(), 'mythroads-emit-'))
+try {
+    run('lake', ['build', 'mythroads-emit'], { cwd: proofs })
+    run('lake', ['exe', 'mythroads-emit', staging], { cwd: proofs })
+    run(biome, ['check', '--write', '--only=assist/source/organizeImports', staging], { cwd: root })
+    run(biome, ['format', '--write', staging], { cwd: root })
+
+    const generated = treeFiles(staging)
+    const stale = []
+    for (const file of generated) {
+        const target = join(root, file)
+        const expected = readFileSync(join(staging, file), 'utf8')
+        const actual = statSync(target, { throwIfNoEntry: false }) && readFileSync(target, 'utf8')
+        if (actual === expected) continue
+        if (write) {
+            mkdirSync(dirname(target), { recursive: true })
+            cpSync(join(staging, file), target)
+        } else stale.push(actual === undefined || actual === null ? `${file} (missing)` : file)
+    }
+
+    // A generated file whose Lean source disappeared would otherwise linger unnoticed.
+    const owned = new Set(generated)
+    const directories = [...new Set(generated.map((file) => dirname(file)))]
+    const extra = [
+        ...new Set(
+            directories
+                .flatMap((directory) => treeFiles(join(root, directory), directory))
+                .filter((file) => file.endsWith('.generated.ts') && !owned.has(file)),
+        ),
+    ].sort()
+
+    if (!write && (stale.length > 0 || extra.length > 0)) {
+        for (const file of stale) process.stderr.write(`${file} is stale.\n`)
+        for (const file of extra) process.stderr.write(`${file} has no Lean source.\n`)
+        process.stderr.write('Run npm run proofs:generate.\n')
+        process.exit(1)
+    }
+    if (write && extra.length > 0) {
+        for (const file of extra) {
+            process.stderr.write(`${file} has no Lean source; delete it.\n`)
+        }
+        process.exit(1)
+    }
+
+    process.stdout.write(
+        write
+            ? `Generated ${generated.length} Convex modules from Lean.\n`
+            : 'Lean proofs and generated Convex modules agree.\n',
+    )
+} finally {
+    rmSync(staging, { recursive: true, force: true })
+}

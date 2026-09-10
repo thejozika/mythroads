@@ -1,5 +1,5 @@
 /** Generated from proofs/Mythroads/Game/Inventory.lean. Do not edit by hand. */
-import { MAGIC_LOADOUTS, type Element } from '../magic.system.ts'
+import { type Element, MAGIC_LOADOUTS } from '../magic.system.ts'
 
 export type ShopKind = 'armoury' | 'jeweller' | 'weapons' | 'items' | 'magic'
 export type EquipmentSlot =

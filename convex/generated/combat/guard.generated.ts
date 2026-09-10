@@ -1,18 +1,19 @@
+/** Generated from proofs/Mythroads/Backend/Combat/Guard.lean. Do not edit by hand. */
 import {
     ATTACK_LABELS,
     GUARD_LABELS,
+    type GuardStance,
     isMagicTechnique,
     PHYSICAL_ATTACKS,
     strikeDamage,
-    type GuardStance,
 } from '../../../shared/combat.system'
 import { equippedMagic } from '../../../shared/item.system'
 import { MAGIC_LOADOUTS, MAGIC_TECHNIQUES } from '../../../shared/magic.system'
 import type { Id } from '../../_generated/dataModel'
 import type { MutationCtx } from '../../_generated/server'
 import { advanceTurn } from '../../gameHelpers'
-import { chanceHits } from '../random.generated'
 import { drawRoomRandom } from '../../random/state'
+import { chanceHits } from '../random.generated'
 import { activeCombat, debuffPatch, enemyStats, playerStats } from './state.generated'
 
 export async function chooseGuard(

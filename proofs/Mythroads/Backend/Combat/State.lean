@@ -1,7 +1,8 @@
-import Mythroads.Convex.TypeScript
+import Mythroads.Convex.Module
 
 namespace Mythroads.Backend.Combat.State
 
+open Mythroads.Convex
 open Mythroads.Convex.TypeScript
 
 def id (name : String) : Expr := .identifier name
@@ -20,8 +21,8 @@ def playerStatsFunction : Function where
   isAsync := false
   name := "playerStats"
   parameters := [
-    { name := "player", type := .named "Doc<'players'>" },
-    { name := "combat", type := .union [.named "Doc<'combats'>", .named "undefined"] }
+    { name := "player", type := .doc .players },
+    { name := "combat", type := .union [.doc .combats, .named "undefined"] }
   ]
   returns := .named "BattleStats"
   body := [.return (.object [
@@ -39,7 +40,7 @@ def playerStatsFunction : Function where
 def enemyStatsFunction : Function where
   isAsync := false
   name := "enemyStats"
-  parameters := [{ name := "combat", type := .named "Doc<'combats'>" }]
+  parameters := [{ name := "combat", type := .doc .combats }]
   returns := .named "BattleStats"
   body := [.return (.object [
     ("attack", prop (id "combat") "enemyAttack"),
@@ -59,15 +60,15 @@ def debuffPatchFunction : Function where
   isAsync := false
   name := "debuffPatch"
   parameters := [
-    { name := "combat", type := .named "Doc<'combats'>" },
+    { name := "combat", type := .doc .combats },
     { name := "target", type := .union [.literalString "enemy", .literalString "player"] },
     { name := "stat", type := .named "DebuffStat" }, { name := "amount", type := .number }
   ]
   returns := .union [
-    .object [("enemyDefensePenalty", .number)], .object [("enemyMagicPenalty", .number)],
-    .object [("enemyAthleticsPenalty", .number)], .object [("enemyAgilityPenalty", .number)],
-    .object [("playerDefensePenalty", .number)], .object [("playerMagicPenalty", .number)],
-    .object [("playerAthleticsPenalty", .number)], .object [("playerAgilityPenalty", .number)]
+    .obj [("enemyDefensePenalty", .number)], .obj [("enemyMagicPenalty", .number)],
+    .obj [("enemyAthleticsPenalty", .number)], .obj [("enemyAgilityPenalty", .number)],
+    .obj [("playerDefensePenalty", .number)], .obj [("playerMagicPenalty", .number)],
+    .obj [("playerAthleticsPenalty", .number)], .obj [("playerAgilityPenalty", .number)]
   ]
   body := [
     .ifThen (.binary (id "target") "===" (.string "enemy")) [
@@ -98,8 +99,8 @@ def startCombatFunction : Function where
   name := "startCombat"
   parameters := [
     { name := "ctx", type := .named "MutationCtx" },
-    { name := "room", type := .named "Doc<'rooms'>" },
-    { name := "player", type := .named "Doc<'players'>" },
+    { name := "room", type := .doc .rooms },
+    { name := "player", type := .doc .players },
     { name := "spaceId", type := .number }
   ]
   returns := .promise .void
@@ -137,8 +138,8 @@ def startCombatFunction : Function where
 def activeCombatFunction : Function where
   name := "activeCombat"
   parameters := [
-    { name := "ctx", type := .named "MutationCtx" }, { name := "roomId", type := .id "rooms" },
-    { name := "playerId", type := .id "players" },
+    { name := "ctx", type := .named "MutationCtx" }, { name := "roomId", type := .id .rooms },
+    { name := "playerId", type := .id .players },
     { name := "expected", type := .union [
         .literalString "combatAttack", .literalString "combatDefend"
       ] }
@@ -164,10 +165,24 @@ def activeCombatFunction : Function where
     .return (.object [("room", id "room"), ("player", id "player"), ("combat", id "combat")])
   ]
 
-def emitState : String :=
-  "type CombatControl = { room: Doc<'rooms'>; player: Doc<'players'>; combat: Doc<'combats'> }\n\n" ++
-  emitFunction playerStatsFunction ++ "\n" ++ emitFunction enemyStatsFunction ++ "\n" ++
-  emitFunction debuffPatchFunction ++ "\n" ++ emitFunction startCombatFunction ++ "\n" ++
-  emitFunction activeCombatFunction
+/-- Combat stat projection, debuff bookkeeping, and combat lifecycle. -/
+def module : Module where
+  provenance := some "proofs/Mythroads/Backend/Combat/State.lean"
+  imports := [
+    { source := "convex/values", bindings := [{ name := "ConvexError" }] },
+    { source := "../../../shared/combat.system", bindings := [{ name := "enemyForSpace" }, { name := "BattleStats", isType := true }] },
+    { source := "../../../shared/magic.system", bindings := [{ name := "DebuffStat", isType := true }] },
+    { source := "../../_generated/dataModel", bindings := [{ name := "Doc", isType := true }, { name := "Id", isType := true }] },
+    { source := "../../_generated/server", bindings := [{ name := "MutationCtx", isType := true }] },
+    { source := "../../gameHelpers", bindings := [{ name := "roomPhase" }] }
+  ]
+  items := [
+    .raw "type CombatControl = { room: Doc<'rooms'>; player: Doc<'players'>; combat: Doc<'combats'> }\n",
+    .function playerStatsFunction,
+    .function enemyStatsFunction,
+    .function debuffPatchFunction,
+    .function startCombatFunction,
+    .function activeCombatFunction
+  ]
 
 end Mythroads.Backend.Combat.State
