@@ -133,7 +133,8 @@ structure Envelope where
 ```
 
 `actor` is derived server-side from the auth token, and `seed` is entropy supplied by the trusted
-boundary and stored in the log.
+boundary. Only `room.create` reads the seed, and it is *not* written to `gameEvents`: `Lobby.create`
+normalises it into a generator state and the `rooms` row stores that state (see §5).
 
 **`Effect`** is what the pure function asks the outside world to do afterwards: `persistPlayer`,
 `persistRoom`, `persistCombat`, `persistEncounter`, `persistSelection`, `clearSelection`,
@@ -242,14 +243,23 @@ every reachable room satisfies:
 structure Ok (s : State) : Prop where
   heroes : ∀ p ∈ s.players, p.hp ≤ p.maxHp
   turnInRange : s.turn < max 1 s.players.length
+  seated : s.players.length ≤ maxPlayers
+  rngInRange : s.rng < Game.Random.modulus
 ```
 
-Two more safety properties are absent because they are free: gold is a `Nat`, so it cannot go
-negative, and hero identity survives because every rewrite goes through `mapPlayer`.
+The last two clauses are the facts the boundary silently relies on: `loadState` reads at most four
+hero rows, and the compiled generator arithmetic is exact only while the state is below 2^31. Stating
+them in `Ok` makes the division of labour explicit — the rules keep them, and the boundary is the only
+place they can be violated, which is why every client number is coerced there (§6). What `Ok` does
+not claim is `0 < rng`: that needs primality of the modulus, and the boundary never produces zero
+because every seed is normalised to `1 ≤ state`. Two more safety properties are absent because they
+are free: gold is a `Nat`, so it cannot go negative, and hero identity survives because every rewrite
+goes through `mapPlayer`.
 
 Because there are only two primitives, invariant preservation is two lemmas — `ok_mapPlayer` and
 `ok_advanceTurn` — plus a one-line side condition per event (`damaged_bounded`, `spent_bounded`,
-`restored_bounded`). [`Engine/Preservation.lean`](../../proofs/Mythroads/Engine/Preservation.lean)
+`restored_bounded`), and one more shape for the transitions that draw: `ok_reseeded`, discharged by
+the fact that every draw ends in a remainder modulo the modulus. [`Engine/Preservation.lean`](../../proofs/Mythroads/Engine/Preservation.lean)
 carries one lemma per transition, and the dispatcher theorem in
 [`Engine/Theorems.lean`](../../proofs/Mythroads/Engine/Theorems.lean) is a mechanical `split` with
 one arm per dispatch case. An event added to `transition` without its lemma leaves an arm the proof
@@ -284,10 +294,10 @@ same values the theorems talk about.
 compile-time `#guard`s that walk a full turn, a battle round and a shop visit — concrete evidence
 that the abstract statements describe a game somebody can actually play.
 
-## 5. Replay: the log is the truth
+## 5. Replay: what a log means
 
-[`Engine/Replay.lean`](../../proofs/Mythroads/Engine/Replay.lean) is thirty lines and settles the
-persistence model.
+[`Engine/Replay.lean`](../../proofs/Mythroads/Engine/Replay.lean) is thirty lines and gives the log
+a meaning — with one honest caveat about what the deployed backend stores.
 
 ```lean
 def applyLogged (s : State) (env : Envelope) : State :=
@@ -305,6 +315,14 @@ snapshot table can be added later without weakening a single claim made today. `
 one-event corollary — appending one event advances the cached state by exactly one `step`, which is
 what a Convex mutation does inside one transaction.
 
+The caveat: today **state is the truth and the log is an audit trail**. The boundary loads the
+`rooms` row and its satellites into a `State`, steps it, and writes the result back; it never
+rebuilds a room from `gameEvents`. Nor could it, quite: the `room.create` seed is normalised into the
+generator state and not logged, and the room-code collision retry advances that generator outside any
+logged envelope. `replay` is therefore a statement about the log as a mathematical object, and the
+foundation a snapshot-and-tail model would rest on if one is adopted — not a description of how a
+room is read today.
+
 ## 6. Effects, and the load–step–save boundary
 
 `step` performs no writes. It returns them.
@@ -315,8 +333,9 @@ raises the matching `ConvexError` and writes nothing, and on `.ok` performs each
 and appends the envelope to `gameEvents` when `Event.durable` says so. Nothing in that interpreter
 is game-specific: it is a `switch` on nine constructors.
 
-**That interpreter is what Convex runs.** `api.game.dispatch` authorizes the caller, deduplicates
-the `commandId`, and hands the event to `applyGameEvent`, which is the whole write side:
+**That interpreter is what Convex runs.** `api.game.dispatch` and `internal.game.execute` are one
+definition object registered twice (§8); it authorizes the caller, deduplicates the `commandId`, and
+hands the event to `applyGameEvent`, which is the whole write side:
 
 ```ts
 const roomId = await roomIdForEvent(ctx, event)
@@ -341,14 +360,28 @@ in the same step — `combat.attack` that empties the enemy writes the final bat
 the turn — so by the time the interpreter runs, `State.phase` has moved on and the row it must
 write is no longer reachable from the state.
 
-Two behaviours are still **not** rules, and the boundary carries them as declared policies rather
+Four behaviours are still **not** rules, and the boundary carries them as declared policies rather
 than smuggling them into the engine:
 
 * the **2200 ms encounter reveal delay**, which reads a wall clock and a stored `createdAt`; a rule
   that consulted either would make the same log replay into different rooms;
 * the **room-code collision retry**, which needs a database read. The boundary redraws using the
   engine's own `Lobby.roomCode`, four characters and four generator ticks at a time, so the room's
-  generator ends where the rules would have left it.
+  generator ends where the rules would have left it — and it gives up after 32 redraws with
+  `Could not allocate a room code.`, so a degenerate generator can never spin until Convex kills the
+  mutation;
+* **coercing client numbers.** The compiled engine represents `Nat` as `number` and its arithmetic
+  is exact only for non-negative integers, while `v.number()` admits negatives, fractions and `NaN`.
+  `Envelope.wireNat` (`Math.trunc(Math.abs(x))`, `undefined` for a non-finite value) is applied to
+  every client number that becomes a `Nat`: the `room.create` seed falls back to the clock when
+  absent, and a route `destination` is refused with "That destination cannot be selected." Together
+  with `Lobby.create`'s `normalizeSeed` this restores the pre-engine contract exactly —
+  `trunc(|seed|) % (modulus − 1) + 1`;
+* the **development bypass.** With `DEV_NO_AUTH=true` there is no identity, so `actorFor` hands the
+  rules the identity the gate is about to compare against — the stored host or the hero's stored
+  owner — and, for `room.create` and `player.join`, the anonymous actor `""`. `Lobby.join` treats
+  the anonymous actor as owning nothing, so every anonymous joiner under a new name gets a fresh,
+  unowned hero (`authId` undefined), which is what lets several controllers share one laptop.
 
 Convex row identifiers are the boundary's for the same reason: a hero the rules have just seated
 carries a placeholder id until `saveState` inserts the row and reports the real one back.
@@ -411,7 +444,10 @@ export const execute = internalMutation(executeMutationDefinition)
 ```
 
 Convex names functions by file path, so these exports preserve `api.game.dispatch`. They do not
-reimplement anything.
+reimplement anything — and the two definitions are one object: `game-api.generated.ts` renders
+`executeMutationDefinition` once and `dispatchMutationDefinition` as an alias of it, so the public
+and internal names run the same handler body in one transaction rather than the public one
+`ctx.runMutation`-ing its twin.
 
 ## 9. The compiled engine
 

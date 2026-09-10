@@ -7,8 +7,11 @@ namespace Mythroads.Convex
 /-! # The write-side game API
 
 This module describes the two endpoints that make up `convex/generated/game-api.generated.ts` —
-the public `game.dispatch` mutation and the internal `game.execute` transaction it forwards to —
-and renders them.
+the public `game.dispatch` mutation and the internal `game.execute` transaction — and renders them.
+The two are one definition object registered twice: `dispatch` used to `ctx.runMutation` its
+internal twin with the same context and arguments, which bought nothing (a throw already rolls the
+whole mutation back) and cost a nested sub-transaction per command. Sharing the `{ args, returns,
+handler }` record is the helper-function pattern the Convex guidelines ask for, expressed as data.
 
 Two things changed here when the value universe was unified. Argument types are `Ty` rather than
 the old `ValueType`, whose `custom (validator typeName : String)` constructor let the runtime
@@ -71,8 +74,9 @@ inductive EndpointPlan where
   | query (steps : List QueryStep)
   /-- A transaction. -/
   | mutation (steps : List MutationStep)
-  /-- A mutation that only forwards to another one, named by a function reference path. -/
-  | forwardMutation (functionReference : List String)
+  /-- A registration that reuses another endpoint's definition object verbatim, so two Convex
+  function names run one handler body inside one transaction. -/
+  | sharedMutation (definition : String)
   deriving Repr, DecidableEq
 
 /-- A generated Convex endpoint definition. -/
@@ -101,27 +105,27 @@ def inventoryEndpoint : Endpoint where
 /-- The dispatch result, shared by both write endpoints. -/
 private def dispatchResult : Ty := .external "dispatchResultValidator" "DispatchResult"
 
-/-- The only client-callable mutation. It delegates without writing state itself. -/
-def dispatchEndpoint : Endpoint where
-  exportName := "dispatchMutationDefinition"
+/-- The internal transactional event loop: authorize, deduplicate, route, and persist. -/
+def executeEndpoint : Endpoint where
+  exportName := "executeMutationDefinition"
   args := [
     { name := "commandId", type := .optional .string },
     { name := "event", type := .external "gameEventValidator" "GameEvent" }
   ]
   returns := dispatchResult
   auth := .eventActor
-  plan := .forwardMutation ["internal", "game", "execute"]
-
-/-- The internal transactional event loop: authorize, deduplicate, route, and persist. -/
-def executeEndpoint : Endpoint where
-  exportName := "executeMutationDefinition"
-  args := dispatchEndpoint.args
-  returns := dispatchResult
-  auth := .eventActor
   plan := .mutation [.authorizeEvent, .returnPriorCommand, .routeEvent, .persistEvent]
 
-/-- All generated registrations that form the write-side game API. -/
-def gameApi : List Endpoint := [dispatchEndpoint, executeEndpoint]
+/-- The only client-callable mutation: the same definition as `execute`, registered publicly. -/
+def dispatchEndpoint : Endpoint where
+  exportName := "dispatchMutationDefinition"
+  args := executeEndpoint.args
+  returns := dispatchResult
+  auth := .eventActor
+  plan := .sharedMutation executeEndpoint.exportName
+
+/-- All generated registrations that form the write-side game API, definition before alias. -/
+def gameApi : List Endpoint := [executeEndpoint, dispatchEndpoint]
 
 open TypeScript
 
@@ -164,21 +168,14 @@ private def mutationStepBody : MutationStep → List Statement
 /-- The context type an endpoint's handler receives. -/
 private def contextType : EndpointPlan → TsType
   | .query _ => .named "QueryCtx"
-  | .mutation _ | .forwardMutation _ => .named "MutationCtx"
+  | .mutation _ | .sharedMutation _ => .named "MutationCtx"
 
-/-- A dotted function reference such as `internal.game.execute`. -/
-private def referenceExpr : List String → Expr
-  | [] => .identifier "internal"
-  | head :: rest => rest.foldl (fun acc segment => .property acc segment) (.identifier head)
-
-/-- The handler body for a plan. -/
+/-- The handler body for a plan; a shared registration has none of its own. -/
 private def planBody (endpoint : Endpoint) : List Statement :=
   match endpoint.plan with
   | .query steps => steps.flatMap queryStepBody
   | .mutation steps => steps.flatMap mutationStepBody
-  | .forwardMutation reference =>
-      [.return (.await (.call (.property (.identifier "ctx") "runMutation")
-        [referenceExpr reference, .shorthand (endpoint.args.map (·.name))]))]
+  | .sharedMutation _ => []
 
 /-- Renders one endpoint as an exported `{ args, returns, handler }` record. -/
 def endpointDefinition (endpoint : Endpoint) : EndpointDefinition where
@@ -193,17 +190,23 @@ def endpointDefinition (endpoint : Endpoint) : EndpointDefinition where
     ]
     returns := match endpoint.plan with
       | .query _ => none
-      | .mutation _ | .forwardMutation _ => some (.promise endpoint.returns.tsType)
+      | .mutation _ | .sharedMutation _ => some (.promise endpoint.returns.tsType)
     body := planBody endpoint
   }
 
-/-- The write-side game API module: the public `dispatch` mutation and the internal `execute`
-transaction it forwards to. -/
+/-- Renders one endpoint as a module item: a definition record, or an alias of another's. -/
+def endpointItem (endpoint : Endpoint) : Item :=
+  match endpoint.plan with
+  | .sharedMutation definition =>
+      .raw ("export const " ++ endpoint.exportName ++ " = " ++ definition ++ "\n")
+  | _ => .endpoint (endpointDefinition endpoint)
+
+/-- The write-side game API module: the internal `execute` transaction and the public `dispatch`
+registration that shares its definition. -/
 def module : Module where
   provenance := some "proofs/Mythroads/*.lean"
   imports := [
     { source := "convex/values", bindings := [{ name := "v" }] },
-    { source := "../_generated/api", bindings := [{ name := "internal" }] },
     { source := "../_generated/server", bindings := [{ name := "MutationCtx", isType := true }] },
     { source := "../auth/authorization", bindings := [{ name := "authorizeGameEvent" }] },
     { source := "../events/persistence", bindings := [
@@ -213,6 +216,6 @@ def module : Module where
       { name := "dispatchResultValidator" }, { name := "gameEventValidator" },
       { name := "DispatchResult", isType := true }, { name := "GameEvent", isType := true }] }
   ]
-  items := gameApi.map fun endpoint => .endpoint (endpointDefinition endpoint)
+  items := gameApi.map endpointItem
 
 end Mythroads.Convex

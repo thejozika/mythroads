@@ -96,7 +96,12 @@ structure Envelope where
   /-- The hero this event acts upon, when the event names one. -/
   subject : Option Mythroads.PlayerId
   event : Event
-  /-- Entropy supplied by the trusted boundary and stored in the log, so replay is faithful. -/
+  /--
+  Entropy supplied by the trusted boundary. Only `room.create` reads it, and it is
+  **not** written to `gameEvents`: the boundary coerces it to a `Nat`, `Lobby.create`
+  normalises it into a generator state, and the `rooms` row stores that state. Replay
+  from the log therefore starts from a room row, not from a seed.
+  -/
   seed : Nat
   deriving Repr, DecidableEq, Inhabited
 
@@ -166,13 +171,18 @@ end Event
 /--
 Does the sender hold the privilege the event demands?
 
-`account` only requires a verified identity, `roomHost` compares against the stored
-host, and `playerOwner` compares against the hero's stored owner. The client never
-supplies any of these three values; the actor arrives from `ctx.auth`.
+`roomHost` compares against the stored host and `playerOwner` against the hero's stored
+owner. `account` asks only for a signed-in caller, and that is decided *before* an
+envelope exists: the boundary's `requireAuthId` refuses an unauthenticated caller with
+its own sentence, and under the development bypass it deliberately hands the rules the
+anonymous actor `""`, which `Lobby.join` treats as owning nothing. The rules therefore
+accept every actor for account-level events rather than re-checking a fact they cannot
+distinguish from the bypass. The client never supplies any of these values; the actor
+arrives from `ctx.auth`.
 -/
 def authorized (s : State) (env : Envelope) : Bool :=
   match env.event.authority with
-  | .account => env.actor ≠ ""
+  | .account => true
   | .roomHost => s.host = env.actor
   | .playerOwner =>
       match env.subject with

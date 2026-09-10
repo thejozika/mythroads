@@ -55,7 +55,7 @@ def turnScenario : Scenario where
   start := blank
   envelopes :=
     [env "host" none (.roomCreate 20260910),
-      env "" none (.playerJoin "JSKM" "Ghost" "grey"),
+      env "" none (.playerJoin "JSKM" "   " "grey"),
       env "host" none (.playerJoin "JSKM" "Ayla" "red"),
       env "bo" none (.playerJoin "JSKM" "Bo" "blue"),
       env "bo" none .gameStart,

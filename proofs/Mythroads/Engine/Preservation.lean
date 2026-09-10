@@ -6,7 +6,8 @@ import Mythroads.Engine.Invariant
 `Mythroads.Engine.Invariant` proves the invariant for the two mutation primitives.
 This module spends that work: every per-phase module function gets exactly one small
 lemma, each of which unfolds the function, splits its branches, and hands each branch
-to `ok_congr`, `ok_mapPlayer` or `ok_advanceTurn`.
+to `ok_congr`, `ok_mapPlayer`, `ok_advanceTurn` or — wherever the branch drew from the
+generator — `ok_reseeded` with the matching `*_rng_lt` fact.
 
 The lemmas are separate on purpose. `ok_transition` in `Mythroads.Engine.Theorems`
 consumes them one dispatch arm at a time, so an event added without its lemma leaves a
@@ -17,12 +18,34 @@ namespace Mythroads.Engine
 
 /-! ## Lobby -/
 
-/-- Creating a room empties the hero list and parks the cursor at zero. -/
+/-- Drawing code characters keeps the generator below the modulus. -/
+theorem codeChars_state_lt (state count : Nat) (h : state < Game.Random.modulus) :
+    (Lobby.codeChars state count).2 < Game.Random.modulus := by
+  induction count generalizing state with
+  | zero => exact h
+  | succ n ih =>
+      exact ih _ (Game.Random.nextState_lt_modulus _)
+
+/-- Drawing a room code keeps the generator below the modulus. -/
+theorem roomCode_state_lt (state : Nat) (h : state < Game.Random.modulus) :
+    (Lobby.roomCode state).2 < Game.Random.modulus := by
+  have inRange := codeChars_state_lt state 4 h
+  unfold Lobby.roomCode
+  -- Keep the four draws opaque: unfolding them would evaluate the alphabet.
+  generalize Lobby.codeChars state 4 = drawn at inRange ⊢
+  exact inRange
+
+/-- Creating a room empties the hero list, parks the cursor at zero and seeds the generator. -/
 theorem ok_create {s s' : State} {actor : Mythroads.AuthId} {seed : Nat} {fx : List Effect}
     (h : Lobby.create s actor seed = .ok (s', fx)) : Ok s' := by
   simp only [Lobby.create, Except.ok.injEq, Prod.mk.injEq] at h
+  -- Keep the drawn code opaque: unfolding it would evaluate four generator draws.
+  generalize drawn : Lobby.roomCode (Game.Random.normalizeSeed seed) = generated at h
   obtain ⟨rfl, -⟩ := h
-  exact ⟨by simp, by simp⟩
+  refine ⟨by simp, by simp, by simp [maxPlayers], ?_⟩
+  have inRange := roomCode_state_lt _ (Game.Random.normalizedSeed_lt_modulus seed)
+  rw [drawn] at inRange
+  exact inRange
 
 /-- Seating a hero appends one hero at full health and keeps the cursor in range. -/
 theorem ok_joinAs {s s' : State} {actor : Mythroads.AuthId} {hero color : String}
@@ -44,9 +67,10 @@ theorem ok_joinAs {s s' : State} {actor : Mythroads.AuthId} {hero color : String
       · exact absurd h (by simp)
       · split at h
         · exact absurd h (by simp)
-        · simp only [Except.ok.injEq, Prod.mk.injEq] at h
+        · rename_i seatFree
+          simp only [Except.ok.injEq, Prod.mk.injEq] at h
           obtain ⟨rfl, -⟩ := h
-          refine ⟨?_, ?_⟩
+          refine ⟨?_, ?_, ?_, ok.rngInRange⟩
           · intro p hp
             simp only [List.mem_append, List.mem_cons, List.not_mem_nil, or_false] at hp
             cases hp with
@@ -54,6 +78,8 @@ theorem ok_joinAs {s s' : State} {actor : Mythroads.AuthId} {hero color : String
             | inr fresh => subst fresh; simp [Lobby.freshPlayer]
           · have := ok.turnInRange
             simp only [List.length_append, List.length_cons, List.length_nil]
+            omega
+          · simp only [List.length_append, List.length_cons, List.length_nil]
             omega
 
 /-- Joining preserves the invariant. -/
@@ -76,7 +102,8 @@ theorem ok_start {s s' : State} {fx : List Effect} (ok : Ok s)
     · exact absurd h (by simp)
     · simp only [Except.ok.injEq, Prod.mk.injEq] at h
       obtain ⟨rfl, -⟩ := h
-      exact ⟨ok.heroes, Nat.lt_of_lt_of_le Nat.zero_lt_one (Nat.le_max_left 1 _)⟩
+      exact ⟨ok.heroes, Nat.lt_of_lt_of_le Nat.zero_lt_one (Nat.le_max_left 1 _), ok.seated,
+        ok.rngInRange⟩
 
 /-! ## Movement -/
 
@@ -94,16 +121,25 @@ theorem rollDice_turn (dice : List Nat) (s : State) :
   | nil => rfl
   | cons sides rest ih => simp only [Movement.rollDice]; exact ih (s.draw sides).2
 
+/-- Rolling leaves the generator in range: every die is a draw, and no die leaves it unchanged
+unless there are none. -/
+theorem rollDice_rng_lt (dice : List Nat) (s : State) (h : s.rng < Game.Random.modulus) :
+    (Movement.rollDice s dice).2.rng < Game.Random.modulus := by
+  induction dice generalizing s with
+  | nil => exact h
+  | cons sides rest ih => simp only [Movement.rollDice]; exact ih _ (draw_rng_lt s sides)
+
 /-- Rolling preserves the invariant. -/
 theorem ok_rollDice {s : State} (ok : Ok s) (dice : List Nat) : Ok (Movement.rollDice s dice).2 :=
-  ok_congr ok (rollDice_players dice s) (rollDice_turn dice s)
+  ok_reseeded ok (rollDice_players dice s) (rollDice_turn dice s)
+    (rollDice_rng_lt dice s ok.rngInRange)
 
 /-- `movement.roll` only rewrites one hero's memory of where they came from. -/
 theorem ok_roll {s s' : State} {p : PlayerState} {fx : List Effect} (ok : Ok s)
     (h : Movement.roll s p = .ok (s', fx)) : Ok s' := by
   simp only [Movement.roll, Except.ok.injEq, Prod.mk.injEq] at h
   obtain ⟨rfl, -⟩ := h
-  refine ok_congr (ok_mapPlayer (ok_rollDice ok p.dice) ?_) rfl rfl
+  refine ok_congr (ok_mapPlayer (ok_rollDice ok p.dice) ?_) rfl rfl rfl
   exact fun _ hq => hq
 
 /-- Planning a route only changes the phase. -/
@@ -116,19 +152,19 @@ theorem ok_select {s s' : State} {p : PlayerState} {moves : Nat} {sel : Option S
     · exact absurd h (by simp)
     · simp only [Except.ok.injEq, Prod.mk.injEq] at h
       obtain ⟨rfl, -⟩ := h
-      exact ok_congr ok rfl rfl
+      exact ok_congr ok rfl rfl rfl
   · split at h
     · exact absurd h (by simp)
     · simp only [Except.ok.injEq, Prod.mk.injEq] at h
       obtain ⟨rfl, -⟩ := h
-      exact ok_congr ok rfl rfl
+      exact ok_congr ok rfl rfl rfl
 
 /-- Cancelling a route only changes the phase. -/
 theorem ok_cancel {s s' : State} {moves : Nat} {fx : List Effect} (ok : Ok s)
     (h : Movement.cancel s moves = .ok (s', fx)) : Ok s' := by
   simp only [Movement.cancel, Except.ok.injEq, Prod.mk.injEq] at h
   obtain ⟨rfl, -⟩ := h
-  exact ok_congr ok rfl rfl
+  exact ok_congr ok rfl rfl rfl
 
 /-! ## Landing -/
 /-- Every landing either changes the phase, or heals a hero to full and passes the turn. -/
@@ -139,14 +175,14 @@ theorem ok_resolveOn {s s' : State} {p : PlayerState} {d : NodeId} {landed : Gam
   split at h
   · simp only [Except.ok.injEq, Prod.mk.injEq] at h
     obtain ⟨rfl, -⟩ := h
-    exact ok_congr ok rfl rfl
+    exact ok_congr ok rfl rfl rfl
   · split at h
     · simp only [Landing.startCombat, Except.ok.injEq, Prod.mk.injEq] at h
       obtain ⟨rfl, -⟩ := h
-      exact ok_congr ok rfl rfl
+      exact ok_congr ok rfl rfl rfl
     · simp only [Landing.startEvent, Except.ok.injEq, Prod.mk.injEq] at h
       obtain ⟨rfl, -⟩ := h
-      exact ok_congr ok rfl rfl
+      exact ok_reseeded ok rfl rfl (by rw [withPhase_rng]; exact draw_rng_lt s _)
     · simp only [Except.ok.injEq, Prod.mk.injEq] at h
       obtain ⟨rfl, -⟩ := h
       refine ok_advanceTurn (ok_mapPlayer ok ?_) _
@@ -179,6 +215,21 @@ theorem ok_stepMove {s s' : State} {p : PlayerState} {moves : Nat} {sel : Option
           exact fun _ hq => hq
 
 /-! ## Battle -/
+
+/-- The enemy's guard is one draw, so the generator lands in range. -/
+theorem drawGuard_rng_lt (s : State) : (Battle.drawGuard s).2.rng < Game.Random.modulus :=
+  draw_rng_lt _ _
+
+/-- The enemy's strike is one draw, so the generator lands in range. -/
+theorem drawStrike_rng_lt (s : State) (element : Game.Magic.Element) :
+    (Battle.drawStrike s element).2.rng < Game.Random.modulus :=
+  draw_rng_lt _ _
+
+/-- The hit check is one draw, so the generator lands in range. -/
+theorem drawHit_rng_lt (s : State) (result : StrikeResult) :
+    (Battle.drawHit s result).2.rng < Game.Random.modulus :=
+  draw_rng_lt _ _
+
 /-- Striking either logs an exchange, or fells the enemy and passes the turn. -/
 theorem ok_attack {s s' : State} {p : PlayerState} {b : CombatState} {c : Strike}
     {fx : List Effect} (ok : Ok s) (h : Battle.attack s p b c = .ok (s', fx)) : Ok s' := by
@@ -188,17 +239,18 @@ theorem ok_attack {s s' : State} {p : PlayerState} {b : CombatState} {c : Strike
   · split at h
     · simp only [Except.ok.injEq, Prod.mk.injEq] at h
       obtain ⟨rfl, -⟩ := h
-      exact ok_congr ok rfl rfl
+      exact ok_reseeded ok rfl rfl (by rw [withPhase_rng]; exact drawGuard_rng_lt s)
     · split at h
       · simp only [Except.ok.injEq, Prod.mk.injEq] at h
         obtain ⟨rfl, -⟩ := h
-        refine ok_advanceTurn (ok_withPhase (ok_mapPlayer (ok_congr ok ?_ ?_) ?_) _ _) _
+        refine ok_advanceTurn (ok_withPhase (ok_mapPlayer (ok_reseeded ok ?_ ?_ ?_) ?_) _ _) _
         · rfl
         · rfl
+        · exact drawHit_rng_lt _ _
         · exact fun _ hq => hq
       · simp only [Except.ok.injEq, Prod.mk.injEq] at h
         obtain ⟨rfl, -⟩ := h
-        exact ok_congr ok rfl rfl
+        exact ok_reseeded ok rfl rfl (by rw [withPhase_rng]; exact drawHit_rng_lt _ _)
 
 /-- Defeat restores the hero to full health before passing the turn. -/
 theorem ok_defeat {s s' : State} {p : PlayerState} {b logged : CombatState} {fx : List Effect}
@@ -215,16 +267,18 @@ theorem ok_guard {s s' : State} {p : PlayerState} {b : CombatState} {g : Game.Co
   split at h
   · simp only [Except.ok.injEq, Prod.mk.injEq] at h
     obtain ⟨rfl, -⟩ := h
-    exact ok_congr ok rfl rfl
+    exact ok_reseeded ok rfl rfl (by rw [withPhase_rng]; exact drawStrike_rng_lt _ _)
   · split at h
-    · refine ok_defeat (ok_withPhase (ok_congr ok ?_ ?_) _ _) h
+    · refine ok_defeat (ok_withPhase (ok_reseeded ok ?_ ?_ ?_) _ _) h
       · rfl
       · rfl
+      · exact drawHit_rng_lt _ _
     · simp only [Except.ok.injEq, Prod.mk.injEq] at h
       obtain ⟨rfl, -⟩ := h
-      refine ok_withPhase (ok_mapPlayer (ok_congr ok ?_ ?_) ?_) _ _
+      refine ok_withPhase (ok_mapPlayer (ok_reseeded ok ?_ ?_ ?_) ?_) _ _
       · rfl
       · rfl
+      · exact drawHit_rng_lt _ _
       · exact fun q hq => damaged_bounded q _ hq
 
 /-! ## Encounter, shop and camera -/
@@ -275,7 +329,7 @@ theorem ok_cameraToggle {s s' : State} {p : PlayerState} {fx : List Effect} (ok 
     (h : CameraStep.toggle s p = .ok (s', fx)) : Ok s' := by
   simp only [CameraStep.toggle, Except.ok.injEq, Prod.mk.injEq] at h
   obtain ⟨rfl, -⟩ := h
-  exact ok_congr ok rfl rfl
+  exact ok_congr ok rfl rfl rfl
 
 /-- Panning the camera touches only the ephemeral projection. -/
 theorem ok_cameraMove {s s' : State} {d : Direction} {fx : List Effect} (ok : Ok s)
@@ -286,7 +340,7 @@ theorem ok_cameraMove {s s' : State} {d : Direction} {fx : List Effect} (ok : Ok
     · exact absurd h (by simp)
     · simp only [Except.ok.injEq, Prod.mk.injEq] at h
       obtain ⟨rfl, -⟩ := h
-      exact ok_congr ok rfl rfl
+      exact ok_congr ok rfl rfl rfl
   · exact absurd h (by simp)
 
 /-- Zooming the camera touches only the ephemeral projection. -/
@@ -298,7 +352,7 @@ theorem ok_cameraZoom {s s' : State} {d : Zoom} {fx : List Effect} (ok : Ok s)
     · exact absurd h (by simp)
     · simp only [Except.ok.injEq, Prod.mk.injEq] at h
       obtain ⟨rfl, -⟩ := h
-      exact ok_congr ok rfl rfl
+      exact ok_congr ok rfl rfl rfl
   · exact absurd h (by simp)
 
 end Mythroads.Engine

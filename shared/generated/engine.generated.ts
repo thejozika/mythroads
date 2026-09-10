@@ -738,12 +738,7 @@ export function authorized(s: State, env: Envelope): boolean {
     const Event_authority_1 = Event_authority(env_1.event)
     switch (Event_authority_1._) {
         case 'account': {
-            const scrutinee = actor === ''
-            if (scrutinee) {
-                return false
-            } else {
-                return true
-            }
+            return true
         }
         case 'roomHost': {
             const s_1 = s
@@ -1249,7 +1244,7 @@ export function Lobby_join(
     if (scrutinee) {
         return { _: 'error', a: { _: 'nameRequired' } }
     } else {
-        return Lobby_joinAs(s, actor, _x_1, color)
+        return Lobby_joinAs(s, actor, _x_1, Lobby_normalizeColor(color))
     }
 }
 
@@ -1743,6 +1738,15 @@ export function Lobby_normalizeName(name: string): string {
     )
 }
 
+/** Lean `Mythroads.Engine.Lobby.normalizeColor`. */
+export function Lobby_normalizeColor(color: string): string {
+    const _x_2: number = 0
+    const _x_7: number[] = leanChars(leanTrimAscii(color.slice(_x_2, color.length)))
+    return leanString(
+        _private_Init_Data_List_Impl_0_List_takeTR_go__redArg(_x_7, _x_7, 16, []) as number[],
+    )
+}
+
 /** Lean `Mythroads.Engine.Lobby.joinAs`. */
 export function Lobby_joinAs(
     s: State,
@@ -1809,17 +1813,8 @@ export function Lobby_joinAs(
                     const owner = val.owner
                     // join point
                     const _jp_30 = (): Except<Error, Prod<State, Effect[]>> => {
-                        const _x_31: number = 0
-                        const scrutinee_1 =
-                            String_mapAux__at___private_Mythroads_Convex_Module_0_Mythroads_Convex_Module_nameLe_spec_0(
-                                val.color,
-                                _x_31,
-                            ) ===
-                            String_mapAux__at___private_Mythroads_Convex_Module_0_Mythroads_Convex_Module_nameLe_spec_0(
-                                color,
-                                _x_31,
-                            )
-                        if (scrutinee_1) {
+                        const Lobby_colorMatches_1 = Lobby_colorMatches(val.color, color)
+                        if (Lobby_colorMatches_1) {
                             return {
                                 _: 'ok',
                                 a: {
@@ -1836,12 +1831,12 @@ export function Lobby_joinAs(
                             return { _: 'error', a: { _: 'colorMismatch' } }
                         }
                     }
-                    const scrutinee_2 = owner === ''
-                    if (scrutinee_2) {
+                    const scrutinee_1 = owner === ''
+                    if (scrutinee_1) {
                         return _jp_30()
                     } else {
-                        const scrutinee_3 = owner === actor
-                        if (scrutinee_3) {
+                        const scrutinee_2 = owner === actor
+                        if (scrutinee_2) {
                             return _jp_30()
                         } else {
                             return { _: 'error', a: { _: 'nameTaken' } }
@@ -3089,35 +3084,19 @@ export function Lobby_joinAs__lam_0(actor: string, q: PlayerState): PlayerState 
     }
 }
 
-/** Lean `String.mapAux._at_._private.Mythroads.Convex.Module.0.Mythroads.Convex.Module.nameLe.spec_0`. */
-export function String_mapAux__at___private_Mythroads_Convex_Module_0_Mythroads_Convex_Module_nameLe_spec_0(
-    s: string,
-    p: number,
-): string {
-    // join point
-    const _jp_1 = (_y_2: number): string => {
-        return String_mapAux__at___private_Mythroads_Convex_Module_0_Mythroads_Convex_Module_nameLe_spec_0(
-            leanCharSet(s, p, _y_2),
-            p + leanCharWidth(_y_2),
+/** Lean `Mythroads.Engine.Lobby.colorMatches`. */
+export function Lobby_colorMatches(stored: string, requested: string): boolean {
+    const _x_2: number = 0
+    return (
+        String_mapAux__at___private_Mythroads_Convex_Module_0_Mythroads_Convex_Module_nameLe_spec_0(
+            Lobby_normalizeColor(stored),
+            _x_2,
+        ) ===
+        String_mapAux__at___private_Mythroads_Convex_Module_0_Mythroads_Convex_Module_nameLe_spec_0(
+            requested,
+            _x_2,
         )
-    }
-    const scrutinee = p === s.length
-    if (scrutinee) {
-        return s
-    } else {
-        const _x_9: number = leanCharAt(s, p)
-        const scrutinee_1 = 65 <= _x_9
-        if (scrutinee_1) {
-            const scrutinee_2 = _x_9 <= 90
-            if (scrutinee_2) {
-                return _jp_1((_x_9 + 32) % 4294967296)
-            } else {
-                return _jp_1(_x_9)
-            }
-        } else {
-            return _jp_1(_x_9)
-        }
-    }
+    )
 }
 
 /** Lean `Mythroads.Engine.instDecidableEqSelection`. */
@@ -4782,6 +4761,37 @@ export function List_reverseAux__redArg(x_1: unknown[], x_2: unknown[]): unknown
         return x_2
     } else {
         return List_reverseAux__redArg(x_1_1.slice(1), [x_1_1[0], ...x_2])
+    }
+}
+
+/** Lean `String.mapAux._at_._private.Mythroads.Convex.Module.0.Mythroads.Convex.Module.nameLe.spec_0`. */
+export function String_mapAux__at___private_Mythroads_Convex_Module_0_Mythroads_Convex_Module_nameLe_spec_0(
+    s: string,
+    p: number,
+): string {
+    // join point
+    const _jp_1 = (_y_2: number): string => {
+        return String_mapAux__at___private_Mythroads_Convex_Module_0_Mythroads_Convex_Module_nameLe_spec_0(
+            leanCharSet(s, p, _y_2),
+            p + leanCharWidth(_y_2),
+        )
+    }
+    const scrutinee = p === s.length
+    if (scrutinee) {
+        return s
+    } else {
+        const _x_9: number = leanCharAt(s, p)
+        const scrutinee_1 = 65 <= _x_9
+        if (scrutinee_1) {
+            const scrutinee_2 = _x_9 <= 90
+            if (scrutinee_2) {
+                return _jp_1((_x_9 + 32) % 4294967296)
+            } else {
+                return _jp_1(_x_9)
+            }
+        } else {
+            return _jp_1(_x_9)
+        }
     }
 }
 

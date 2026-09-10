@@ -10,7 +10,7 @@ import {
 import type { Id } from '../../_generated/dataModel'
 import type { MutationCtx } from '../../_generated/server'
 import type { DispatchResult, GameEvent } from '../../events/validators'
-import { envelopeFrom, eventFrom, subjectOf } from './envelope.generated'
+import { envelopeFrom, eventFrom, subjectOf, wireNat } from './envelope.generated'
 import { emptyState, loadState } from './load.generated'
 import { insertRoom, saveState } from './persist.generated'
 
@@ -54,7 +54,7 @@ function actorFor(event: GameEvent, actorAuthId: string | null, before: State): 
                 : undefined
         return hero ? hero.owner : ''
     }
-    return 'development'
+    return ''
 }
 
 async function requireRipeEncounter(ctx: MutationCtx, event: GameEvent): Promise<void> {
@@ -80,12 +80,17 @@ async function freeRoomCode(
     let code = after.code
     let rngState = after.rng
     let rngCounter = after.rngCounter
+    let attempts = 0
     while (
         await ctx.db
             .query('rooms')
             .withIndex('by_code', (query) => query.eq('code', code))
             .unique()
     ) {
+        if (attempts >= 32) {
+            throw new ConvexError('Could not allocate a room code.')
+        }
+        attempts = attempts + 1
         const drawn = Lobby_roomCode(rngState)
         code = drawn.fst
         rngState = drawn.snd
@@ -100,8 +105,11 @@ async function createRoom(
     actorAuthId: string | null,
 ): Promise<DispatchResult> {
     const before = emptyState()
-    const seed =
-        event.type === 'room.create' && event.data.seed !== undefined ? event.data.seed : Date.now()
+    const requested =
+        event.type === 'room.create' && event.data.seed !== undefined
+            ? wireNat(event.data.seed)
+            : undefined
+    const seed = requested ?? Date.now()
     const envelope = envelopeFrom(event, actorFor(event, actorAuthId, before), seed)
     const outcome = step(before, envelope)
     if (outcome._ === 'error') {

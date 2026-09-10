@@ -19,6 +19,17 @@ Two boundary details are modelled faithfully rather than idealised.
   back unchanged, and a matching name with a matching colour reclaims an unowned
   hero even after the adventure has started. Only a genuinely new hero requires the
   lobby phase and a free seat.
+* **The anonymous actor owns nothing.** With `DEV_NO_AUTH=true` the boundary has no
+  identity to hand over and passes `anonymous` (the empty string) as the actor. An
+  anonymous join never matches an existing hero by ownership — every anonymous joiner
+  under a new name gets a fresh hero, which is what lets several controllers share one
+  laptop — and the hero it seats is stored with no owner at all, so a later sign-in can
+  reclaim it by name and colour.
+
+Both client strings are normalised before any comparison: trimmed and cut to sixteen
+characters. For the name that is the stored length the boundary has always used; for
+the colour it bounds the case-insensitive comparison, whose compiled form recurses once
+per character, so a client cannot choose the recursion depth.
 -/
 
 namespace Mythroads.Engine.Lobby
@@ -62,8 +73,24 @@ def freshPlayer (id : Mythroads.PlayerId) (owner : Mythroads.AuthId) (name color
       [{ rowId := id ++ "-item-1", itemId := "ember_grimoire", equippedSlot := some .offensiveMagic },
        { rowId := id ++ "-item-2", itemId := "aegis_script", equippedSlot := some .defensiveMagic }] }
 
+/-- The longest hero name or colour the rules keep: sixteen characters, after trimming. -/
+def nameLimit : Nat := 16
+
 /-- The trimmed, length-capped hero name the boundary stores. -/
-def normalizeName (name : String) : String := String.ofList (name.trimAscii.toString.toList.take 16)
+def normalizeName (name : String) : String :=
+  String.ofList (name.trimAscii.toString.toList.take nameLimit)
+
+/--
+The trimmed, length-capped colour the boundary stores. Sixteen characters hold any hex
+or named colour a controller offers, and the cap is what bounds the recursion depth of
+the case-insensitive comparison in `joinAs` — without it a client string of any length
+would reach the compiled `String.toLower`.
+-/
+def normalizeColor (color : String) : String :=
+  String.ofList (color.trimAscii.toString.toList.take nameLimit)
+
+/-- The actor the development bypass hands the rules: it owns nothing and claims nothing. -/
+def anonymous : Mythroads.AuthId := ""
 
 /-- `room.create`: seed the generator, draw a code, and open an empty lobby. -/
 def create (s : State) (actor : Mythroads.AuthId) (seed : Nat) : Outcome :=
@@ -74,17 +101,28 @@ def create (s : State) (actor : Mythroads.AuthId) (seed : Nat) : Outcome :=
           lastRoll := [], rng := generated.2, rngCounter := 4, camera := none },
        [.persistRoom, .appendLog "room.create"])
 
-/-- A hero already owned by this account, which a repeated join simply returns. -/
+/--
+A hero already owned by this account, which a repeated join simply returns. The
+anonymous actor owns nothing: unowned heroes are reclaimed by name and colour below,
+never collapsed onto whichever one happened to be seated first.
+-/
 def ownedBy (s : State) (actor : Mythroads.AuthId) : Option PlayerState :=
-  if actor = "" then none else s.players.find? fun p => p.owner = actor
+  if actor = anonymous then none else s.players.find? fun p => p.owner = actor
 
 /-- A hero holding this name, compared case-insensitively as the boundary does. -/
 def namedBy (s : State) (name : String) : Option PlayerState :=
   s.players.find? fun p => p.name.toLower = name.toLower
 
 /--
-Seat a hero under an already-normalized name: return the account's existing hero,
-reclaim a matching unowned hero, or take a free seat in the lobby.
+Does a stored colour match a normalised requested one? Both sides are normalised, so a
+row written before the cap existed cannot reintroduce an unbounded comparison.
+-/
+def colorMatches (stored requested : String) : Bool :=
+  (normalizeColor stored).toLower = requested.toLower
+
+/--
+Seat a hero under an already-normalized name and colour: return the account's existing
+hero, reclaim a matching unowned hero, or take a free seat in the lobby.
 -/
 def joinAs (s : State) (actor : Mythroads.AuthId) (hero color : String) : Outcome :=
   match ownedBy s actor with
@@ -92,8 +130,8 @@ def joinAs (s : State) (actor : Mythroads.AuthId) (hero color : String) : Outcom
   | none =>
     match namedBy s hero with
     | some p =>
-        if p.owner ≠ "" && p.owner ≠ actor then .error .nameTaken
-        else if p.color.toLower ≠ color.toLower then .error .colorMismatch
+        if p.owner ≠ anonymous && p.owner ≠ actor then .error .nameTaken
+        else if !colorMatches p.color color then .error .colorMismatch
         else .ok (s.mapPlayer p.id (fun q => { q with owner := actor }),
                   [.persistPlayer p.id, .appendLog "player.join"])
     | none =>
@@ -107,12 +145,12 @@ def joinAs (s : State) (actor : Mythroads.AuthId) (hero color : String) : Outcom
                 .appendLog "player.join"])
 
 /--
-`player.join`: normalize the requested name, then seat it. The room `code` in the event
-selects which room to load and is therefore not re-checked here.
+`player.join`: normalize the requested name and colour, then seat it. The room `code` in
+the event selects which room to load and is therefore not re-checked here.
 -/
 def join (s : State) (actor : Mythroads.AuthId) (name color : String) : Outcome :=
   if normalizeName name = "" then .error .nameRequired
-  else joinAs s actor (normalizeName name) color
+  else joinAs s actor (normalizeName name) (normalizeColor color)
 
 /--
 `game.start`: at least one hero must be seated; the first to join acts first.

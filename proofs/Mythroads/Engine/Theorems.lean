@@ -54,7 +54,8 @@ theorem step_ok_authorized {s s' : State} {env : Envelope} {fx : List Effect}
   · exact ha
   · simp [step, ha] at h
 
-/-- A successful transition proves the sender owns the hero whose turn it is. -/
+/-- A successful in-play transition proves it was the sender's hero's turn; lobby events and
+`inventory.equip` are exempt from the turn gate and pass it trivially. -/
 theorem step_ok_onTurn {s s' : State} {env : Envelope} {fx : List Effect}
     (h : step s env = .ok (s', fx)) : onTurn s env = true := by
   by_cases ht : onTurn s env
@@ -206,7 +207,7 @@ theorem ok_applyLogged {s : State} (ok : Ok s) (env : Envelope) : Ok (applyLogge
   unfold applyLogged
   split
   · rename_i s'' fx hstep
-    exact ok_congr (ok_step ok hstep) rfl rfl
+    exact ok_congr (ok_step ok hstep) rfl rfl rfl
   · exact ok
 
 /-- Replaying a durable log from a safe room lands in a safe room. -/

@@ -4,6 +4,21 @@ import type { Envelope, Event, Option } from '../../../shared/engine.system'
 import type { GameEvent } from '../../events/validators'
 import { directionOf, equipmentSlotOf, guardOf, strikeOf } from './enums.generated'
 
+export function wireNat(value: number): number | undefined {
+    if (!Number.isFinite(value)) {
+        return undefined
+    }
+    return Math.trunc(Math.abs(value))
+}
+
+export function destinationOf(value: number): number {
+    const node = wireNat(value)
+    if (node === undefined) {
+        throw new ConvexError('That destination cannot be selected.')
+    }
+    return node
+}
+
 export function eventFrom(event: GameEvent, seed: number): Event {
     switch (event.type) {
         case 'room.create': {
@@ -24,13 +39,13 @@ export function eventFrom(event: GameEvent, seed: number): Event {
             return { _: 'movementRoll' }
         }
         case 'movement.select': {
-            return { _: 'movementSelect', destination: event.data.destination }
+            return { _: 'movementSelect', destination: destinationOf(event.data.destination) }
         }
         case 'movement.cancel': {
             return { _: 'movementCancel' }
         }
         case 'movement.step': {
-            return { _: 'movementStep', destination: event.data.destination }
+            return { _: 'movementStep', destination: destinationOf(event.data.destination) }
         }
         case 'combat.attack': {
             return { _: 'combatAttack', strike: strikeOf(event.data.attack) }

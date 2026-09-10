@@ -24,20 +24,34 @@ rather than smuggled into the rules.
   from the seeded generator. Whether that code is already in the `rooms` table is a database
   question, so the retry lives here — and it redraws with the engine's own `Lobby.roomCode`, four
   characters and four counter ticks at a time, so the room's generator stays in the state the rules
-  would have left it in.
+  would have left it in. The retry is bounded at `codeAttempts` redraws: with a healthy generator
+  the alphabet offers over a million codes and a second collision is already improbable, so hitting
+  the bound means the generator is degenerate, and refusing is better than spinning until Convex
+  kills the mutation.
+
+## Numbers from the client
+
+The `room.create` seed is the one client number this module reads itself. It goes through
+`Envelope.wireNat` before the rules see it — the same `Math.trunc(Math.abs(seed))` the pre-engine
+boundary applied — and a non-finite seed counts as no seed, so the clock supplies one. Together
+with `Lobby.create`'s `normalizeSeed`, that restores the old contract exactly: the stored generator
+state is `trunc(|seed|) % (modulus − 1) + 1`.
 
 ## Refusals
 
 Every refusal comes from one table, `Mythroads.Engine.Error.message`, keyed on the error and the
-event. The two policies above are the only sentences written here, because they are the only two
+event. The policies above are the only sentences written here, because they are the only
 refusals the rules never see.
 
 ## The development bypass
 
 With `DEV_NO_AUTH=true` the boundary has no verified identity to hand over. Rather than refuse
 every gate, it substitutes the identity the gate is about to compare against — the room's host for
-a host-only event, the addressed hero's stored owner for an owner-only one. That keeps the rules
-meaningful in production and out of the way on a laptop.
+a host-only event, the addressed hero's stored owner for an owner-only one. Account-level events
+(`room.create`, `player.join`) get the anonymous actor, the empty string, which the rules treat as
+owning nothing: a room created this way has no `hostAuthId`, and every anonymous joiner under a new
+name is seated as a fresh hero with no `authId`, exactly as the pre-engine handler did with an
+absent identity. Fabricating a shared owner here would collapse every joiner onto the first hero.
 -/
 
 open Mythroads.Convex Mythroads.Convex.TypeScript
@@ -98,7 +112,7 @@ def actorFor : Function where
           [.arrow ["candidate"] (eq (prop (id "candidate") "id") (unwrapped (id "subject")))])
         .undefined),
       .return (.conditional (id "hero") (prop (id "hero") "owner") (.string ""))],
-    .return (.string "development")]
+    .return (.string "")]
 
 /-- Boundary policy: the encounter wheel must have finished spinning. -/
 def requireRipeEncounter : Function where
@@ -121,7 +135,10 @@ def requireRipeEncounter : Function where
             (.number revealDelay))))
       [refuse "This encounter cannot be resolved now."]]
 
-/-- Boundary policy: keep redrawing until the room code is free. -/
+/-- How many redraws the collision retry allows before refusing. -/
+def codeAttempts : Nat := 32
+
+/-- Boundary policy: keep redrawing until the room code is free, up to `codeAttempts` times. -/
 def freeRoomCode : Function where
   isExported := false
   name := "freeRoomCode"
@@ -133,7 +150,11 @@ def freeRoomCode : Function where
     .letDecl "code" (prop (id "after") "code"),
     .letDecl "rngState" (prop (id "after") "rng"),
     .letDecl "rngCounter" (prop (id "after") "rngCounter"),
+    .letDecl "attempts" (.number 0),
     .whileDo (Query.indexedRead .rooms .roomsByCode [id "code"] .unique) [
+      .ifThen (.binary (id "attempts") ">=" (.number codeAttempts))
+        [refuse "Could not allocate a room code."],
+      .assign (id "attempts") (.binary (id "attempts") "+" (.number 1)),
       .constDecl "drawn" (call (id "Lobby_roomCode") [id "rngState"]),
       .assign (id "code") (prop (id "drawn") "fst"),
       .assign (id "rngState") (prop (id "drawn") "snd"),
@@ -145,7 +166,8 @@ def refuseOutcome : Statement :=
   .throw (.new "ConvexError" [call (id "Error_message")
     [prop (id "outcome") "a", prop (id "envelope") "event"]])
 
-/-- `room.create`: the one event with no room to load and one row to insert. -/
+/-- `room.create`: the one event with no room to load and one row to insert. The client seed is
+coerced by `wireNat`; an absent or non-finite one is replaced by the clock. -/
 def createRoom : Function where
   isExported := false
   name := "createRoom"
@@ -156,9 +178,10 @@ def createRoom : Function where
   returns := .promise (.named "DispatchResult")
   body := [
     .constDecl "before" (call (id "emptyState")),
-    .constDecl "seed" (.conditional
+    .constDecl "requested" (.conditional
       (.binary (isEvent "room.create") "&&" (ne (prop (prop event "data") "seed") .undefined))
-      (prop (prop event "data") "seed") now),
+      (call (id "wireNat") [prop (prop event "data") "seed"]) .undefined),
+    .constDecl "seed" (orElse (id "requested") now),
     .constDecl "envelope" (call (id "envelopeFrom")
       [event, call (id "actorFor") [event, id "actorAuthId", id "before"], id "seed"]),
     .constDecl "outcome" (call (id "step") [id "before", id "envelope"]),
@@ -206,7 +229,7 @@ def module : Module where
     serverImport,
     validatorsImport [typeBinding "DispatchResult", typeBinding "GameEvent"],
     { source := "./envelope.generated", bindings := [valueBinding "envelopeFrom",
-      valueBinding "eventFrom", valueBinding "subjectOf"] },
+      valueBinding "eventFrom", valueBinding "subjectOf", valueBinding "wireNat"] },
     { source := "./persist.generated", bindings := [valueBinding "insertRoom",
       valueBinding "saveState"] },
     { source := "./load.generated", bindings := [valueBinding "emptyState",

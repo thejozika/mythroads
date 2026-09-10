@@ -187,8 +187,10 @@ samples or timestamps at the trusted boundary and passes them into a Lean-author
 explicit inputs. Lean then proves properties for every possible allowed input—for example, reward
 bounds for every wheel index—not that the random source is fair.
 
-For replayability, the durable game event stores those inputs. Replaying a sequence then invokes the
-same generated transition with identical values.
+Randomness is a field of the room state (a Park–Miller generator advanced by `State.draw`), so a
+stored room replays its own future exactly. The `room.create` seed itself is coerced at the boundary
+and normalised into that generator state; it is not stored in the `gameEvents` log, which is an audit
+trail beside the authoritative room row rather than the source the room is rebuilt from.
 
 ## Types and numeric semantics
 

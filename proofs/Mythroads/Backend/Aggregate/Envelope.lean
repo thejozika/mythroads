@@ -21,6 +21,16 @@ value the rules see. Two fields never come from the body:
 
 The table below is keyed on the wire type, and the `#guard` under it holds that key set to
 `Game.Events.specs` — so an event added to the protocol without a translation stops the build.
+
+## Numbers are coerced at this edge
+
+The compiled engine represents every `Nat` as a JavaScript `number` and its arithmetic assumes a
+non-negative integer: `natMod` is `%`, and a Park–Miller state that is negative, fractional or `NaN`
+never recovers. A `v.number()` validator admits all three, so every client number that becomes a
+`Nat` passes through `wireNat` first — `Math.trunc(Math.abs(x))`, and `undefined` for a non-finite
+value — and each caller decides what an absent value means: `room.create` falls back to the clock,
+`movement.select` and `movement.step` refuse with the sentence an unselectable destination already
+has. `camera.zoom`'s `delta` needs no coercion because its validator is a literal union.
 -/
 
 open Mythroads.Convex Mythroads.Convex.TypeScript
@@ -53,10 +63,10 @@ def wires : List Wire :=
     { type := "game.start", tag := "gameStart" },
     { type := "movement.roll", tag := "movementRoll" },
     { type := "movement.select", tag := "movementSelect", fields :=
-      [("destination", prop payload "destination")] },
+      [("destination", call (id "destinationOf") [prop payload "destination"])] },
     { type := "movement.cancel", tag := "movementCancel" },
     { type := "movement.step", tag := "movementStep", fields :=
-      [("destination", prop payload "destination")] },
+      [("destination", call (id "destinationOf") [prop payload "destination"])] },
     { type := "combat.attack", tag := "combatAttack", fields :=
       [("strike", call (id "strikeOf") [prop payload "attack"])] },
     { type := "combat.guard", tag := "combatGuard", fields :=
@@ -79,6 +89,31 @@ def wires : List Wire :=
 
 -- And the manifest is itself the engine alphabet, so this table covers every constructor.
 #guard wires.map Wire.type = Engine.Event.alphabet.map Engine.Event.name
+
+/--
+Boundary policy: the `Nat` a client number denotes, or `undefined` when it denotes none.
+Sign and fraction are discarded rather than refused because the pre-engine boundary did the
+same (`Math.trunc(Math.abs(seed))`), and a non-finite value has no integer to offer.
+-/
+def wireNat : Function where
+  isAsync := false
+  name := "wireNat"
+  parameters := [{ name := "value", type := .number }]
+  returns := .union [.number, .named "undefined"]
+  body := [
+    .ifThen (not' (call (prop (id "Number") "isFinite") [id "value"])) [.return .undefined],
+    .return (call (prop (id "Math") "trunc") [call (prop (id "Math") "abs") [id "value"]])]
+
+/-- Boundary policy: a route destination must be a `Nat`; anything else is unselectable. -/
+def destinationOf : Function where
+  isAsync := false
+  name := "destinationOf"
+  parameters := [{ name := "value", type := .number }]
+  returns := .number
+  body := [
+    .constDecl "node" (call (id "wireNat") [id "value"]),
+    .ifThen (eq (id "node") .undefined) [refuse "That destination cannot be selected."],
+    .return (id "node")]
 
 /-- The engine event one wire event asks for. -/
 def eventFrom : Function where
@@ -127,6 +162,7 @@ def module : Module where
     { source := "./enums.generated", bindings := [valueBinding "directionOf",
       valueBinding "equipmentSlotOf", valueBinding "guardOf", valueBinding "strikeOf"] }
   ]
-  items := [.function eventFrom, .function subjectOf, .function envelopeFrom]
+  items := [.function wireNat, .function destinationOf, .function eventFrom, .function subjectOf,
+    .function envelopeFrom]
 
 end Mythroads.Backend.Aggregate.Envelope

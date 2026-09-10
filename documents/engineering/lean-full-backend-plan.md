@@ -584,7 +584,17 @@ handlers are gone. What remains, in order of value:
 3. derive `isPersistentGameEvent` from `Engine.Event.durable` instead of holding them equal with a
    `#guard`, and schedule or delete the retention batch;
 4. bound every stored `Nat` below 2^53 in Lean, closing the one representation assumption the
-   compiler makes.
+   compiler makes. The invariant `Ok` now carries the two bounds the boundary relies on
+   (`players.length ≤ maxPlayers`, `rng < modulus`), and every client number that becomes a `Nat`
+   is coerced by `Envelope.wireNat` at the trust edge; what remains is the general statement for
+   gold, hit points and counters;
+5. decide whether the `gameEvents` log should become a full transcript. Today the room row is the
+   truth and the log is an audit trail: the `room.create` seed is normalised into the generator
+   state rather than logged, and the room-code collision retry advances the generator outside any
+   envelope. Persisting the effective seed and the redraw count would make `replay` executable over
+   the stored log;
+6. prove `0 < rng` as part of `Ok`, which needs primality of 2^31 − 1 (or a decision procedure the
+   axiom audit accepts); today the boundary guarantees it by normalising every seed to `1 ≤ state`.
 
 ## Sources
 

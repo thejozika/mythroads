@@ -40,7 +40,7 @@ def refusal (s : State) (env : Envelope) : Option Error :=
   | .ok _ => none
   | .error e => some e
 
-/-- Build an envelope; the seed is unused by the rules today and is carried for the log. -/
+/-- Build an envelope; only `room.create` reads the seed, so the examples pass zero. -/
 def envelope (actor : String) (subject : Option String) (event : Event) : Envelope :=
   { actor, subject, event, seed := 0 }
 
@@ -69,6 +69,29 @@ def seated : State :=
 #guard (seated.players[0]!.items.map fun o => (o.itemId, o.equippedSlot)) =
   [("ember_grimoire", some Inventory.EquipmentSlot.offensiveMagic),
     ("aegis_script", some Inventory.EquipmentSlot.defensiveMagic)]
+
+/-! ## The anonymous actor of the development bypass -/
+
+/-- Two heroes seated by the anonymous actor, as two controllers on one laptop would. -/
+def anonymousPair : State :=
+  run (run created (envelope Lobby.anonymous none (.playerJoin created.code "Ayla" "red")))
+    (envelope Lobby.anonymous none (.playerJoin created.code "Bo" "blue"))
+
+-- Each anonymous joiner gets a fresh, unowned hero rather than the first one seated.
+#guard anonymousPair.players.map (fun p => (p.name, p.owner)) = [("Ayla", ""), ("Bo", "")]
+
+-- Rejoining anonymously by name and colour returns that hero instead of seating a third.
+#guard (run anonymousPair
+  (envelope Lobby.anonymous none (.playerJoin created.code "ayla" "RED"))).players.length = 2
+
+-- A signed-in account may claim an unowned hero by name and colour.
+#guard (run anonymousPair (envelope "host" none (.playerJoin created.code "Ayla" "red"))).players.map
+  (fun p => (p.name, p.owner)) = [("Ayla", "host"), ("Bo", "")]
+
+-- Names and colours are trimmed and capped at sixteen characters before they are stored.
+#guard (run created (envelope "host" none
+  (.playerJoin created.code "  Ayla  " "  #4bd3c2-with-a-long-tail  "))).players.map
+    (fun p => (p.name, p.color)) = [("Ayla", "#4bd3c2-with-a-l")]
 
 /-- The adventure has started; the first hero to join acts first. -/
 def started : State := run seated (envelope "host" none .gameStart)

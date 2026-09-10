@@ -3,9 +3,18 @@ import Mythroads.Engine.Step
 /-!
 # Replay
 
-The durable event log is the source of truth; `State` is a cache of `replay`. Rejected
-envelopes are never appended, so folding a log is total: `applyLogged` keeps the state
-unchanged when an envelope is refused.
+`replay` is the meaning of a log: the room a sequence of accepted envelopes produces.
+Rejected envelopes are never appended, so folding a log is total: `applyLogged` keeps the
+state unchanged when an envelope is refused.
+
+What the deployed backend stores is the *state* — the `rooms` row and its satellites,
+which `loadState` reads and `saveState` writes — and the `gameEvents` log beside it is an
+audit trail rather than the source the state is rebuilt from. Two things keep it from
+being a complete transcript today: the `room.create` seed is normalised into the room's
+generator state and not written to the log, and the room-code collision retry advances
+that generator outside any logged envelope. The theorems below are about the log as a
+mathematical object, and they are what a snapshot-and-tail persistence model would rest
+on if it is ever adopted.
 
 `replay_append` is the theorem that makes **snapshots sound**. A stored snapshot taken
 at version *n* plus the tail of the log equals a full replay from the beginning, so a
