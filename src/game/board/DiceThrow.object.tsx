@@ -1,8 +1,8 @@
-import { Text } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { useEffect, useRef, useState } from 'react'
 import type { Group } from 'three'
 import { getNode } from '../../../shared/board.system'
+import { BoardText as Text } from './labels/BoardText.object'
 
 export function DiceThrow({ results, originId }: { results?: number[]; originId: number }) {
     const group = useRef<Group>(null)

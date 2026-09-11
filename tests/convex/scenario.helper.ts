@@ -41,6 +41,7 @@ export type Scenario = {
     camera: () => Promise<Doc<'roomCameras'> | null>
     items: (index: number) => Promise<Doc<'playerItems'>[]>
     gameEvents: () => Promise<Doc<'gameEvents'>[]>
+    snapshots: () => Promise<Doc<'gameSnapshots'>[]>
     /** Overwrite the room random stream so a scenario can force a specific draw. */
     forceRng: (state: number) => Promise<void>
     patchPlayer: (index: number, patch: Partial<Doc<'players'>>) => Promise<void>
@@ -158,6 +159,13 @@ function buildScenario(
                 const events = await ctx.db.query('gameEvents').withIndex('by_createdAt').take(500)
                 return events
             }),
+        snapshots: () =>
+            t.run(async (ctx) =>
+                ctx.db
+                    .query('gameSnapshots')
+                    .withIndex('by_roomId_and_version', (query) => query.eq('roomId', roomId))
+                    .take(20),
+            ),
         forceRng: (state) => t.run(async (ctx) => ctx.db.patch(roomId, { rngState: state })),
         patchPlayer: (index, patch) => t.run(async (ctx) => ctx.db.patch(playerIds[index], patch)),
         patchRoom: (patch) => t.run(async (ctx) => ctx.db.patch(roomId, patch)),

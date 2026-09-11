@@ -37,6 +37,7 @@ export function BoardScene({
                 cameraState={cameraState}
                 combatActive={Boolean(combat)}
                 targeting={selectedDestination !== undefined}
+                focusNodeId={selectedDestination}
             />
             {combat && activePlayer ? (
                 <CombatStage combat={combat} player={activePlayer} />

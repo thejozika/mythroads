@@ -39,6 +39,7 @@ def outputs : List (System.FilePath × Convex.Module) :=
     ("convex/auth/authorization.generated.ts", Backend.Authorization.module),
     ("convex/rooms/queries.generated.ts", Backend.Room.Queries.module),
     ("shared/generated/board.generated.ts", Game.World.boardModule),
+    ("shared/generated/board-data.generated.ts", Game.World.boardDataModule),
     ("shared/generated/world.generated.ts", Game.World.worldTypesModule),
     ("shared/generated/controller-input.generated.ts", Game.World.controllerInputModule),
     ("shared/generated/combat.generated.ts", Game.Combat.module),

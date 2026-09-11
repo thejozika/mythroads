@@ -92,10 +92,6 @@ private def renderPhysicalRow (attack : PhysicalAttack) : String :=
   "    " ++ attack.label ++ ": " ++ record (guards.map fun guard =>
     (guard.label, quote (physicalMatchup attack guard).label)) ++ ",\n"
 
-private def renderImpactRow (impact : Impact) : String :=
-  "    " ++ impact.label ++ ": " ++ record (guards.map fun guard =>
-    (guard.label, quote (impactMatchup impact guard).label)) ++ ",\n"
-
 private def renderEnemy (enemy : Enemy) : String :=
   "    " ++ record [
     ("name", quote enemy.name), ("element", quote enemy.element.label), ("hp", toString enemy.hp),
@@ -118,24 +114,24 @@ private def body : String :=
   join "" (guards.map fun value => "    " ++ value.label ++ ": " ++ quote value.title ++ ",\n") ++ "}\n" ++
   "const PHYSICAL_MATCHUPS: Record<PhysicalAttack, Record<GuardStance, Matchup>> = {\n" ++
   join "" (physicalAttacks.map renderPhysicalRow) ++ "}\n" ++
-  "const MULTIPLIER: Record<Matchup, number> = { weak: 0.55, neutral: 1, strong: 1.65 }\n" ++
-  "const POWER: Record<PhysicalAttack, number> = { " ++ join ", " (physicalAttacks.map fun value =>
-    value.label ++ ": " ++ toString (physicalPower value) ++ " / 100") ++ " }\n" ++
   "export const isMagicTechnique = (attack: CombatAttack): attack is MagicTechniqueId => attack in MAGIC_TECHNIQUES\n" ++
   "export function physicalMatchup(attack: PhysicalAttack, guard: GuardStance) { return PHYSICAL_MATCHUPS[attack][guard] }\n" ++
-  "const IMPACT_MATCHUPS: Record<ImpactType, Record<GuardStance, Matchup>> = {\n" ++
-  join "" ([Impact.wucht, .stich, .hieb].map renderImpactRow) ++ "}\n" ++
-  "export function strikeDamage(attack: CombatAttack, guard: GuardStance, attacker: BattleStats, defender: BattleStats, targetElement?: Element, wardPower = 0.35) { const technique = isMagicTechnique(attack) ? MAGIC_TECHNIQUES[attack] : undefined; const arcane = technique?.delivery === 'arcane'; const impact = technique && ['wucht', 'stich', 'hieb'].includes(technique.delivery) ? (technique.delivery as ImpactType) : undefined; const matchup = arcane ? elementMatchup(technique.element, targetElement) : impact ? IMPACT_MATCHUPS[impact][guard] : physicalMatchup(attack as PhysicalAttack, guard); const physical = !arcane; const techniquePower = technique ? 0 : attack === 'stab' ? 0 : attacker.athletics * 0.35; const attackValue = technique ? attacker.magic : attacker.attack; const resistance = arcane ? defender.magic * 0.55 : defender.defense * 0.55; const brace = physical && guard === 'brace' ? defender.athletics * 0.25 : 0; const ward = arcane && guard === 'ward' ? wardPower : 1; const accuracy = arcane ? 1 : Math.max(0.5, Math.min(0.98, 0.75 + (attacker.agility - defender.agility) * 0.04)); const power = technique?.power ?? POWER[attack as PhysicalAttack]; return { matchup, accuracy, damage: Math.max(1, Math.round((attackValue * power + techniquePower - resistance - brace) * MULTIPLIER[matchup] * ward)) } }\n" ++
+  "export function strikeDamage(attack: CombatAttack, guard: GuardStance, attacker: BattleStats, defender: BattleStats, targetElement?: Element, wardPower = 0.35) { const strike: EngineStrike = isMagicTechnique(attack) ? { _: 'magic', technique: { _: attack } } : { _: 'physical', attack: { _: attack } }; const target: EngineOption<EngineElement> = targetElement ? { _: 'some', val: { _: targetElement } } : { _: 'none' }; const result = engineStrikeDamage(strike, { _: guard }, attacker, defender, target, Math.round(wardPower * 100)); return { matchup: result.matchup._, accuracy: result.accuracy / 10000, damage: result.damage } }\n" ++
   "const ENEMIES = [\n" ++ join "" (enemies.map renderEnemy) ++ "] as const\n" ++
   "export function enemyForSpace(spaceId: number) { return ENEMIES[spaceId % ENEMIES.length] }\n"
 
 /-- The physical attack, guard, and enemy catalogues plus the damage formula. -/
 def module : Module where
   provenance := some "proofs/Mythroads/Game/Combat.lean"
-  imports := [{ source := "../magic.system.ts", bindings := [
-    { name := "elementMatchup" }, { name := "MAGIC_TECHNIQUES" },
-    { name := "Element", isType := true }, { name := "ImpactType", isType := true },
-    { name := "MagicTechniqueId", isType := true }] }]
+  imports := [
+    { source := "../engine.system.ts", bindings := [
+      { name := "strikeDamage as engineStrikeDamage" },
+      { name := "Game_Magic_Element as EngineElement", isType := true },
+      { name := "Option as EngineOption", isType := true },
+      { name := "Strike as EngineStrike", isType := true }] },
+    { source := "../magic.system.ts", bindings := [
+      { name := "MAGIC_TECHNIQUES" }, { name := "Element", isType := true },
+      { name := "MagicTechniqueId", isType := true }] }]
   items := [.raw body]
 
 end Mythroads.Game.Combat

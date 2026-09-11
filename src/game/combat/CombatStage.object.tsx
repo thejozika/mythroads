@@ -1,6 +1,7 @@
-import { Float, Text } from '@react-three/drei'
-import { ATTACK_LABELS, isMagicTechnique, type CombatAttack } from '../../../shared/combat.system'
-import { MAGIC_TECHNIQUES, type Element } from '../../../shared/magic.system'
+import { Float } from '@react-three/drei'
+import { ATTACK_LABELS, type CombatAttack, isMagicTechnique } from '../../../shared/combat.system'
+import { type Element, MAGIC_TECHNIQUES } from '../../../shared/magic.system'
+import { BoardText as Text } from '../board/labels/BoardText.object'
 import type { Combat, PublicPlayer } from '../game.type'
 
 const ELEMENT_COLOR: Record<Element, string> = {

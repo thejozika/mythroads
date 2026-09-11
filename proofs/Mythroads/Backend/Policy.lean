@@ -1,11 +1,11 @@
 import Mythroads.Convex.Module
-import Mythroads.Game.Events
+import Mythroads.Engine.Event
 
 namespace Mythroads.Backend.Policy
 
 open Mythroads.Convex
 open Mythroads.Convex.TypeScript
-open Mythroads.Game.Events
+open Mythroads.Engine
 
 private def id (name : String) : Expr := .identifier name
 private def prop (target : Expr) (name : String) : Expr := .property target name
@@ -16,8 +16,8 @@ def persistentFunction : Function where
   parameters := [{ name := "event", type := .named "GameEvent" }]
   returns := .boolean
   body := [
-    .switch (prop (id "event") "type") (specs.map fun spec =>
-      (spec.type, [.return (.boolean spec.persistent)])),
+    .switch (prop (id "event") "type") (Event.alphabet.map fun event =>
+      (event.name, [.return (.boolean event.durable)])),
     .return (.boolean false)
   ]
 
@@ -34,7 +34,7 @@ def roomIdFunction : Function where
 
 /-- Which events are durable, and which room each one belongs to. -/
 def module : Module where
-  provenance := some "proofs/Mythroads/Game/Events.lean"
+  provenance := some "proofs/Mythroads/Engine/Event.lean"
   imports := [
     { source := "../_generated/dataModel", bindings := [{ name := "Id", isType := true }] },
     { source := "./validators", bindings := [{ name := "GameEvent", isType := true }] }

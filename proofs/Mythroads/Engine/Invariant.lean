@@ -38,9 +38,8 @@ pins the cursor of an *empty* lobby to zero. Without that, a room could sit at t
 three with nobody seated and the first hero to join would arrive out of range; with
 it, seating a hero is a one-line `omega`.
 
-`rngInRange` does not claim the state is non-zero. Park–Miller's modulus is prime, so a
-non-zero state stays non-zero, but that proof needs primality of 2^31 − 1 and the
-boundary never produces zero: `Lobby.create` normalises every seed to `1 ≤ state`.
+The generator is both positive and below the modulus. The preservation proof uses the
+smaller fact actually required by Park–Miller: its multiplier is coprime to the modulus.
 -/
 structure Ok (s : State) : Prop where
   /-- No hero is ever over-healed. -/
@@ -49,6 +48,8 @@ structure Ok (s : State) : Prop where
   turnInRange : s.turn < max 1 s.players.length
   /-- The room never seats more heroes than `loadState` reads back. -/
   seated : s.players.length ≤ maxPlayers
+  /-- The generator never enters its absorbing zero state. -/
+  rngPositive : 0 < s.rng
   /-- The generator state is a residue below the Park–Miller modulus. -/
   rngInRange : s.rng < Game.Random.modulus
 
@@ -61,10 +62,11 @@ theorem length_pos_of_ne_nil {α : Type} {l : List α} (h : l ≠ []) : 0 < l.le
 /-- Anything that leaves the hero list, the cursor and the generator alone preserves `Ok`. -/
 theorem ok_congr {s s' : State} (ok : Ok s) (players : s'.players = s.players)
     (turn : s'.turn = s.turn) (rng : s'.rng = s.rng) : Ok s' := by
-  refine ⟨?_, ?_, ?_, ?_⟩
+  refine ⟨?_, ?_, ?_, ?_, ?_⟩
   · rw [players]; exact ok.heroes
   · rw [players, turn]; exact ok.turnInRange
   · rw [players]; exact ok.seated
+  · rw [rng]; exact ok.rngPositive
   · rw [rng]; exact ok.rngInRange
 
 /--
@@ -72,8 +74,9 @@ Anything that leaves the hero list and the cursor alone and lands the generator 
 modulus preserves `Ok`. This is the shape of every transition that draws.
 -/
 theorem ok_reseeded {s s' : State} (ok : Ok s) (players : s'.players = s.players)
-    (turn : s'.turn = s.turn) (rng : s'.rng < Game.Random.modulus) : Ok s' := by
-  refine ⟨?_, ?_, ?_, rng⟩
+    (turn : s'.turn = s.turn) (rngPositive : 0 < s'.rng)
+    (rngInRange : s'.rng < Game.Random.modulus) : Ok s' := by
+  refine ⟨?_, ?_, ?_, rngPositive, rngInRange⟩
   · rw [players]; exact ok.heroes
   · rw [players, turn]; exact ok.turnInRange
   · rw [players]; exact ok.seated
@@ -81,7 +84,8 @@ theorem ok_reseeded {s s' : State} (ok : Ok s) (players : s'.players = s.players
 /-- The invariant only reads the hero list, the cursor and the generator. -/
 theorem ok_of {s : State} (heroes : ∀ p ∈ s.players, p.hp ≤ p.maxHp)
     (turn : s.turn < max 1 s.players.length) (seated : s.players.length ≤ maxPlayers)
-    (rng : s.rng < Game.Random.modulus) : Ok s := ⟨heroes, turn, seated, rng⟩
+    (rngPositive : 0 < s.rng) (rngInRange : s.rng < Game.Random.modulus) : Ok s :=
+  ⟨heroes, turn, seated, rngPositive, rngInRange⟩
 
 /-- Rewriting one hero leaves the list length alone, which is why the cursor stays valid. -/
 theorem mapPlayer_length (s : State) (pid : Mythroads.PlayerId) (f : PlayerState → PlayerState) :
@@ -92,7 +96,7 @@ theorem mapPlayer_length (s : State) (pid : Mythroads.PlayerId) (f : PlayerState
 theorem ok_mapPlayer {s : State} {pid : Mythroads.PlayerId} {f : PlayerState → PlayerState}
     (ok : Ok s) (hf : ∀ p, p.hp ≤ p.maxHp → (f p).hp ≤ (f p).maxHp) :
     Ok (s.mapPlayer pid f) := by
-  refine ⟨?_, ?_, ?_, ok.rngInRange⟩
+  refine ⟨?_, ?_, ?_, ok.rngPositive, ok.rngInRange⟩
   · intro p hp
     simp only [State.mapPlayer, List.mem_map] at hp
     obtain ⟨q, hq, rfl⟩ := hp
@@ -110,7 +114,7 @@ theorem ok_advanceTurn {s : State} (ok : Ok s) (message : String) :
   unfold State.advanceTurn
   split
   · rename_i h
-    refine ⟨ok.heroes, ?_, ok.seated, ok.rngInRange⟩
+    refine ⟨ok.heroes, ?_, ok.seated, ok.rngPositive, ok.rngInRange⟩
     have := Game.Turn.nextIndexIsValid s.turn s.players.length h
     simp only []
     omega
@@ -139,9 +143,15 @@ the state after *any* draw is in range regardless of the state before it. That i
 theorem draw_rng_lt (s : State) (bound : Nat) : (s.draw bound).2.rng < Game.Random.modulus :=
   Game.Random.nextState_lt_modulus _
 
+/-- A draw from a valid room cannot enter the absorbing zero generator state. -/
+theorem draw_rng_positive (s : State) (bound : Nat) (positive : 0 < s.rng)
+    (small : s.rng < Game.Random.modulus) : 0 < (s.draw bound).2.rng :=
+  Game.Random.nextState_positive _ positive small
+
 /-- Taking a draw from the room generator preserves `Ok`. -/
 theorem ok_draw {s : State} (ok : Ok s) (bound : Nat) : Ok (s.draw bound).2 :=
-  ok_reseeded ok rfl rfl (draw_rng_lt s bound)
+  ok_reseeded ok rfl rfl (draw_rng_positive s bound ok.rngPositive ok.rngInRange)
+    (draw_rng_lt s bound)
 
 /-! ## Side conditions for the per-hero rewrites the rules perform -/
 

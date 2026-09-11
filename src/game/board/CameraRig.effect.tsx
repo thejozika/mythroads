@@ -9,9 +9,16 @@ type CameraRigProps = {
     cameraState: RoomCamera | null
     combatActive?: boolean
     targeting?: boolean
+    focusNodeId?: number
 }
 
-export function CameraRig({ activePlayer, cameraState, combatActive, targeting }: CameraRigProps) {
+export function CameraRig({
+    activePlayer,
+    cameraState,
+    combatActive,
+    targeting,
+    focusNodeId,
+}: CameraRigProps) {
     const camera = useThree((state) => state.camera)
     const desired = useMemo(() => new Vector3(), [])
     const fixedRotation = useMemo(() => {
@@ -23,16 +30,17 @@ export function CameraRig({ activePlayer, cameraState, combatActive, targeting }
 
     useFrame((_, delta) => {
         const activeNode = activePlayer ? getNode(activePlayer.position) : undefined
+        const focusNode = focusNodeId === undefined ? activeNode : getNode(focusNodeId)
         const free = !combatActive && cameraState?.mode === 'free'
-        const targetX = free ? cameraState.targetX : targeting ? 0 : (activeNode?.x ?? 0)
-        const targetZ = free ? cameraState.targetZ : targeting ? 0 : (activeNode?.z ?? 0)
+        const targetX = free ? cameraState.targetX : (focusNode?.x ?? 0)
+        const targetZ = free ? cameraState.targetZ : (focusNode?.z ?? 0)
         const distance = free
             ? cameraState.distance
             : combatActive
               ? 8.3
               : activePlayer && !targeting
                 ? 9.2
-                : 13.4
+                : 10.5
         if (combatActive) {
             desired.set(0, distance * 0.72, distance * 0.86)
         } else {

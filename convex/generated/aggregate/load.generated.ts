@@ -197,7 +197,7 @@ export async function loadState(ctx: MutationCtx, roomId: Id<'rooms'>): Promise<
         rng: room.rngState ?? normalizeSeed(room._creationTime),
         rngCounter: room.rngCounter ?? 0,
         camera: camera ? { _: 'some', val: cameraFrom(camera) } : { _: 'none' },
-        version: 0,
+        version: room.eventVersion ?? 0,
     }
 }
 

@@ -36,6 +36,20 @@ theorem normalizedSeed_lt_modulus (seed : Nat) : normalizeSeed seed < modulus :=
 theorem nextState_lt_modulus (state : Nat) : nextState state < modulus := by
   exact Nat.mod_lt _ (by decide)
 
+/-- The Park–Miller multiplier is invertible modulo the Mersenne modulus. -/
+theorem multiplier_coprime_modulus : Nat.Coprime modulus multiplier := by decide
+
+/-- A valid non-zero Park–Miller state can never transition to zero. -/
+theorem nextState_positive (state : Nat) (positive : 0 < state) (small : state < modulus) :
+    0 < nextState state := by
+  have notDvd : ¬ modulus ∣ state := Nat.not_dvd_of_pos_of_lt positive small
+  have modNonzero : (state * multiplier) % modulus ≠ 0 := by
+    intro zero
+    exact notDvd (multiplier_coprime_modulus.dvd_of_dvd_mul_right
+      (Nat.dvd_of_mod_eq_zero zero))
+  unfold nextState
+  omega
+
 theorem drawBounded_lt (state bound : Nat) (positive : 0 < bound) :
     (drawBounded state bound).value < bound := by
   exact Nat.mod_lt _ positive

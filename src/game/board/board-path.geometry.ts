@@ -10,13 +10,17 @@ export function roadPoints(road: WorldRoad, reverse = false): PathPoint[] {
 }
 
 export function roadBetween(from: number, to: number) {
-    const road = WORLD.roads.find(
+    const road = findRoad(from, to)
+    if (!road) return null
+    return roadPoints(road, road.to === from)
+}
+
+export function findRoad(from: number, to: number) {
+    return WORLD.roads.find(
         (candidate) =>
             (candidate.from === from && candidate.to === to) ||
             (candidate.bidirectional && candidate.from === to && candidate.to === from),
     )
-    if (!road) return null
-    return roadPoints(road, road.to === from)
 }
 
 export function offsetPath(points: PathPoint[], distance: number) {

@@ -138,6 +138,31 @@ def requireRipeEncounter : Function where
 /-- How many redraws the collision retry allows before refusing. -/
 def codeAttempts : Nat := 32
 
+/-- Durable snapshots bound replay cost without making them part of the public game surface. -/
+def snapshotInterval : Nat := 20
+
+/-- Store the complete compiled Lean state after every twentieth durable transition. -/
+def writeSnapshot : Function where
+  isExported := false
+  name := "writeSnapshot"
+  parameters := [
+    { name := "ctx", type := .named "MutationCtx" },
+    { name := "roomId", type := .id .rooms },
+    { name := "state", type := engineType "State" },
+    { name := "durable", type := .boolean }]
+  returns := .promise .void
+  body := [
+    .ifThen (not' (id "durable")) [.returnVoid],
+    .expression (Query.patchIn .rooms (id "roomId")
+      (.object [("eventVersion", prop (id "state") "version")])),
+    .ifThen (ne (.binary (prop (id "state") "version") "%" (.number snapshotInterval))
+      (.number 0)) [.returnVoid],
+    .constDecl "canonical" (.await (call (id "loadState") [ctx, id "roomId"])),
+    .expression (Query.insert .gameSnapshots (.object [
+      ("roomId", id "roomId"), ("version", prop (id "canonical") "version"),
+      ("stateJson", call (prop (id "JSON") "stringify") [id "canonical"]),
+      ("createdAt", now)]))]
+
 /-- Boundary policy: keep redrawing until the room code is free, up to `codeAttempts` times. -/
 def freeRoomCode : Function where
   isExported := false
@@ -210,8 +235,16 @@ def applyGameEvent : Function where
       [event, call (id "actorFor") [event, id "actorAuthId", id "before"], .number 0]),
     .constDecl "outcome" (call (id "step") [id "before", id "envelope"]),
     .ifThen (isTag (id "outcome") "error") [refuseOutcome],
+    .constDecl "durable" (call (id "isPersistentGameEvent") [event]),
+    .constDecl "transitioned" (prop (prop (id "outcome") "a") "fst"),
+    .constDecl "after" (.conditional (id "durable") (.object [
+      ("...", id "transitioned"),
+      ("version", .binary (prop (id "before") "version") "+" (.number 1))])
+      (id "transitioned")),
     .constDecl "saved" (.await (call (id "saveState") [ctx, id "roomId", id "before",
-      prop (prop (id "outcome") "a") "fst", prop (prop (id "outcome") "a") "snd"])),
+      id "after", prop (prop (id "outcome") "a") "snd"])),
+    .expression (.await (call (id "writeSnapshot")
+      [ctx, id "roomId", id "after", id "durable"])),
     .ifThen (isEvent "player.join") [
       .ifThen (not' (prop (id "saved") "playerId")) [refuse "Choose a hero name."],
       .return (.object [("kind", .string "player.joined"),
@@ -233,12 +266,14 @@ def module : Module where
     { source := "./persist.generated", bindings := [valueBinding "insertRoom",
       valueBinding "saveState"] },
     { source := "./load.generated", bindings := [valueBinding "emptyState",
-      valueBinding "loadState"] }
+      valueBinding "loadState"] },
+    { source := "../../events/policy", bindings := [valueBinding "isPersistentGameEvent"] }
   ]
   items := [
     .function roomIdForEvent,
     .function actorFor,
     .function requireRipeEncounter,
+    .function writeSnapshot,
     .function freeRoomCode,
     .function createRoom,
     .function applyGameEvent

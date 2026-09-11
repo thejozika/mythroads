@@ -7,7 +7,7 @@ open Mythroads.Convex.TypeScript
 
 /-- The gameplay role attached to a board node. Rendering derives its visual identifier from this value. -/
 inductive SpaceKind where
-  | castle | combat | event | armoury | jeweller | weapons | items | magic
+  | castle | combat | event | armoury | jeweller | weapons | items | magic | teleport
   deriving Repr, DecidableEq
 
 /-- Converts a space kind to the stable lowercase value emitted into TypeScript. -/
@@ -15,6 +15,13 @@ def SpaceKind.label : SpaceKind → String
   | .castle => "castle" | .combat => "combat" | .event => "event"
   | .armoury => "armoury" | .jeweller => "jeweller" | .weapons => "weapons"
   | .items => "items" | .magic => "magic"
+  | .teleport => "teleport"
+
+/-- Stable identity of one disconnected landmass. Teleport landings connect the islands. -/
+inductive IslandId where | hearth | ember | tide deriving Repr, DecidableEq
+
+def IslandId.label : IslandId → String
+  | .hearth => "hearth" | .ember => "ember" | .tide => "tide"
 
 /-- An integer board-space coordinate. Emitters divide values by 100 for Three.js world units. -/
 structure Point where
@@ -35,9 +42,10 @@ structure Node where
   kind : SpaceKind
   point : Point
   landmark : Option Landmark := none
+  island : IslandId := .hearth
   deriving Repr, DecidableEq
 
-/-- A directed graph edge. `bidirectional` adds the reverse edge; `bridge` is visual metadata. -/
+/-- A directed local graph edge. `bidirectional` adds the reverse edge; `bridge` is visual metadata. -/
 structure Road where
   origin : Nat
   destination : Nat
@@ -45,10 +53,25 @@ structure Road where
   bridge : Bool := false
   deriving Repr, DecidableEq
 
+/-- A landing-triggered, bidirectional pairing between teleport fields on different islands. -/
+structure TeleportPair where
+  first : Nat
+  second : Nat
+  deriving Repr, DecidableEq
+
+/-- The visible shoreline of one independently rendered map. -/
+structure Island where
+  id : IslandId
+  label : String
+  boundary : List Point
+  deriving Repr, DecidableEq
+
 /-- The complete traversable board: playable nodes plus the roads connecting them. -/
 structure BoardGraph where
   nodes : List Node
   roads : List Road
+  teleports : List TeleportPair
+  islands : List Island
   deriving Repr, DecidableEq
 
 /-- Non-playable world geometry positioned around and beneath the graph. -/
@@ -58,8 +81,26 @@ inductive Terrain where
   | hill (id : String) (point : Point) (radius height : Nat)
   deriving Repr, DecidableEq
 
-private def n (id : Nat) (label : String) (kind : SpaceKind) (x z : Int) : Node :=
-  { id, label, kind, point := { x, z } }
+private def n (id : Nat) (label : String) (kind : SpaceKind) (x z : Int)
+    (island : IslandId := .hearth) : Node :=
+  { id, label, kind, point := { x, z }, island }
+
+/-- Three disconnected shorelines. Landing on paired teleport fields moves between them. -/
+def islands : List Island := [
+  { id := .hearth, label := "Hearthwild", boundary := [
+      { x := -650, z := -270 }, { x := -310, z := -305 }, { x := 80, z := -285 },
+      { x := 370, z := -300 }, { x := 620, z := -220 }, { x := 650, z := 110 },
+      { x := 610, z := 380 }, { x := 410, z := 550 }, { x := 20, z := 575 },
+      { x := -320, z := 555 }, { x := -620, z := 465 }, { x := -680, z := 120 }] },
+  { id := .ember, label := "Embercrag", boundary := [
+      { x := -1510, z := -760 }, { x := -1360, z := -950 }, { x := -1050, z := -990 },
+      { x := -790, z := -850 }, { x := -760, z := -560 }, { x := -930, z := -390 },
+      { x := -1240, z := -370 }, { x := -1490, z := -500 }] },
+  { id := .tide, label := "Tideglass", boundary := [
+      { x := 760, z := -590 }, { x := 900, z := -870 }, { x := 1190, z := -1010 },
+      { x := 1480, z := -860 }, { x := 1530, z := -570 }, { x := 1330, z := -390 },
+      { x := 1010, z := -370 }, { x := 790, z := -450 }] }
+]
 
 /-- Every playable space in Wildroot Crossing. Node IDs are persistent game-state references. -/
 def nodes : List Node := [
@@ -77,7 +118,24 @@ def nodes : List Node := [
   n 19 "Wayfarer" .items 90 40, n 20 "Old Ferry" .event 220 40,
   n 21 "Thorn Beast" .combat 350 40, n 22 "Cloud Altar" .event (-300) (-120),
   n 23 "Windy Bluff" .event (-150) (-120), n 24 "River Cache" .items 0 (-120),
-  n 25 "Ash Orchard" .combat 150 (-120), n 26 "Pilgrim Stone" .event 300 (-120)
+  n 25 "Ash Orchard" .combat 150 (-120), n 26 "Pilgrim Stone" .event 300 (-120),
+  n 27 "Ember Gate" .teleport (-420) (-170), n 28 "Tide Gate" .teleport 420 (-170),
+  n 30 "Hearth Gate" .teleport (-980) (-520) .ember,
+  n 31 "Cinder Market" .items (-1160) (-500) .ember,
+  n 32 "Ash Drake" .combat (-1340) (-570) .ember,
+  n 33 "Forge Shrine" .event (-1390) (-760) .ember,
+  n 34 "Crag Armoury" .armoury (-1210) (-880) .ember,
+  n 35 "Magma Maw" .combat (-960) (-820) .ember,
+  n 36 "Tide Gate" .teleport (-880) (-650) .ember,
+  n 37 "Ember Jeweller" .jeweller (-1130) (-690) .ember,
+  n 50 "Hearth Gate" .teleport 980 (-520) .tide,
+  n 51 "Coral Cache" .event 1160 (-480) .tide,
+  n 52 "Reef Stalker" .combat 1360 (-560) .tide,
+  n 53 "Pearl Jeweller" .jeweller 1420 (-750) .tide,
+  n 54 "Sunken Library" .magic 1240 (-900) .tide,
+  n 55 "Storm Crab" .combat 990 (-850) .tide,
+  n 56 "Ember Gate" .teleport 860 (-660) .tide,
+  n 57 "Drift Shop" .items 1150 (-700) .tide
 ]
 
 private def r (origin destination : Nat) (bidirectional := true) (bridge := false) : Road :=
@@ -85,17 +143,31 @@ private def r (origin destination : Nat) (bidirectional := true) (bridge := fals
 
 /-- The board's edges. A road with `bidirectional := false` may only be traversed origin-to-destination. -/
 def roads : List Road := [
-  r 0 1, r 1 2, r 2 3, r 3 4, r 4 5, r 5 6 true true, r 6 7, r 7 8, r 8 9,
+  r 0 1, r 0 3, r 1 2, r 2 3, r 3 4, r 4 5, r 5 6 true true, r 6 7, r 7 8, r 8 9,
   r 2 10, r 10 11, r 11 12, r 12 13 false true, r 13 14, r 14 15, r 15 9,
   r 10 16, r 16 17, r 17 18, r 18 19 true true, r 19 20, r 20 21, r 21 15,
   r 16 22, r 22 23, r 23 24, r 24 25 true true, r 25 26, r 26 21,
-  r 4 11, r 6 13, r 8 15, r 12 18, r 14 20, r 17 23, r 20 25
+  r 4 11, r 6 13, r 8 15, r 12 18, r 14 20, r 17 23, r 20 25,
+  r 23 27, r 25 28,
+  r 30 31, r 31 32, r 32 33, r 33 34, r 34 35, r 35 36, r 36 37, r 37 31,
+  r 32 37, r 34 37,
+  r 50 51, r 51 52, r 52 53, r 53 54, r 54 55, r 55 56, r 56 57, r 57 51,
+  r 52 57, r 54 57
+]
+
+/-- Teleport destinations are landing effects, never graph edges or movement steps. -/
+def teleports : List TeleportPair := [
+  { first := 27, second := 30 },
+  { first := 28, second := 50 },
+  { first := 36, second := 56 }
 ]
 
 /-- The authoritative graph value consumed by movement rules and TypeScript generation. -/
 def boardGraph : BoardGraph where
   nodes := nodes
   roads := roads
+  teleports := teleports
+  islands := islands
 
 /-- Decorative and collision-free terrain; terrain never decides legal movement. -/
 def terrain : List Terrain := [
@@ -126,6 +198,13 @@ def BoardGraph.availableRoads (graph : BoardGraph) (position : Nat) : List Avail
 def BoardGraph.canTraverse (graph : BoardGraph) (origin destination : Nat) : Bool :=
   (graph.availableRoads origin).any fun road => road.destination = destination
 
+/-- The paired arrival field for a teleport landing, if this node is a declared endpoint. -/
+def BoardGraph.teleportTarget? (graph : BoardGraph) (id : Nat) : Option Nat :=
+  graph.teleports.findSome? fun pair =>
+    if pair.first = id then some pair.second
+    else if pair.second = id then some pair.first
+    else none
+
 /-- Looks up movement options in the authoritative board graph. -/
 def availableRoads (position : Nat) : List AvailableRoad := boardGraph.availableRoads position
 
@@ -141,99 +220,8 @@ theorem everyRoadEndpointExists : roads.all (fun road =>
     nodes.any (fun node => node.id = road.destination)) = true := by
   decide
 
-private def coordinate (value : Int) : String := toString value ++ " / 100"
-private def point (value : Point) : String :=
-  "{ x: " ++ coordinate value.x ++ ", z: " ++ coordinate value.z ++ " }"
-
-private def renderNode (value : Node) : String :=
-  "    { id: " ++ toString value.id ++ ", label: " ++ quote value.label ++ ", kind: " ++
-  quote value.kind.label ++ ", x: " ++ coordinate value.point.x ++ ", z: " ++
-  coordinate value.point.z ++ (match value.landmark with
-    | none => ""
-    | some mark => ", landmark: { visualId: 'landmark.castle', offsetX: " ++
-      coordinate mark.offsetX ++ ", offsetZ: " ++ coordinate mark.offsetZ ++ " }") ++ " },\n"
-
-private def renderRoad (value : Road) : String :=
-  "    road(" ++ toString value.origin ++ ", " ++ toString value.destination ++
-  (if value.bidirectional ∧ !value.bridge then ""
-   else ", { bidirectional: " ++ (if value.bidirectional then "true" else "false") ++
-     (if value.bridge then ", bridge: true" else "") ++ " }") ++ "),\n"
-
-private def renderTerrain : Terrain → String
-  | .lake id center radiusX radiusZ =>
-      "    { id: " ++ quote id ++ ", kind: 'lake', visualId: 'terrain.lake', x: " ++
-      coordinate center.x ++ ", z: " ++ coordinate center.z ++ ", radiusX: " ++
-      coordinate radiusX ++ ", radiusZ: " ++ coordinate radiusZ ++ " },\n"
-  | .river id width points =>
-      "    { id: " ++ quote id ++ ", kind: 'river', visualId: 'terrain.river', width: " ++
-      coordinate width ++ ", points: [" ++ join ", " (points.map point) ++ "] },\n"
-  | .hill id center radius height =>
-      "    { id: " ++ quote id ++ ", kind: 'hill', visualId: 'terrain.hill', x: " ++
-      coordinate center.x ++ ", z: " ++ coordinate center.z ++ ", radius: " ++
-      coordinate radius ++ ", height: " ++ coordinate height ++ " },\n"
-
-/-- The body of `shared/generated/board.generated.ts`. -/
-private def boardBody : String :=
-  "export type { SpaceKind, WorldNode as BoardNode } from '../world.type'\n" ++
-  "const node = (definition: Omit<WorldNode, 'visualId'>): WorldNode => ({ ...definition, visualId: `space.${definition.kind}` })\n" ++
-  "const WORLD_NODES: Omit<WorldNode, 'visualId'>[] = [\n" ++
-  join "" (boardGraph.nodes.map renderNode) ++ "]\n" ++
-  "const road = (from: number, to: number, options: Partial<WorldRoad> = {}): WorldRoad => ({ id: `${from}-${to}`, from, to, bidirectional: true, ...options })\n" ++
-  "const WORLD_ROADS: WorldRoad[] = [\n" ++
-  join "" (boardGraph.roads.map renderRoad) ++ "]\n" ++
-  "export const WORLD: LogicalGameWorld = { id: 'wildroot-crossing', label: 'Wildroot Crossing', version: 5, nodes: WORLD_NODES.map(node), roads: WORLD_ROADS, terrain: [\n" ++
-  join "" (terrain.map renderTerrain) ++ "] }\n" ++
-  "export const BOARD = WORLD.nodes\n" ++
-  "export const isShopKind = (kind: SpaceKind): kind is ShopKind => ['armoury', 'jeweller', 'weapons', 'items', 'magic'].includes(kind)\n" ++
-  "export const getNode = (id: number) => BOARD.find((node) => node.id === id) ?? BOARD[0]\n" ++
-  "export type AvailableRoad = { destination: number; oneWay: boolean; roadId: string }\n" ++
-  "export const availableRoads = (position: number): AvailableRoad[] => WORLD.roads.flatMap((road) => { if (road.from === position) return [{ destination: road.to, oneWay: !road.bidirectional, roadId: road.id }]; if (road.bidirectional && road.to === position) return [{ destination: road.from, oneWay: false, roadId: road.id }]; return [] })\n" ++
-  "export const canTraverse = (from: number, to: number) => availableRoads(from).some((road) => road.destination === to)\n" ++
-  "export const availableSteps = (position: number, previousPosition?: number) => { const destinations = availableRoads(position).map((road) => road.destination); const forward = destinations.filter((id) => id !== previousPosition); return forward.length > 0 ? forward : destinations }\n" ++
-  "export function previewRouteStep(origin: number, path: number[], destination: number, totalSteps: number) { const current = path.at(-1) ?? origin; const previous = path.length > 1 ? path.at(-2) : path.length === 1 ? origin : undefined; if (destination === previous && canTraverse(current, destination)) return path.slice(0, -1); if (path.length >= totalSteps || !canTraverse(current, destination)) return null; return [...path, destination] }\n" ++
-  "export type ReachableRoute = { destination: number; path: number[] }\n" ++
-  "export function reachableRoutes(position: number, previousPosition: number | undefined, steps: number) { if (steps <= 0) return []; type RouteState = { current: number; previous?: number; path: number[] }; let routes = new Map<string, RouteState>([[`${position}:${previousPosition ?? 'none'}`, { current: position, previous: previousPosition, path: [] }]]); for (let step = 0; step < steps; step += 1) { const nextRoutes = new Map<string, RouteState>(); for (const route of routes.values()) { for (const destination of availableSteps(route.current, route.previous)) { const key = `${destination}:${route.current}`; if (!nextRoutes.has(key)) nextRoutes.set(key, { current: destination, previous: route.current, path: [...route.path, destination] }) } } routes = nextRoutes } const destinations = new Map<number, number[]>(); for (const route of routes.values()) if (!destinations.has(route.current)) destinations.set(route.current, route.path); return [...destinations].map(([destination, path]) => ({ destination, path })) }\n"
-
-/-- The body of `shared/generated/world.generated.ts`. -/
-private def typesBody : String :=
-  "export type SpaceKind = 'castle' | 'combat' | 'event' | ShopKind\n" ++
-  "export type WorldVisualId = `space.${SpaceKind}`\n" ++
-  "export type WorldNode = { id: number; label: string; kind: SpaceKind; visualId: WorldVisualId; x: number; z: number; landmark?: { visualId: 'landmark.castle'; offsetX: number; offsetZ: number } }\n" ++
-  "export type WorldRoad = { id: string; from: number; to: number; bidirectional: boolean; via?: { x: number; z: number }[]; bridge?: boolean }\n" ++
-  "export type WorldTerrainFeature = { id: string; kind: 'hill'; visualId: 'terrain.hill'; x: number; z: number; radius: number; height: number } | { id: string; kind: 'lake'; visualId: 'terrain.lake'; x: number; z: number; radiusX: number; radiusZ: number } | { id: string; kind: 'river'; visualId: 'terrain.river'; width: number; points: { x: number; z: number }[] }\n" ++
-  "export type LogicalGameWorld = { id: string; label: string; version: number; nodes: WorldNode[]; roads: WorldRoad[]; terrain: WorldTerrainFeature[] }\n"
-
-/-- The body of `shared/generated/controller-input.generated.ts`. -/
-private def controllerInputBody : String :=
-  "export type CardinalDirection = 'up' | 'down' | 'left' | 'right'\n" ++
-  "export function directionForStep(originId: number, destinationId: number): CardinalDirection { const origin = getNode(originId); const destination = getNode(destinationId); const deltaX = destination.x - origin.x; const deltaZ = destination.z - origin.z; if (Math.abs(deltaX) > Math.abs(deltaZ)) return deltaX > 0 ? 'right' : 'left'; return deltaZ > 0 ? 'down' : 'up' }\n" ++
-  "export function directionalRoads(position: number) { const result: Partial<Record<CardinalDirection, number>> = {}; for (const { destination } of availableRoads(position)) result[directionForStep(position, destination)] = destination; return result }\n" ++
-  "export function directionalTargets(originId: number, destinations: number[]) { const origin = getNode(originId); const result: Partial<Record<CardinalDirection, number>> = {}; const distance: Partial<Record<CardinalDirection, number>> = {}; for (const destinationId of destinations) { if (destinationId === originId) continue; const destination = getNode(destinationId); const direction = directionForStep(originId, destinationId); const squared = (destination.x - origin.x) ** 2 + (destination.z - origin.z) ** 2; if (distance[direction] === undefined || squared < (distance[direction] ?? Infinity)) { result[direction] = destinationId; distance[direction] = squared } } return result }\n"
-
-
-/-- The board graph as data for the browser renderer and the movement transactions. -/
-def boardModule : Module where
-  provenance := some "proofs/Mythroads/Game/World.lean"
-  imports := [
-    { source := "../item.system", bindings := [{ name := "ShopKind", isType := true }] },
-    { source := "../world.type", bindings := [
-      { name := "LogicalGameWorld", isType := true }, { name := "SpaceKind", isType := true },
-      { name := "WorldNode", isType := true }, { name := "WorldRoad", isType := true }] }
-  ]
-  items := [.raw boardBody]
-
-/-- The structural types the board module and the renderer share. -/
-def worldTypesModule : Module where
-  provenance := some "proofs/Mythroads/Game/World.lean"
-  imports := [{ source := "../item.system", bindings := [{ name := "ShopKind", isType := true }] }]
-  items := [.raw typesBody]
-
-/-- Cardinal-direction helpers for the controller's d-pad. -/
-def controllerInputModule : Module where
-  provenance := some "proofs/Mythroads/Game/World.lean"
-  imports := [{ source := "../board.system.ts", bindings := [
-    { name := "availableRoads" }, { name := "getNode" }] }]
-  items := [.raw controllerInputBody]
-
-
+theorem teleportPairsConnectEveryIslandPair :
+    boardGraph.teleportTarget? 27 = some 30 ∧
+    boardGraph.teleportTarget? 28 = some 50 ∧
+    boardGraph.teleportTarget? 36 = some 56 := by decide
 end Mythroads.Game.World

@@ -265,10 +265,11 @@ requests, and Convex runs that function compiled from Lean. Phase 5 is partly do
   compares the compiled engine against that fixture on every check.
 - Not started: proving the emitter preserves the semantics of the TypeScript AST, and a Lean-side
   bound showing every stored `Nat` stays below 2^53 (the compiler represents `Nat` as `number`).
-- Known follow-ups: the browser combat preview in `shared/generated/combat.generated.ts` still
-  computes `strikeDamage` in floats and can differ by one from the fixed-point engine on an exact
-  half; `isPersistentGameEvent` duplicates `Engine.Event.durable` (held equal by a `#guard`);
-  `saveState` patches every hero column on each `persistPlayer`; the retention batch is unscheduled.
+- Done: browser combat preview delegates to compiled fixed-point damage; event durability is emitted
+  from `Engine.Event.durable`; indexed private snapshots are written every 20 durable transitions;
+  and `Ok` proves the PRNG state stays positive.
+- Known follow-ups: `saveState` patches every hero column on each `persistPlayer`; the retention
+  batch is unscheduled.
 - Wasm remains out of scope until a measured, pure, computation-heavy function justifies it.
 
 ## Developer workflow

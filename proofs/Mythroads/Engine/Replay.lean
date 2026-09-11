@@ -9,7 +9,8 @@ state unchanged when an envelope is refused.
 
 What the deployed backend stores is the *state* — the `rooms` row and its satellites,
 which `loadState` reads and `saveState` writes — and the `gameEvents` log beside it is an
-audit trail rather than the source the state is rebuilt from. Two things keep it from
+audit trail rather than the source the state is rebuilt from. The private snapshot table caches
+that compiled state every twenty durable versions. Two things keep the log from
 being a complete transcript today: the `room.create` seed is normalised into the room's
 generator state and not written to the log, and the room-code collision retry advances
 that generator outside any logged envelope. The theorems below are about the log as a
@@ -18,7 +19,7 @@ on if it is ever adopted.
 
 `replay_append` is the theorem that makes **snapshots sound**. A stored snapshot taken
 at version *n* plus the tail of the log equals a full replay from the beginning, so a
-snapshot table can be added later without weakening any claim made here. `replay_snoc`
+snapshot table uses without weakening any claim made here. `replay_snoc`
 is its one-event corollary: appending an event advances the cached state by exactly one
 `step`, which is what the Convex mutation does inside a single transaction.
 -/
@@ -41,6 +42,12 @@ theorem replay_nil (s : State) : replay s [] = s := rfl
 theorem replay_append (s : State) (a b : List Envelope) :
     replay s (a ++ b) = replay (replay s a) b := by
   simp [replay, List.foldl_append]
+
+/-- A cached prefix state and its remaining tail have exactly full-replay semantics. -/
+theorem snapshot_tail_sound (initial snapshot : State) (head tail : List Envelope)
+    (sound : snapshot = replay initial head) :
+    replay snapshot tail = replay initial (head ++ tail) := by
+  rw [sound, replay_append]
 
 /-- Appending one event advances the cached state by exactly one `step`. -/
 theorem replay_snoc (s : State) (log : List Envelope) (env : Envelope) :

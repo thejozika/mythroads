@@ -57,8 +57,8 @@ def startEvent (s : State) (p : PlayerState) (spaceId : NodeId) : Outcome :=
 /--
 Resolve the space a hero has just stopped on, given that space's node.
 
-Shops and battles and events each open their own phase and keep the turn; the castle
-heals to full and passes the turn; anything else simply passes the turn.
+Shops, battles, and events each open their own phase and keep the turn. The castle heals to full;
+a paired teleport relocates the hero as a landing effect; both then pass the turn.
 -/
 def resolveOn (s : State) (p : PlayerState) (destination : NodeId) (landed : World.Node) :
     Outcome :=
@@ -74,6 +74,16 @@ def resolveOn (s : State) (p : PlayerState) (destination : NodeId) (landed : Wor
           .ok ((s.mapPlayer p.id fun q => { q with hp := q.maxHp }).advanceTurn
                 (p.name ++ " rested at Hearthkeep and recovered all health."),
                [.persistPlayer p.id, .persistRoom, .appendLog "landing.castle"])
+      | .teleport =>
+          match World.boardGraph.teleportTarget? destination with
+          | some target =>
+              .ok ((s.mapPlayer p.id fun q =>
+                    { q with position := target, previousPosition := none }).advanceTurn
+                    (p.name ++ " crossed the teleport gate."),
+                   [.persistPlayer p.id, .persistRoom, .appendLog "landing.teleport"])
+          | none =>
+              .ok (s.advanceTurn (p.name ++ " found a dormant teleport gate."),
+                   [.persistRoom, .appendLog "landing.teleport.dormant"])
       | _ =>
           .ok (s.advanceTurn (p.name ++ " completed the journey."),
                [.persistRoom, .appendLog "landing.done"])

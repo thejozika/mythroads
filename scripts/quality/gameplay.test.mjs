@@ -11,6 +11,7 @@ import {
 } from '../../shared/board.system.ts'
 import { directionalRoads } from '../../shared/controller-input.system.ts'
 import { physicalMatchup, strikeDamage } from '../../shared/combat.system.ts'
+import { strikeDamage as engineStrikeDamage } from '../../shared/engine.system.ts'
 import { equippedMagic, itemsForShop } from '../../shared/item.system.ts'
 import { elementMatchup, MAGIC_LOADOUTS } from '../../shared/magic.system.ts'
 import { isPersistentGameEvent } from '../../convex/events/policy.ts'
@@ -119,6 +120,27 @@ test('the world defines a healing castle and a river bridge', () => {
     assert.ok(WORLD.roads.some((road) => road.bridge))
 })
 
+test('three independent island maps are pairwise connected by teleport fields', () => {
+    assert.deepEqual(
+        WORLD.islands.map((island) => island.id),
+        ['hearth', 'ember', 'tide'],
+    )
+    for (const island of WORLD.islands) {
+        assert.equal(
+            WORLD.nodes.filter((node) => node.island === island.id && node.kind === 'teleport')
+                .length,
+            2,
+        )
+    }
+    assert.equal(WORLD.teleports.length, 3)
+    assert.ok(
+        WORLD.teleports.every((pair) => getNode(pair.first).island !== getNode(pair.second).island),
+    )
+    assert.equal(canTraverse(27, 30), false)
+    assert.equal(canTraverse(28, 50), false)
+    assert.equal(canTraverse(36, 56), false)
+})
+
 test('destination mode exposes exact-roll endpoints and adjacent roads', () => {
     const routes = reachableRoutes(0, undefined, 5)
     assert.ok(routes.length > 1)
@@ -175,6 +197,24 @@ test('physical and elemental advantages materially change damage', () => {
     assert.ok(exposed.damage > blocked.damage)
     assert.equal(elementMatchup('fire', 'earth'), 'strong')
     assert.equal(elementMatchup('fire', 'water'), 'weak')
+})
+
+test('browser damage preview is an adapter over the compiled Lean engine', () => {
+    const attacker = { attack: 4, defense: 2, magic: 4, athletics: 3, agility: 3 }
+    const defender = { attack: 2, defense: 3, magic: 2, athletics: 2, agility: 2 }
+    const compiled = engineStrikeDamage(
+        { _: 'magic', technique: { _: 'emberBlast' } },
+        { _: 'ward' },
+        attacker,
+        defender,
+        { _: 'some', val: { _: 'earth' } },
+        35,
+    )
+    assert.deepEqual(strikeDamage('emberBlast', 'ward', attacker, defender, 'earth'), {
+        matchup: compiled.matchup._,
+        accuracy: compiled.accuracy / 10000,
+        damage: compiled.damage,
+    })
 })
 
 test('arcane ward is strong against pure magic and exposed to physical attacks', () => {

@@ -1,4 +1,4 @@
-/** Generated from proofs/Mythroads/Game/Events.lean. Do not edit by hand. */
+/** Generated from proofs/Mythroads/Engine/Event.lean. Do not edit by hand. */
 import type { Id } from '../_generated/dataModel'
 import type { GameEvent } from './validators'
 

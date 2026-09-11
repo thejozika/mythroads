@@ -26,6 +26,15 @@ theorem codeChars_state_lt (state count : Nat) (h : state < Game.Random.modulus)
   | succ n ih =>
       exact ih _ (Game.Random.nextState_lt_modulus _)
 
+/-- Drawing code characters keeps a valid generator away from zero. -/
+theorem codeChars_state_positive (state count : Nat) (positive : 0 < state)
+    (small : state < Game.Random.modulus) : 0 < (Lobby.codeChars state count).2 := by
+  induction count generalizing state with
+  | zero => exact positive
+  | succ n ih =>
+      exact ih _ (Game.Random.nextState_positive _ positive small)
+        (Game.Random.nextState_lt_modulus _)
+
 /-- Drawing a room code keeps the generator below the modulus. -/
 theorem roomCode_state_lt (state : Nat) (h : state < Game.Random.modulus) :
     (Lobby.roomCode state).2 < Game.Random.modulus := by
@@ -35,6 +44,14 @@ theorem roomCode_state_lt (state : Nat) (h : state < Game.Random.modulus) :
   generalize Lobby.codeChars state 4 = drawn at inRange ⊢
   exact inRange
 
+/-- Drawing a room code keeps a valid generator away from zero. -/
+theorem roomCode_state_positive (state : Nat) (positive : 0 < state)
+    (small : state < Game.Random.modulus) : 0 < (Lobby.roomCode state).2 := by
+  have nonzero := codeChars_state_positive state 4 positive small
+  unfold Lobby.roomCode
+  generalize Lobby.codeChars state 4 = drawn at nonzero ⊢
+  exact nonzero
+
 /-- Creating a room empties the hero list, parks the cursor at zero and seeds the generator. -/
 theorem ok_create {s s' : State} {actor : Mythroads.AuthId} {seed : Nat} {fx : List Effect}
     (h : Lobby.create s actor seed = .ok (s', fx)) : Ok s' := by
@@ -42,7 +59,11 @@ theorem ok_create {s s' : State} {actor : Mythroads.AuthId} {seed : Nat} {fx : L
   -- Keep the drawn code opaque: unfolding it would evaluate four generator draws.
   generalize drawn : Lobby.roomCode (Game.Random.normalizeSeed seed) = generated at h
   obtain ⟨rfl, -⟩ := h
-  refine ⟨by simp, by simp, by simp [maxPlayers], ?_⟩
+  refine ⟨by simp, by simp, by simp [maxPlayers], ?_, ?_⟩
+  · have positive := roomCode_state_positive _ (Game.Random.normalizedSeed_positive seed)
+      (Game.Random.normalizedSeed_lt_modulus seed)
+    rw [drawn] at positive
+    exact positive
   have inRange := roomCode_state_lt _ (Game.Random.normalizedSeed_lt_modulus seed)
   rw [drawn] at inRange
   exact inRange
@@ -70,7 +91,7 @@ theorem ok_joinAs {s s' : State} {actor : Mythroads.AuthId} {hero color : String
         · rename_i seatFree
           simp only [Except.ok.injEq, Prod.mk.injEq] at h
           obtain ⟨rfl, -⟩ := h
-          refine ⟨?_, ?_, ?_, ok.rngInRange⟩
+          refine ⟨?_, ?_, ?_, ok.rngPositive, ok.rngInRange⟩
           · intro p hp
             simp only [List.mem_append, List.mem_cons, List.not_mem_nil, or_false] at hp
             cases hp with
@@ -103,7 +124,7 @@ theorem ok_start {s s' : State} {fx : List Effect} (ok : Ok s)
     · simp only [Except.ok.injEq, Prod.mk.injEq] at h
       obtain ⟨rfl, -⟩ := h
       exact ⟨ok.heroes, Nat.lt_of_lt_of_le Nat.zero_lt_one (Nat.le_max_left 1 _), ok.seated,
-        ok.rngInRange⟩
+        ok.rngPositive, ok.rngInRange⟩
 
 /-! ## Movement -/
 
@@ -129,9 +150,19 @@ theorem rollDice_rng_lt (dice : List Nat) (s : State) (h : s.rng < Game.Random.m
   | nil => exact h
   | cons sides rest ih => simp only [Movement.rollDice]; exact ih _ (draw_rng_lt s sides)
 
+/-- Rolling any number of dice keeps a valid generator away from zero. -/
+theorem rollDice_rng_positive (dice : List Nat) (s : State) (positive : 0 < s.rng)
+    (small : s.rng < Game.Random.modulus) : 0 < (Movement.rollDice s dice).2.rng := by
+  induction dice generalizing s with
+  | nil => exact positive
+  | cons sides rest ih =>
+      simp only [Movement.rollDice]
+      exact ih _ (draw_rng_positive s sides positive small) (draw_rng_lt s sides)
+
 /-- Rolling preserves the invariant. -/
 theorem ok_rollDice {s : State} (ok : Ok s) (dice : List Nat) : Ok (Movement.rollDice s dice).2 :=
   ok_reseeded ok (rollDice_players dice s) (rollDice_turn dice s)
+    (rollDice_rng_positive dice s ok.rngPositive ok.rngInRange)
     (rollDice_rng_lt dice s ok.rngInRange)
 
 /-- `movement.roll` only rewrites one hero's memory of where they came from. -/
@@ -182,11 +213,21 @@ theorem ok_resolveOn {s s' : State} {p : PlayerState} {d : NodeId} {landed : Gam
       exact ok_congr ok rfl rfl rfl
     · simp only [Landing.startEvent, Except.ok.injEq, Prod.mk.injEq] at h
       obtain ⟨rfl, -⟩ := h
-      exact ok_reseeded ok rfl rfl (by rw [withPhase_rng]; exact draw_rng_lt s _)
+      exact ok_reseeded ok rfl rfl
+        (draw_rng_positive s (Game.Encounter.totalWeight .event) ok.rngPositive ok.rngInRange)
+        (draw_rng_lt s (Game.Encounter.totalWeight .event))
     · simp only [Except.ok.injEq, Prod.mk.injEq] at h
       obtain ⟨rfl, -⟩ := h
       refine ok_advanceTurn (ok_mapPlayer ok ?_) _
       exact fun q _ => Nat.le_refl q.maxHp
+    · split at h
+      · simp only [Except.ok.injEq, Prod.mk.injEq] at h
+        obtain ⟨rfl, -⟩ := h
+        refine ok_advanceTurn (ok_mapPlayer ok ?_) _
+        exact fun _ hpBound => hpBound
+      · simp only [Except.ok.injEq, Prod.mk.injEq] at h
+        obtain ⟨rfl, -⟩ := h
+        exact ok_advanceTurn ok _
     · simp only [Except.ok.injEq, Prod.mk.injEq] at h
       obtain ⟨rfl, -⟩ := h
       exact ok_advanceTurn ok _
@@ -220,15 +261,26 @@ theorem ok_stepMove {s s' : State} {p : PlayerState} {moves : Nat} {sel : Option
 theorem drawGuard_rng_lt (s : State) : (Battle.drawGuard s).2.rng < Game.Random.modulus :=
   draw_rng_lt _ _
 
+theorem drawGuard_rng_positive (s : State) (ok : Ok s) : 0 < (Battle.drawGuard s).2.rng :=
+  draw_rng_positive s _ ok.rngPositive ok.rngInRange
+
 /-- The enemy's strike is one draw, so the generator lands in range. -/
 theorem drawStrike_rng_lt (s : State) (element : Game.Magic.Element) :
     (Battle.drawStrike s element).2.rng < Game.Random.modulus :=
   draw_rng_lt _ _
 
+theorem drawStrike_rng_positive (s : State) (element : Game.Magic.Element) (ok : Ok s) :
+    0 < (Battle.drawStrike s element).2.rng :=
+  draw_rng_positive s _ ok.rngPositive ok.rngInRange
+
 /-- The hit check is one draw, so the generator lands in range. -/
 theorem drawHit_rng_lt (s : State) (result : StrikeResult) :
     (Battle.drawHit s result).2.rng < Game.Random.modulus :=
   draw_rng_lt _ _
+
+theorem drawHit_rng_positive (s : State) (result : StrikeResult) (positive : 0 < s.rng)
+    (small : s.rng < Game.Random.modulus) : 0 < (Battle.drawHit s result).2.rng :=
+  draw_rng_positive s _ positive small
 
 /-- Striking either logs an exchange, or fells the enemy and passes the turn. -/
 theorem ok_attack {s s' : State} {p : PlayerState} {b : CombatState} {c : Strike}
@@ -239,18 +291,31 @@ theorem ok_attack {s s' : State} {p : PlayerState} {b : CombatState} {c : Strike
   · split at h
     · simp only [Except.ok.injEq, Prod.mk.injEq] at h
       obtain ⟨rfl, -⟩ := h
-      exact ok_reseeded ok rfl rfl (by rw [withPhase_rng]; exact drawGuard_rng_lt s)
+      exact ok_reseeded ok rfl rfl (drawGuard_rng_positive s ok) (drawGuard_rng_lt s)
     · split at h
       · simp only [Except.ok.injEq, Prod.mk.injEq] at h
         obtain ⟨rfl, -⟩ := h
-        refine ok_advanceTurn (ok_withPhase (ok_mapPlayer (ok_reseeded ok ?_ ?_ ?_) ?_) _ _) _
+        refine ok_advanceTurn (ok_withPhase (ok_mapPlayer (ok_reseeded ok ?_ ?_ ?_ ?_) ?_) _ _) _
         · rfl
         · rfl
-        · exact drawHit_rng_lt _ _
+        · exact drawHit_rng_positive (Battle.drawGuard s).2
+            (strikeDamage c (Battle.drawGuard s).1 (playerStats p b) (enemyStats b)
+              (some b.enemy.element) 35)
+            (drawGuard_rng_positive s ok) (drawGuard_rng_lt s)
+        · exact drawHit_rng_lt (Battle.drawGuard s).2
+            (strikeDamage c (Battle.drawGuard s).1 (playerStats p b) (enemyStats b)
+              (some b.enemy.element) 35)
         · exact fun _ hq => hq
       · simp only [Except.ok.injEq, Prod.mk.injEq] at h
         obtain ⟨rfl, -⟩ := h
-        exact ok_reseeded ok rfl rfl (by rw [withPhase_rng]; exact drawHit_rng_lt _ _)
+        exact ok_reseeded ok rfl rfl
+          (drawHit_rng_positive (Battle.drawGuard s).2
+            (strikeDamage c (Battle.drawGuard s).1 (playerStats p b) (enemyStats b)
+              (some b.enemy.element) 35)
+            (drawGuard_rng_positive s ok) (drawGuard_rng_lt s))
+          (drawHit_rng_lt (Battle.drawGuard s).2
+            (strikeDamage c (Battle.drawGuard s).1 (playerStats p b) (enemyStats b)
+              (some b.enemy.element) 35))
 
 /-- Defeat restores the hero to full health before passing the turn. -/
 theorem ok_defeat {s s' : State} {p : PlayerState} {b logged : CombatState} {fx : List Effect}
@@ -267,18 +332,31 @@ theorem ok_guard {s s' : State} {p : PlayerState} {b : CombatState} {g : Game.Co
   split at h
   · simp only [Except.ok.injEq, Prod.mk.injEq] at h
     obtain ⟨rfl, -⟩ := h
-    exact ok_reseeded ok rfl rfl (by rw [withPhase_rng]; exact drawStrike_rng_lt _ _)
+    exact ok_reseeded ok rfl rfl (drawStrike_rng_positive s b.enemy.element ok)
+      (drawStrike_rng_lt s b.enemy.element)
   · split at h
-    · refine ok_defeat (ok_withPhase (ok_reseeded ok ?_ ?_ ?_) _ _) h
+    · refine ok_defeat (ok_withPhase (ok_reseeded ok ?_ ?_ ?_ ?_) _ _) h
       · rfl
       · rfl
-      · exact drawHit_rng_lt _ _
+      · exact drawHit_rng_positive (Battle.drawStrike s b.enemy.element).2
+          (strikeDamage (Battle.drawStrike s b.enemy.element).1 g (enemyStats b)
+            (playerStats p b) none (equippedWardPower p))
+          (drawStrike_rng_positive s b.enemy.element ok) (drawStrike_rng_lt s b.enemy.element)
+      · exact drawHit_rng_lt (Battle.drawStrike s b.enemy.element).2
+          (strikeDamage (Battle.drawStrike s b.enemy.element).1 g (enemyStats b)
+            (playerStats p b) none (equippedWardPower p))
     · simp only [Except.ok.injEq, Prod.mk.injEq] at h
       obtain ⟨rfl, -⟩ := h
-      refine ok_withPhase (ok_mapPlayer (ok_reseeded ok ?_ ?_ ?_) ?_) _ _
+      refine ok_withPhase (ok_mapPlayer (ok_reseeded ok ?_ ?_ ?_ ?_) ?_) _ _
       · rfl
       · rfl
-      · exact drawHit_rng_lt _ _
+      · exact drawHit_rng_positive (Battle.drawStrike s b.enemy.element).2
+          (strikeDamage (Battle.drawStrike s b.enemy.element).1 g (enemyStats b)
+            (playerStats p b) none (equippedWardPower p))
+          (drawStrike_rng_positive s b.enemy.element ok) (drawStrike_rng_lt s b.enemy.element)
+      · exact drawHit_rng_lt (Battle.drawStrike s b.enemy.element).2
+          (strikeDamage (Battle.drawStrike s b.enemy.element).1 g (enemyStats b)
+            (playerStats p b) none (equippedWardPower p))
       · exact fun q hq => damaged_bounded q _ hq
 
 /-! ## Encounter, shop and camera -/

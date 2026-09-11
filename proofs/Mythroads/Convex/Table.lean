@@ -33,6 +33,8 @@ inductive Table where
   | playerItems
   /-- The durable game-event log. -/
   | gameEvents
+  /-- Periodic private snapshots of the Lean aggregate for bounded replay. -/
+  | gameSnapshots
   /-- Ephemeral spectator camera state for a room. -/
   | roomCameras
   deriving Repr, DecidableEq, Inhabited
@@ -48,12 +50,13 @@ def name : Table → String
   | .roomSelections => "roomSelections"
   | .playerItems => "playerItems"
   | .gameEvents => "gameEvents"
+  | .gameSnapshots => "gameSnapshots"
   | .roomCameras => "roomCameras"
 
 /-- Every table, in the order the generated `defineSchema` call lists them. -/
 def all : List Table :=
   [.rooms, .players, .encounters, .combats, .roomSelections, .playerItems, .gameEvents,
-    .roomCameras]
+    .gameSnapshots, .roomCameras]
 
 end Table
 
@@ -80,6 +83,8 @@ inductive Index : Table → Type where
   | gameEventsByCommandId : Index .gameEvents
   /-- One room's event log in insertion order. -/
   | gameEventsByRoomIdAndCreatedAt : Index .gameEvents
+  /-- Snapshot lookup by room and monotonically increasing event version. -/
+  | gameSnapshotsByRoomIdAndVersion : Index .gameSnapshots
   /-- The camera state of a room. -/
   | roomCamerasByRoomId : Index .roomCameras
 
@@ -97,6 +102,7 @@ def name : Index table → String
   | .gameEventsByCreatedAt => "by_createdAt"
   | .gameEventsByCommandId => "by_commandId"
   | .gameEventsByRoomIdAndCreatedAt => "by_roomId_and_createdAt"
+  | .gameSnapshotsByRoomIdAndVersion => "by_roomId_and_version"
   | .roomCamerasByRoomId => "by_roomId"
 
 /-- The index key fields, in order. This is what an emitted `q.eq(…)` chain is built from, so the
@@ -112,6 +118,7 @@ def fields : Index table → List String
   | .gameEventsByCreatedAt => ["createdAt"]
   | .gameEventsByCommandId => ["commandId"]
   | .gameEventsByRoomIdAndCreatedAt => ["roomId", "createdAt"]
+  | .gameSnapshotsByRoomIdAndVersion => ["roomId", "version"]
   | .roomCamerasByRoomId => ["roomId"]
 
 end Index
@@ -126,6 +133,7 @@ def Table.indexes : (table : Table) → List (Index table)
   | .playerItems => [.playerItemsByPlayerId]
   | .gameEvents =>
       [.gameEventsByCreatedAt, .gameEventsByCommandId, .gameEventsByRoomIdAndCreatedAt]
+  | .gameSnapshots => [.gameSnapshotsByRoomIdAndVersion]
   | .roomCameras => [.roomCamerasByRoomId]
 
 end Mythroads.Convex

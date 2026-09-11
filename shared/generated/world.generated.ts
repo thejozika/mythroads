@@ -1,12 +1,14 @@
 /** Generated from proofs/Mythroads/Game/World.lean. Do not edit by hand. */
 import type { ShopKind } from '../item.system'
 
-export type SpaceKind = 'castle' | 'combat' | 'event' | ShopKind
+export type SpaceKind = 'castle' | 'combat' | 'event' | 'teleport' | ShopKind
+export type IslandId = 'hearth' | 'ember' | 'tide'
 export type WorldVisualId = `space.${SpaceKind}`
 export type WorldNode = {
     id: number
     label: string
     kind: SpaceKind
+    island: IslandId
     visualId: WorldVisualId
     x: number
     z: number
@@ -20,6 +22,8 @@ export type WorldRoad = {
     via?: { x: number; z: number }[]
     bridge?: boolean
 }
+export type WorldTeleportPair = { first: number; second: number }
+export type WorldIsland = { id: IslandId; label: string; boundary: { x: number; z: number }[] }
 export type WorldTerrainFeature =
     | {
           id: string
@@ -50,7 +54,9 @@ export type LogicalGameWorld = {
     id: string
     label: string
     version: number
+    islands: WorldIsland[]
     nodes: WorldNode[]
     roads: WorldRoad[]
+    teleports: WorldTeleportPair[]
     terrain: WorldTerrainFeature[]
 }

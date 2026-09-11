@@ -261,7 +261,7 @@ def loadState : Function where
       ("rngCounter", orElse (prop roomRow "rngCounter") (.number 0)),
       ("camera", .conditional (id "camera") (wrapped (call (id "cameraFrom") [id "camera"]))
         absent),
-      ("version", .number 0)])]
+      ("version", orElse (prop (id "room") "eventVersion") (.number 0))])]
 
 /-- The room `room.create` starts from: no code, no host, no heroes, nothing drawn.
 

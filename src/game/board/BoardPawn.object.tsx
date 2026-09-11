@@ -1,10 +1,11 @@
-import { Billboard, Float, Text } from '@react-three/drei'
+import { Billboard, Float } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { useMemo, useRef } from 'react'
 import type { Group } from 'three'
 import { Vector3 } from 'three'
 import { getNode } from '../../../shared/board.system'
 import type { PublicPlayer } from '../game.type'
+import { BoardText as Text } from './labels/BoardText.object'
 
 export function BoardPawn({
     player,

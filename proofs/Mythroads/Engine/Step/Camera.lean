@@ -13,8 +13,8 @@ They are still turn-gated, because the generated `requireCameraControl` demands 
 active player: the shared screen follows whoever is playing, and a phone that is not
 on turn cannot drag the view out from under the table.
 
-Coordinates are held in hundredths of a world unit, exactly as `Game.World.Point` is,
-so the pan step of `0.9` and the bounds of `±7` by `±5.5` are integers here.
+Coordinates are held in hundredths of a world unit, exactly as `Game.World.Point` is.
+The bounds cover all three island maps while keeping the camera over the table.
 -/
 
 namespace Mythroads.Engine.CameraStep
@@ -50,19 +50,19 @@ def move (s : State) (direction : Direction) : Outcome :=
         let dz : Int := match direction with
           | .up => -panStep | .down => panStep | _ => 0
         let panned : Camera := { camera with
-          targetX := clamp (-700) 700 (camera.targetX + dx),
-          targetZ := clamp (-550) 550 (camera.targetZ + dz) }
+          targetX := clamp (-1600) 1600 (camera.targetX + dx),
+          targetZ := clamp (-1100) 600 (camera.targetZ + dz) }
         .ok ({ s with camera := some panned }, [.persistCamera panned, .notify "camera.move"])
   | none => .error .cameraNotFree
 
-/-- `camera.zoom`: one notch in or out, held between five and fifteen units. -/
+/-- `camera.zoom`: one notch in or out, from a local view to the whole archipelago. -/
 def zoom (s : State) (delta : Zoom) : Outcome :=
   match s.camera with
   | some camera =>
       if !camera.free then .error .cameraNotFree
       else
         let zoomed : Camera := { camera with
-          distance := (clamp 5 15 ((camera.distance : Int) + delta.delta)).toNat }
+          distance := (clamp 5 24 ((camera.distance : Int) + delta.delta)).toNat }
         .ok ({ s with camera := some zoomed }, [.persistCamera zoomed, .notify "camera.zoom"])
   | none => .error .cameraNotFree
 

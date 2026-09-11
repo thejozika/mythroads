@@ -37,6 +37,7 @@ export const appSchema = defineSchema({
             ),
             rngState: v.optional(v.number()),
             rngCounter: v.optional(v.number()),
+            eventVersion: v.optional(v.number()),
         }),
     ).index('by_code', ['code']),
     players: defineTable(
@@ -172,6 +173,14 @@ export const appSchema = defineSchema({
         .index('by_createdAt', ['createdAt'])
         .index('by_commandId', ['commandId'])
         .index('by_roomId_and_createdAt', ['roomId', 'createdAt']),
+    gameSnapshots: defineTable(
+        v.object({
+            roomId: v.id('rooms'),
+            version: v.number(),
+            stateJson: v.string(),
+            createdAt: v.number(),
+        }),
+    ).index('by_roomId_and_version', ['roomId', 'version']),
     roomCameras: defineTable(
         v.object({
             roomId: v.id('rooms'),

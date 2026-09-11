@@ -27,4 +27,7 @@ import Mythroads.Game.Random
 import Mythroads.Game.Schema
 import Mythroads.Game.Turn
 import Mythroads.Game.World
+import Mythroads.Game.World.Emit
+import Mythroads.Game.World.Requirement
+import Mythroads.Game.World.Regression
 import Mythroads.Identity

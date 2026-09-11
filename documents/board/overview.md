@@ -15,6 +15,19 @@ The shared map players move across, the spaces they land on, the dice/spinner th
 - Landing there restores the hero to full HP before the turn advances.
 - A combat defeat returns the hero to Hearthkeep at full HP after applying the gold penalty.
 
+## Island topology
+
+- The authored world has three independent graph components: Hearthwild, Embercrag, and Tideglass.
+- Each island contains two teleport fields. Three landing-triggered pairs connect the islands:
+  Hearthwild–Embercrag, Hearthwild–Tideglass, and Embercrag–Tideglass.
+- A teleport pairing is not a road. Movement ends on the local field and its landing effect moves
+  the hero to the paired field without spending another movement point.
+- Shorelines, node membership, roads, and teleports all come from `Game/World.lean`; Three.js only
+  renders that serializable definition.
+- Every island must expose at least five distinct simple local cycles. Ordinary fields have at
+  least two local roads; teleport fields may be local leaves. Lean derives and validates these
+  properties from the graph during every build.
+
 ## Dokapon reference
 
 Dokapon's board is a graph of color-coded panels: red (battle), blue (gold), green (item), orange (town), white (event), plus stores, banks, castles, and special spaces (vending/quiz/warp/trap). 1 day = one round of turns; 7 days = 1 week. Spinner is 1–6 (with rare modifiers). See `../../sources/dokapon-core-loop/notes.md` and `../../sources/dokapon-items-economy/notes.md`.
@@ -32,5 +45,4 @@ Dokapon's board is a graph of color-coded panels: red (battle), blue (gold), gre
 
 - How many space types in the MVP?
 - Fixed map or procedural?
-- Single connected world or per-region maps with travel?
 - Map size sized for what peak roll? (See dice.md — current ceiling is 5 × D8 = 40.)

@@ -42,7 +42,8 @@ def document : Table → Ty
       ("activeEncounterId", .optional (.id .encounters)),
       ("activeCombatId", .optional (.id .combats)),
       ("shopKind", .optional (literals ["armoury", "jeweller", "weapons", "items", "magic"])),
-      ("rngState", .optional .number), ("rngCounter", .optional .number)
+      ("rngState", .optional .number), ("rngCounter", .optional .number),
+      ("eventVersion", .optional .number)
     ]
   | .players => .obj [
       ("roomId", .id .rooms), ("authId", .optional .string), ("name", .string),
@@ -91,6 +92,10 @@ def document : Table → Ty
         ("event", .external "gameEventValidator" "GameEvent"),
         ("result", .external "dispatchResultValidator" "DispatchResult"), ("createdAt", .number)
       ]
+    ]
+  | .gameSnapshots => .obj [
+      ("roomId", .id .rooms), ("version", .number), ("stateJson", .string),
+      ("createdAt", .number)
     ]
   | .roomCameras => .obj [
       ("roomId", .id .rooms), ("mode", literals ["follow", "free"]),

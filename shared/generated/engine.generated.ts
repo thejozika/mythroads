@@ -258,6 +258,7 @@ export type Game_World_Node = {
     kind: Game_World_SpaceKind
     point: Game_World_Point
     landmark: Option<Game_World_Landmark>
+    island: Game_World_IslandId
 }
 
 /** Lean `Mythroads.Game.World.SpaceKind`. */
@@ -270,12 +271,16 @@ export type Game_World_SpaceKind =
     | { _: 'weapons' }
     | { _: 'items' }
     | { _: 'magic' }
+    | { _: 'teleport' }
 
 /** Lean `Mythroads.Game.World.Point`. */
 export type Game_World_Point = { x: number; z: number }
 
 /** Lean `Mythroads.Game.World.Landmark`. */
 export type Game_World_Landmark = { offsetX: number; offsetZ: number }
+
+/** Lean `Mythroads.Game.World.IslandId`. */
+export type Game_World_IslandId = { _: 'hearth' } | { _: 'ember' } | { _: 'tide' }
 
 /** Lean `PUnit`. */
 export type PUnit = Record<string, never>
@@ -419,7 +424,12 @@ export type Game_Magic_Delivery =
 export type Game_Combat_Matchup = { _: 'weak' } | { _: 'neutral' } | { _: 'strong' }
 
 /** Lean `Mythroads.Game.World.BoardGraph`. */
-export type Game_World_BoardGraph = { nodes: Game_World_Node[]; roads: Game_World_Road[] }
+export type Game_World_BoardGraph = {
+    nodes: Game_World_Node[]
+    roads: Game_World_Road[]
+    teleports: Game_World_TeleportPair[]
+    islands: Game_World_Island[]
+}
 
 /** Lean `Mythroads.Game.Magic.Impact`. */
 export type Game_Magic_Impact = { _: 'wucht' } | { _: 'stich' } | { _: 'hieb' }
@@ -430,6 +440,16 @@ export type Game_World_Road = {
     destination: number
     bidirectional: boolean
     bridge: boolean
+}
+
+/** Lean `Mythroads.Game.World.TeleportPair`. */
+export type Game_World_TeleportPair = { first: number; second: number }
+
+/** Lean `Mythroads.Game.World.Island`. */
+export type Game_World_Island = {
+    id: Game_World_IslandId
+    label: string
+    boundary: Game_World_Point[]
 }
 
 /** Lean `Mythroads.Game.World.AvailableRoad`. */
@@ -1556,12 +1576,11 @@ export function CameraStep_move(
             const free = val.free
             // join point
             const _jp_4 = (_y_5: number, _y_6: number): Except<Error, Prod<State, Effect[]>> => {
-                const _x_8: number = 700
-                const _x_13: number = 550
+                const _x_8: number = 1600
                 const panned: Camera = {
                     free: free,
                     targetX: CameraStep_clamp(-_x_8, _x_8, val.targetX + _y_5),
-                    targetZ: CameraStep_clamp(-_x_13, _x_13, val.targetZ + _y_6),
+                    targetZ: CameraStep_clamp(-1100, 600, val.targetZ + _y_6),
                     distance: val.distance,
                 }
                 return {
@@ -1591,30 +1610,30 @@ export function CameraStep_move(
             const free_1 = free
             if (free_1) {
                 // join point
-                const _jp_29 = (_y_30: number): Except<Error, Prod<State, Effect[]>> => {
+                const _jp_31 = (_y_32: number): Except<Error, Prod<State, Effect[]>> => {
                     const direction_1 = direction
                     switch (direction_1._) {
                         case 'up': {
-                            return _jp_4(_y_30, CameraStep_move__lam_1({}))
+                            return _jp_4(_y_32, CameraStep_move__lam_1({}))
                         }
                         case 'down': {
-                            return _jp_4(_y_30, CameraStep_panStep())
+                            return _jp_4(_y_32, CameraStep_panStep())
                         }
                         default: {
-                            return _jp_4(_y_30, CameraStep_move__lam_0(direction_1))
+                            return _jp_4(_y_32, CameraStep_move__lam_0(direction_1))
                         }
                     }
                 }
                 const direction_2 = direction
                 switch (direction_2._) {
                     case 'left': {
-                        return _jp_29(CameraStep_move__lam_1({}))
+                        return _jp_31(CameraStep_move__lam_1({}))
                     }
                     case 'right': {
-                        return _jp_29(CameraStep_panStep())
+                        return _jp_31(CameraStep_panStep())
                     }
                     default: {
-                        return _jp_29(CameraStep_move__lam_0(direction_2))
+                        return _jp_31(CameraStep_move__lam_0(direction_2))
                     }
                 }
             } else {
@@ -1644,7 +1663,7 @@ export function CameraStep_zoom(s: State, delta: Zoom): Except<Error, Prod<State
                     targetZ: val.targetZ,
                     distance: Math.max(
                         0,
-                        CameraStep_clamp(5, 15, val.distance + Zoom_delta(delta)),
+                        CameraStep_clamp(5, 24, val.distance + Zoom_delta(delta)),
                     ),
                 }
                 return {
@@ -2912,6 +2931,7 @@ export function node(id: number): Game_World_Node {
                 kind: { _: 'castle' },
                 point: { x: -540, z: 320 },
                 landmark: { _: 'none' },
+                island: { _: 'hearth' },
             }
         }
         case 'some': {
@@ -4481,189 +4501,394 @@ export function Game_Turn_nextRound(round: number, current: number, playerCount:
 
 /** Lean `Mythroads.Game.World.nodes`. */
 export function Game_World_nodes(): Game_World_Node[] {
-    const _x_1: number = 0
-    const _x_8: number = 320
-    const _x_10: number = _x_1
-    const _x_12: number = 90
-    const _x_18: Game_World_SpaceKind = { _: 'combat' }
-    const _x_27: number = 300
-    const _x_28: number = -_x_27
-    const _x_32: Game_World_SpaceKind = { _: 'event' }
-    const _x_34: number = 450
-    const _x_40: number = -170
-    const _x_46: number = 40
-    const _x_47: number = -_x_46
-    const _x_55: number = 220
-    const _x_61: number = 350
-    const _x_73: number = 180
-    const _x_77: Game_World_SpaceKind = { _: 'items' }
-    const _x_114: number = -120
-    const _x_119: number = 150
+    const _x_3: Game_World_SpaceKind = { _: 'combat' }
+    const _x_9: Game_World_IslandId = { _: 'tide' }
+    const _x_13: Game_World_SpaceKind = { _: 'jeweller' }
+    const _x_22: Game_World_SpaceKind = { _: 'magic' }
+    const _x_38: string = 'Ember Gate'
+    const _x_39: Game_World_SpaceKind = { _: 'teleport' }
+    const _x_48: Game_World_SpaceKind = { _: 'items' }
+    const _x_64: Game_World_SpaceKind = { _: 'armoury' }
+    const _x_70: number = -880
+    const _x_71: Game_World_IslandId = { _: 'ember' }
+    const _x_83: string = 'Tide Gate'
+    const _x_98: string = 'Hearth Gate'
+    const _x_100: number = 980
+    const _x_103: number = -520
+    const _x_107: Game_World_SpaceKind = { _: 'event' }
+    const _x_109: number = 1160
+    const _x_111: number = 480
+    const _x_122: number = 420
+    const _x_123: number = -_x_122
+    const _x_126: number = -170
+    const _x_127: Game_World_IslandId = { _: 'hearth' }
+    const _x_168: number = 300
+    const _x_169: number = -_x_168
+    const _x_172: number = -120
+    const _x_177: number = 150
+    const _x_182: number = 0
+    const _x_183: number = _x_182
+    const _x_199: number = 40
+    const _x_206: number = -_x_199
+    const _x_211: number = 90
+    const _x_216: number = 220
+    const _x_221: number = 350
+    const _x_232: number = 180
+    const _x_254: number = 450
+    const _x_286: number = 320
     return [
         {
-            id: _x_1,
+            id: _x_182,
             label: 'Hearthkeep',
             kind: { _: 'castle' },
-            point: { x: -540, z: _x_8 },
-            landmark: { _: 'some', val: { offsetX: _x_10, offsetZ: _x_12 } },
+            point: { x: -540, z: _x_286 },
+            landmark: { _: 'some', val: { offsetX: _x_183, offsetZ: _x_211 } },
+            island: _x_127,
         },
-        _private_Mythroads_Game_World_0_Mythroads_Game_World_n(1, 'Mossling', _x_18, -420, _x_8),
+        _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
+            1,
+            'Mossling',
+            _x_3,
+            _x_123,
+            _x_286,
+            _x_127,
+        ),
         _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
             2,
             'Armoury Junction',
-            { _: 'armoury' },
-            _x_28,
-            _x_8,
+            _x_64,
+            _x_169,
+            _x_286,
+            _x_127,
         ),
         _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
             3,
             'Lucky Well',
-            _x_32,
-            _x_28,
-            _x_34,
+            _x_107,
+            _x_169,
+            _x_254,
+            _x_127,
         ),
-        _private_Mythroads_Game_World_0_Mythroads_Game_World_n(4, 'Boar Wood', _x_18, _x_40, _x_34),
+        _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
+            4,
+            'Boar Wood',
+            _x_3,
+            _x_126,
+            _x_254,
+            _x_127,
+        ),
         _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
             5,
             'Jeweller',
-            { _: 'jeweller' },
-            _x_47,
-            _x_34,
+            _x_13,
+            _x_206,
+            _x_254,
+            _x_127,
         ),
         _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
             6,
             'Wishing Tree',
-            _x_32,
-            _x_12,
-            _x_34,
+            _x_107,
+            _x_211,
+            _x_254,
+            _x_127,
         ),
         _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
             7,
             'Bandit Pass',
-            _x_18,
-            _x_55,
-            _x_34,
+            _x_3,
+            _x_216,
+            _x_254,
+            _x_127,
         ),
         _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
             8,
             'Weapons',
             { _: 'weapons' },
-            _x_61,
-            _x_34,
+            _x_221,
+            _x_254,
+            _x_127,
         ),
-        _private_Mythroads_Game_World_0_Mythroads_Game_World_n(9, 'Moon Shrine', _x_32, 480, 340),
+        _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
+            9,
+            'Moon Shrine',
+            _x_107,
+            _x_111,
+            340,
+            _x_127,
+        ),
         _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
             10,
             'Slime Fen',
-            _x_18,
-            _x_28,
-            _x_73,
+            _x_3,
+            _x_169,
+            _x_232,
+            _x_127,
         ),
         _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
             11,
             'Item Shop',
-            _x_77,
-            _x_40,
-            _x_73,
+            _x_48,
+            _x_126,
+            _x_232,
+            _x_127,
         ),
         _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
             12,
             'Odd Crossroad',
-            _x_32,
-            _x_47,
-            _x_73,
+            _x_107,
+            _x_206,
+            _x_232,
+            _x_127,
         ),
         _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
             13,
             'Wolf Hollow',
-            _x_18,
-            _x_12,
-            _x_73,
+            _x_3,
+            _x_211,
+            _x_232,
+            _x_127,
         ),
         _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
             14,
             'Magic Shop',
-            { _: 'magic' },
-            _x_55,
-            _x_73,
+            _x_22,
+            _x_216,
+            _x_232,
+            _x_127,
         ),
         _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
             15,
             'Fallen Star',
-            _x_32,
-            _x_61,
-            _x_73,
+            _x_107,
+            _x_221,
+            _x_232,
+            _x_127,
         ),
         _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
             16,
             'Goblin Gate',
-            _x_18,
-            _x_28,
-            _x_46,
+            _x_3,
+            _x_169,
+            _x_199,
+            _x_127,
         ),
         _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
             17,
             'Sunken Cache',
-            _x_32,
-            _x_40,
-            _x_46,
+            _x_107,
+            _x_126,
+            _x_199,
+            _x_127,
         ),
         _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
             18,
             'Briar Knight',
-            _x_18,
-            _x_47,
-            _x_46,
+            _x_3,
+            _x_206,
+            _x_199,
+            _x_127,
         ),
-        _private_Mythroads_Game_World_0_Mythroads_Game_World_n(19, 'Wayfarer', _x_77, _x_12, _x_46),
+        _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
+            19,
+            'Wayfarer',
+            _x_48,
+            _x_211,
+            _x_199,
+            _x_127,
+        ),
         _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
             20,
             'Old Ferry',
-            _x_32,
-            _x_55,
-            _x_46,
+            _x_107,
+            _x_216,
+            _x_199,
+            _x_127,
         ),
         _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
             21,
             'Thorn Beast',
-            _x_18,
-            _x_61,
-            _x_46,
+            _x_3,
+            _x_221,
+            _x_199,
+            _x_127,
         ),
         _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
             22,
             'Cloud Altar',
-            _x_32,
-            _x_28,
-            _x_114,
+            _x_107,
+            _x_169,
+            _x_172,
+            _x_127,
         ),
         _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
             23,
             'Windy Bluff',
-            _x_32,
-            -_x_119,
-            _x_114,
+            _x_107,
+            -_x_177,
+            _x_172,
+            _x_127,
         ),
         _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
             24,
             'River Cache',
-            _x_77,
-            _x_10,
-            _x_114,
+            _x_48,
+            _x_183,
+            _x_172,
+            _x_127,
         ),
         _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
             25,
             'Ash Orchard',
-            _x_18,
-            _x_119,
-            _x_114,
+            _x_3,
+            _x_177,
+            _x_172,
+            _x_127,
         ),
         _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
             26,
             'Pilgrim Stone',
-            _x_32,
-            _x_27,
-            _x_114,
+            _x_107,
+            _x_168,
+            _x_172,
+            _x_127,
+        ),
+        _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
+            27,
+            _x_38,
+            _x_39,
+            _x_123,
+            _x_126,
+            _x_127,
+        ),
+        _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
+            28,
+            _x_83,
+            _x_39,
+            _x_122,
+            _x_126,
+            _x_127,
+        ),
+        _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
+            30,
+            _x_98,
+            _x_39,
+            -_x_100,
+            _x_103,
+            _x_71,
+        ),
+        _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
+            31,
+            'Cinder Market',
+            _x_48,
+            -_x_109,
+            -500,
+            _x_71,
+        ),
+        _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
+            32,
+            'Ash Drake',
+            _x_3,
+            -1340,
+            -570,
+            _x_71,
+        ),
+        _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
+            33,
+            'Forge Shrine',
+            _x_107,
+            -1390,
+            -760,
+            _x_71,
+        ),
+        _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
+            34,
+            'Crag Armoury',
+            _x_64,
+            -1210,
+            _x_70,
+            _x_71,
+        ),
+        _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
+            35,
+            'Magma Maw',
+            _x_3,
+            -960,
+            -820,
+            _x_71,
+        ),
+        _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
+            36,
+            _x_83,
+            _x_39,
+            _x_70,
+            -650,
+            _x_71,
+        ),
+        _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
+            37,
+            'Ember Jeweller',
+            _x_13,
+            -1130,
+            -690,
+            _x_71,
+        ),
+        _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
+            50,
+            _x_98,
+            _x_39,
+            _x_100,
+            _x_103,
+            _x_9,
+        ),
+        _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
+            51,
+            'Coral Cache',
+            _x_107,
+            _x_109,
+            -_x_111,
+            _x_9,
+        ),
+        _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
+            52,
+            'Reef Stalker',
+            _x_3,
+            1360,
+            -560,
+            _x_9,
+        ),
+        _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
+            53,
+            'Pearl Jeweller',
+            _x_13,
+            1420,
+            -750,
+            _x_9,
+        ),
+        _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
+            54,
+            'Sunken Library',
+            _x_22,
+            1240,
+            -900,
+            _x_9,
+        ),
+        _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
+            55,
+            'Storm Crab',
+            _x_3,
+            990,
+            -850,
+            _x_9,
+        ),
+        _private_Mythroads_Game_World_0_Mythroads_Game_World_n(56, _x_38, _x_39, 860, -660, _x_9),
+        _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
+            57,
+            'Drift Shop',
+            _x_48,
+            1150,
+            -700,
+            _x_9,
         ),
     ]
 }
@@ -5034,12 +5259,58 @@ export function Landing_resolveOn(
                         },
                     }
                 }
+                case 'teleport': {
+                    const Game_World_BoardGraph_teleportTarget_q_1 =
+                        Game_World_BoardGraph_teleportTarget_q(Game_World_boardGraph(), destination)
+                    switch (Game_World_BoardGraph_teleportTarget_q_1._) {
+                        case 'none': {
+                            const p_2 = p
+                            return {
+                                _: 'ok',
+                                a: {
+                                    fst: State_advanceTurn(
+                                        s,
+                                        `${p_2.name} found a dormant teleport gate.`,
+                                    ),
+                                    snd: [
+                                        { _: 'persistRoom' },
+                                        { _: 'appendLog', name: 'landing.teleport.dormant' },
+                                    ],
+                                },
+                            }
+                        }
+                        case 'some': {
+                            const p_3 = p
+                            const id_1 = p_3.id
+                            return {
+                                _: 'ok',
+                                a: {
+                                    fst: State_advanceTurn(
+                                        State_mapPlayer(s, id_1, (a0) =>
+                                            Landing_resolveOn__lam_1(
+                                                Game_World_BoardGraph_teleportTarget_q_1.val,
+                                                a0,
+                                            ),
+                                        ),
+                                        `${p_3.name} crossed the teleport gate.`,
+                                    ),
+                                    snd: [
+                                        { _: 'persistPlayer', id: id_1 },
+                                        { _: 'persistRoom' },
+                                        { _: 'appendLog', name: 'landing.teleport' },
+                                    ],
+                                },
+                            }
+                        }
+                    }
+                    throw new Error('non-exhaustive match on Option')
+                }
                 default: {
-                    const p_2 = p
+                    const p_4 = p
                     return {
                         _: 'ok',
                         a: {
-                            fst: State_advanceTurn(s, `${p_2.name} completed the journey.`),
+                            fst: State_advanceTurn(s, `${p_4.name} completed the journey.`),
                             snd: [{ _: 'persistRoom' }, { _: 'appendLog', name: 'landing.done' }],
                         },
                     }
@@ -5047,14 +5318,14 @@ export function Landing_resolveOn(
             }
         }
         case 'some': {
-            const p_3 = p
+            const p_5 = p
             return {
                 _: 'ok',
                 a: {
                     fst: State_withPhase(
                         s,
                         { _: 'shop', kind: shopKindOf_1.val },
-                        `${p_3.name} entered the ${landed_1.label}.`,
+                        `${p_5.name} entered the ${landed_1.label}.`,
                     ),
                     snd: [{ _: 'persistRoom' }, { _: 'appendLog', name: 'landing.shop' }],
                 },
@@ -5786,8 +6057,16 @@ export function _private_Mythroads_Game_World_0_Mythroads_Game_World_n(
     kind: Game_World_SpaceKind,
     x: number,
     z: number,
+    island: Game_World_IslandId,
 ): Game_World_Node {
-    return { id: id, label: label, kind: kind, point: { x: x, z: z }, landmark: { _: 'none' } }
+    return {
+        id: id,
+        label: label,
+        kind: kind,
+        point: { x: x, z: z },
+        landmark: { _: 'none' },
+        island: island,
+    }
 }
 
 /** Lean `instDecidableEqList._redArg`. */
@@ -5843,7 +6122,12 @@ export function Game_Encounter_Kind_ctorIdx(x: Game_Encounter_Kind): number {
 
 /** Lean `Mythroads.Game.World.boardGraph`. */
 export function Game_World_boardGraph(): Game_World_BoardGraph {
-    return { nodes: Game_World_nodes(), roads: Game_World_roads() }
+    return {
+        nodes: Game_World_nodes(),
+        roads: Game_World_roads(),
+        teleports: Game_World_teleports(),
+        islands: Game_World_islands(),
+    }
 }
 
 /** Lean `Mythroads.Game.World.BoardGraph.canTraverse`. */
@@ -5996,6 +6280,41 @@ export function Landing_resolveOn__lam_0(q: PlayerState): PlayerState {
         gold: q_1.gold,
         hp: maxHp,
         maxHp: maxHp,
+        attack: q_1.attack,
+        defense: q_1.defense,
+        magic: q_1.magic,
+        athletics: q_1.athletics,
+        agility: q_1.agility,
+        dice: q_1.dice,
+        items: q_1.items,
+    }
+}
+
+/** Lean `Mythroads.Game.World.BoardGraph.teleportTarget?`. */
+export function Game_World_BoardGraph_teleportTarget_q(
+    graph: Game_World_BoardGraph,
+    id: number,
+): Option<number> {
+    const graph_1 = graph
+    return List_findSome_q__at__Mythroads_Game_World_BoardGraph_teleportTarget_q_spec_0(
+        id,
+        graph_1.teleports,
+    )
+}
+
+/** Lean `Mythroads.Engine.Landing.resolveOn._lam_1`. */
+export function Landing_resolveOn__lam_1(val_1: number, q: PlayerState): PlayerState {
+    const q_1 = q
+    return {
+        id: q_1.id,
+        owner: q_1.owner,
+        name: q_1.name,
+        color: q_1.color,
+        position: val_1,
+        previousPosition: { _: 'none' },
+        gold: q_1.gold,
+        hp: q_1.hp,
+        maxHp: q_1.maxHp,
         attack: q_1.attack,
         defense: q_1.defense,
         magic: q_1.magic,
@@ -6676,71 +6995,184 @@ export function Game_Magic_Element_ctorIdx(x: Game_Magic_Element): number {
 
 /** Lean `Mythroads.Game.World.roads`. */
 export function Game_World_roads(): Game_World_Road[] {
-    const _x_1: number = 8
-    const _x_2: number = 15
+    const _x_1: number = 56
+    const _x_2: number = 57
     const _x_3: boolean = true
     const _x_4: boolean = false
-    const _x_6: number = 12
-    const _x_7: number = 18
-    const _x_9: number = 14
-    const _x_10: number = 20
-    const _x_12: number = 17
-    const _x_13: number = 23
-    const _x_15: number = 25
-    const _x_23: number = 26
-    const _x_25: number = 21
-    const _x_27: number = 4
-    const _x_28: number = 11
-    const _x_30: number = 6
-    const _x_31: number = 13
-    const _x_38: number = 16
-    const _x_39: number = 22
-    const _x_42: number = 24
-    const _x_51: number = 19
-    const _x_61: number = 9
-    const _x_63: number = 10
-    const _x_71: number = 2
-    const _x_80: number = 5
-    const _x_83: number = 7
-    const _x_93: number = 1
-    const _x_96: number = 3
+    const _x_6: number = 51
+    const _x_8: number = 52
+    const _x_10: number = 54
+    const _x_17: number = 53
+    const _x_20: number = 55
+    const _x_27: number = 35
+    const _x_28: number = 36
+    const _x_30: number = 37
+    const _x_32: number = 31
+    const _x_34: number = 32
+    const _x_36: number = 34
+    const _x_49: number = 33
+    const _x_57: number = 20
+    const _x_58: number = 25
+    const _x_60: number = 23
+    const _x_71: number = 26
+    const _x_72: number = 21
+    const _x_74: number = 4
+    const _x_75: number = 11
+    const _x_77: number = 6
+    const _x_78: number = 13
+    const _x_80: number = 8
+    const _x_81: number = 15
+    const _x_83: number = 12
+    const _x_84: number = 18
+    const _x_86: number = 14
+    const _x_88: number = 17
+    const _x_97: number = 22
+    const _x_99: number = 24
+    const _x_107: number = 19
+    const _x_111: number = 16
+    const _x_119: number = 9
+    const _x_121: number = 10
+    const _x_133: number = 7
+    const _x_137: number = 2
+    const _x_149: number = 0
+    const _x_150: number = 1
+    const _x_152: number = 3
+    const _x_157: number = 5
     return [
-        { origin: 0, destination: _x_93, bidirectional: _x_3, bridge: _x_4 },
-        { origin: _x_93, destination: _x_71, bidirectional: _x_3, bridge: _x_4 },
-        { origin: _x_71, destination: _x_96, bidirectional: _x_3, bridge: _x_4 },
-        { origin: _x_96, destination: _x_27, bidirectional: _x_3, bridge: _x_4 },
-        { origin: _x_27, destination: _x_80, bidirectional: _x_3, bridge: _x_4 },
-        { origin: _x_80, destination: _x_30, bidirectional: _x_3, bridge: _x_3 },
-        { origin: _x_30, destination: _x_83, bidirectional: _x_3, bridge: _x_4 },
-        { origin: _x_83, destination: _x_1, bidirectional: _x_3, bridge: _x_4 },
-        { origin: _x_1, destination: _x_61, bidirectional: _x_3, bridge: _x_4 },
-        { origin: _x_71, destination: _x_63, bidirectional: _x_3, bridge: _x_4 },
-        { origin: _x_63, destination: _x_28, bidirectional: _x_3, bridge: _x_4 },
-        { origin: _x_28, destination: _x_6, bidirectional: _x_3, bridge: _x_4 },
-        { origin: _x_6, destination: _x_31, bidirectional: _x_4, bridge: _x_3 },
-        { origin: _x_31, destination: _x_9, bidirectional: _x_3, bridge: _x_4 },
-        { origin: _x_9, destination: _x_2, bidirectional: _x_3, bridge: _x_4 },
-        { origin: _x_2, destination: _x_61, bidirectional: _x_3, bridge: _x_4 },
-        { origin: _x_63, destination: _x_38, bidirectional: _x_3, bridge: _x_4 },
-        { origin: _x_38, destination: _x_12, bidirectional: _x_3, bridge: _x_4 },
-        { origin: _x_12, destination: _x_7, bidirectional: _x_3, bridge: _x_4 },
-        { origin: _x_7, destination: _x_51, bidirectional: _x_3, bridge: _x_3 },
-        { origin: _x_51, destination: _x_10, bidirectional: _x_3, bridge: _x_4 },
-        { origin: _x_10, destination: _x_25, bidirectional: _x_3, bridge: _x_4 },
-        { origin: _x_25, destination: _x_2, bidirectional: _x_3, bridge: _x_4 },
-        { origin: _x_38, destination: _x_39, bidirectional: _x_3, bridge: _x_4 },
-        { origin: _x_39, destination: _x_13, bidirectional: _x_3, bridge: _x_4 },
-        { origin: _x_13, destination: _x_42, bidirectional: _x_3, bridge: _x_4 },
-        { origin: _x_42, destination: _x_15, bidirectional: _x_3, bridge: _x_3 },
-        { origin: _x_15, destination: _x_23, bidirectional: _x_3, bridge: _x_4 },
-        { origin: _x_23, destination: _x_25, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_149, destination: _x_150, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_149, destination: _x_152, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_150, destination: _x_137, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_137, destination: _x_152, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_152, destination: _x_74, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_74, destination: _x_157, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_157, destination: _x_77, bidirectional: _x_3, bridge: _x_3 },
+        { origin: _x_77, destination: _x_133, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_133, destination: _x_80, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_80, destination: _x_119, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_137, destination: _x_121, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_121, destination: _x_75, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_75, destination: _x_83, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_83, destination: _x_78, bidirectional: _x_4, bridge: _x_3 },
+        { origin: _x_78, destination: _x_86, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_86, destination: _x_81, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_81, destination: _x_119, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_121, destination: _x_111, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_111, destination: _x_88, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_88, destination: _x_84, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_84, destination: _x_107, bidirectional: _x_3, bridge: _x_3 },
+        { origin: _x_107, destination: _x_57, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_57, destination: _x_72, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_72, destination: _x_81, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_111, destination: _x_97, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_97, destination: _x_60, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_60, destination: _x_99, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_99, destination: _x_58, bidirectional: _x_3, bridge: _x_3 },
+        { origin: _x_58, destination: _x_71, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_71, destination: _x_72, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_74, destination: _x_75, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_77, destination: _x_78, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_80, destination: _x_81, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_83, destination: _x_84, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_86, destination: _x_57, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_88, destination: _x_60, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_57, destination: _x_58, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_60, destination: 27, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_58, destination: 28, bidirectional: _x_3, bridge: _x_4 },
+        { origin: 30, destination: _x_32, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_32, destination: _x_34, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_34, destination: _x_49, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_49, destination: _x_36, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_36, destination: _x_27, bidirectional: _x_3, bridge: _x_4 },
         { origin: _x_27, destination: _x_28, bidirectional: _x_3, bridge: _x_4 },
-        { origin: _x_30, destination: _x_31, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_28, destination: _x_30, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_30, destination: _x_32, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_34, destination: _x_30, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_36, destination: _x_30, bidirectional: _x_3, bridge: _x_4 },
+        { origin: 50, destination: _x_6, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_6, destination: _x_8, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_8, destination: _x_17, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_17, destination: _x_10, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_10, destination: _x_20, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_20, destination: _x_1, bidirectional: _x_3, bridge: _x_4 },
         { origin: _x_1, destination: _x_2, bidirectional: _x_3, bridge: _x_4 },
-        { origin: _x_6, destination: _x_7, bidirectional: _x_3, bridge: _x_4 },
-        { origin: _x_9, destination: _x_10, bidirectional: _x_3, bridge: _x_4 },
-        { origin: _x_12, destination: _x_13, bidirectional: _x_3, bridge: _x_4 },
-        { origin: _x_10, destination: _x_15, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_2, destination: _x_6, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_8, destination: _x_2, bidirectional: _x_3, bridge: _x_4 },
+        { origin: _x_10, destination: _x_2, bidirectional: _x_3, bridge: _x_4 },
+    ]
+}
+
+/** Lean `Mythroads.Game.World.teleports`. */
+export function Game_World_teleports(): Game_World_TeleportPair[] {
+    return [
+        { first: 27, second: 30 },
+        { first: 28, second: 50 },
+        { first: 36, second: 56 },
+    ]
+}
+
+/** Lean `Mythroads.Game.World.islands`. */
+export function Game_World_islands(): Game_World_Island[] {
+    const _x_4: number = 650
+    const _x_24: number = 370
+    const _x_30: number = 620
+    const _x_69: never[] = []
+    const _x_89: number = 760
+    const _x_90: number = -_x_89
+    const _x_107: number = 790
+    const _x_122: number = -390
+    const _x_127: number = -_x_24
+    const _x_160: number = 1010
+    return [
+        {
+            id: { _: 'hearth' },
+            label: 'Hearthwild',
+            boundary: [
+                { x: -_x_4, z: -270 },
+                { x: -310, z: -305 },
+                { x: 80, z: -285 },
+                { x: _x_24, z: -300 },
+                { x: _x_30, z: -220 },
+                { x: _x_4, z: 110 },
+                { x: 610, z: 380 },
+                { x: 410, z: 550 },
+                { x: 20, z: 575 },
+                { x: -320, z: 555 },
+                { x: -_x_30, z: 465 },
+                { x: -680, z: 120 },
+                ..._x_69,
+            ],
+        },
+        {
+            id: { _: 'ember' },
+            label: 'Embercrag',
+            boundary: [
+                { x: -1510, z: _x_90 },
+                { x: -1360, z: -950 },
+                { x: -1050, z: -990 },
+                { x: -_x_107, z: -850 },
+                { x: _x_90, z: -560 },
+                { x: -930, z: _x_122 },
+                { x: -1240, z: _x_127 },
+                { x: -1490, z: -500 },
+                ..._x_69,
+            ],
+        },
+        {
+            id: { _: 'tide' },
+            label: 'Tideglass',
+            boundary: [
+                { x: _x_89, z: -590 },
+                { x: 900, z: -870 },
+                { x: 1190, z: -_x_160 },
+                { x: 1480, z: -860 },
+                { x: 1530, z: -570 },
+                { x: 1330, z: _x_122 },
+                { x: _x_160, z: _x_127 },
+                { x: _x_107, z: -450 },
+                ..._x_69,
+            ],
+        },
+        ..._x_69,
     ]
 }
 
@@ -6873,6 +7305,35 @@ export function Landing_wheelIndexOf(
         Game_Encounter_outcomesFor(kind),
         0,
     )
+}
+
+/** Lean `List.findSome?._at_.Mythroads.Game.World.BoardGraph.teleportTarget?.spec_0`. */
+export function List_findSome_q__at__Mythroads_Game_World_BoardGraph_teleportTarget_q_spec_0(
+    id: number,
+    x_1: Game_World_TeleportPair[],
+): Option<number> {
+    const x_1_1 = x_1
+    if (x_1_1.length === 0) {
+        return { _: 'none' }
+    } else {
+        const x_1_10 = x_1_1[0]
+        const first = x_1_10.first
+        const second = x_1_10.second
+        const scrutinee = first === id
+        if (scrutinee) {
+            return { _: 'some', val: second }
+        } else {
+            const scrutinee_1 = second === id
+            if (scrutinee_1) {
+                return { _: 'some', val: first }
+            } else {
+                return List_findSome_q__at__Mythroads_Game_World_BoardGraph_teleportTarget_q_spec_0(
+                    id,
+                    x_1_1.slice(1),
+                )
+            }
+        }
+    }
 }
 
 /** Lean `Mythroads.Game.Magic.instDecidableEqImpact`. */

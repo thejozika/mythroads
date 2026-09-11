@@ -1,5 +1,6 @@
-import { Billboard, Float, Text } from '@react-three/drei'
+import { Billboard, Float } from '@react-three/drei'
 import type { BOARD } from '../../../shared/board.system'
+import { BoardText as Text } from './labels/BoardText.object'
 import { SPACE_VISUALS } from './world.material'
 
 type BoardNode = (typeof BOARD)[number]
@@ -7,6 +8,27 @@ type BoardNode = (typeof BOARD)[number]
 function FieldGeometry({ node }: { node: BoardNode }) {
     const shop = ['armoury', 'jeweller', 'weapons', 'items', 'magic'].includes(node.kind)
     return <boxGeometry args={[shop ? 0.82 : 0.74, 0.035, shop ? 0.66 : 0.62]} />
+}
+
+function TeleportGate() {
+    return (
+        <Float speed={2.2} floatIntensity={0.08} rotationIntensity={0.18}>
+            <group position={[0, 0.3, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                <mesh>
+                    <torusGeometry args={[0.28, 0.055, 8, 24]} />
+                    <meshStandardMaterial
+                        color="#8ff8ed"
+                        emissive="#2aa9b4"
+                        emissiveIntensity={1.4}
+                    />
+                </mesh>
+                <mesh>
+                    <circleGeometry args={[0.22, 24]} />
+                    <meshBasicMaterial color="#347ea1" transparent opacity={0.72} />
+                </mesh>
+            </group>
+        </Float>
+    )
 }
 
 function Castle() {
@@ -98,6 +120,7 @@ export function BoardSpace({
                     <Castle />
                 </group>
             )}
+            {node.kind === 'teleport' && <TeleportGate />}
             {reachable && <DestinationArrow selected={selected} />}
             {selected && <Crosshair />}
         </group>

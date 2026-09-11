@@ -9,6 +9,7 @@ import {
 } from '../../../shared/engine.system'
 import type { Id } from '../../_generated/dataModel'
 import type { MutationCtx } from '../../_generated/server'
+import { isPersistentGameEvent } from '../../events/policy'
 import type { DispatchResult, GameEvent } from '../../events/validators'
 import { envelopeFrom, eventFrom, subjectOf, wireNat } from './envelope.generated'
 import { emptyState, loadState } from './load.generated'
@@ -71,6 +72,28 @@ async function requireRipeEncounter(ctx: MutationCtx, event: GameEvent): Promise
     ) {
         throw new ConvexError('This encounter cannot be resolved now.')
     }
+}
+
+async function writeSnapshot(
+    ctx: MutationCtx,
+    roomId: Id<'rooms'>,
+    state: State,
+    durable: boolean,
+): Promise<void> {
+    if (!durable) {
+        return
+    }
+    await ctx.db.patch('rooms', roomId, { eventVersion: state.version })
+    if (state.version % 20 !== 0) {
+        return
+    }
+    const canonical = await loadState(ctx, roomId)
+    await ctx.db.insert('gameSnapshots', {
+        roomId: roomId,
+        version: canonical.version,
+        stateJson: JSON.stringify(canonical),
+        createdAt: Date.now(),
+    })
 }
 
 async function freeRoomCode(
@@ -137,7 +160,11 @@ export async function applyGameEvent(
     if (outcome._ === 'error') {
         throw new ConvexError(Error_message(outcome.a, envelope.event))
     }
-    const saved = await saveState(ctx, roomId, before, outcome.a.fst, outcome.a.snd)
+    const durable = isPersistentGameEvent(event)
+    const transitioned = outcome.a.fst
+    const after = durable ? { ...transitioned, version: before.version + 1 } : transitioned
+    const saved = await saveState(ctx, roomId, before, after, outcome.a.snd)
+    await writeSnapshot(ctx, roomId, after, durable)
     if (event.type === 'player.join') {
         if (!saved.playerId) {
             throw new ConvexError('Choose a hero name.')

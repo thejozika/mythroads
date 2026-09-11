@@ -106,7 +106,7 @@ def cancel (s : State) (moves : Nat) : Outcome :=
 /--
 `movement.step`: commit the planned route.
 
-Three conditions must hold together, and they are the reason a client cannot teleport:
+Three conditions must hold together, and they prevent a client from inventing movement steps:
 the route must end where the event says, it must be exactly as long as the roll, and
 every hop must be a declared road. Only then does the hero move and the landed space
 resolve.

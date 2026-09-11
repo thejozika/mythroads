@@ -12,7 +12,13 @@ export function AuthProvider({
     authConfigured: boolean
     children: ReactNode
 }) {
-    const client = useMemo(() => (convexUrl ? new ConvexReactClient(convexUrl) : null), [convexUrl])
+    const offlinePage =
+        /^\/display\/demo\/?$/i.test(window.location.pathname) ||
+        /^\/lean\/?$/.test(window.location.pathname)
+    const client = useMemo(
+        () => (convexUrl && !offlinePage ? new ConvexReactClient(convexUrl) : null),
+        [convexUrl, offlinePage],
+    )
     if (!client) return children
     if (!authConfigured) return <ConvexProvider client={client}>{children}</ConvexProvider>
     return (

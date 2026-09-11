@@ -210,7 +210,8 @@ def roomColumns : Expr :=
     ("shopKind", .conditional (isTag (prop after "phase") "shop")
       (tagOf (prop (prop after "phase") "kind")) .undefined),
     ("rngState", prop after "rng"),
-    ("rngCounter", prop after "rngCounter")]
+    ("rngCounter", prop after "rngCounter"),
+    ("eventVersion", prop after "version")]
 
 /-- One arm of the effect interpreter. -/
 private def arm (tag : String) (body : List Statement) : String × List Statement :=
@@ -277,7 +278,8 @@ def insertRoom : Function where
       ("round", prop after "round"),
       ("phase", .asConst (.string "awaitingRoll")),
       ("rngState", id "rngState"),
-      ("rngCounter", id "rngCounter")]))]
+      ("rngCounter", id "rngCounter"),
+      ("eventVersion", prop after "version")]))]
 
 /-- The generated effect interpreter. -/
 def module : Module where

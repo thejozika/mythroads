@@ -18,6 +18,25 @@ function subjectsOf(scenario: Scenario, index = 0) {
 }
 
 describe('event persistence', () => {
+    test('the sole mutation stores a private aggregate snapshot every 20 durable events', async () => {
+        const scenario = await playing()
+        for (let index = 0; index < 17; index += 1) {
+            await scenario.dispatch('Ava', {
+                type: 'game.start',
+                subjects: { roomId: scenario.roomId },
+                data: {},
+            })
+        }
+        const snapshots = await scenario.snapshots()
+        expect(snapshots).toHaveLength(1)
+        expect(snapshots[0].version).toBe(20)
+        expect(JSON.parse(snapshots[0].stateJson)).toMatchObject({
+            version: 20,
+            code: scenario.code,
+        })
+        expect((await scenario.room()).eventVersion).toBe(20)
+    })
+
     test('gameplay events are stored as typed envelopes', async () => {
         const scenario = await playing()
         await scenario.dispatch(
@@ -131,7 +150,7 @@ describe('camera control', () => {
             data: { direction: 'up' },
         })
         const panned = await scenario.camera()
-        expect(panned?.targetX).toBeCloseTo(-7, 10)
+        expect(panned?.targetX).toBeCloseTo(-8.1, 10)
         expect(panned?.targetZ).toBeCloseTo(2.3, 10)
 
         await scenario.dispatch('Ava', {
@@ -145,7 +164,7 @@ describe('camera control', () => {
             data: { direction: 'down' },
         })
         const returned = await scenario.camera()
-        expect(returned?.targetX).toBeCloseTo(-6.1, 10)
+        expect(returned?.targetX).toBeCloseTo(-7.2, 10)
         expect(returned?.targetZ).toBeCloseTo(3.2, 10)
 
         for (const unused of [0, 1, 2, 3, 4]) {

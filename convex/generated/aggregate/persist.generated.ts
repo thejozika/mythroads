@@ -208,6 +208,7 @@ export async function saveState(
                     shopKind: after.phase._ === 'shop' ? after.phase.kind._ : undefined,
                     rngState: after.rng,
                     rngCounter: after.rngCounter,
+                    eventVersion: after.version,
                 })
                 break
             }
@@ -239,5 +240,6 @@ export async function insertRoom(
         phase: 'awaitingRoll' as const,
         rngState: rngState,
         rngCounter: rngCounter,
+        eventVersion: after.version,
     })
 }

@@ -9,4 +9,5 @@ export const SPACE_VISUALS: Record<WorldVisualId, { color: string; icon: string 
     'space.weapons': { color: '#cb744c', icon: '$' },
     'space.items': { color: '#61ad79', icon: '$' },
     'space.magic': { color: '#5a75d6', icon: '$' },
+    'space.teleport': { color: '#60e1dc', icon: '✦' },
 }
